@@ -1,0 +1,19 @@
+diff --git a/src/components/theme-provider.tsx b/src/components/theme-provider.tsx
+index 9e92928..2589857 100644
+--- a/src/components/theme-provider.tsx
++++ b/src/components/theme-provider.tsx
+@@ -71,13 +71,3 @@ export function useSwitchToDarkThemeOnMount() {
+     setTheme(ThemeEnum.Dark);
+   }, [setTheme]);
+ }
+-
+-export function useSyncThemeFromParams(theme: string | null) {
+-  const { setTheme } = useTheme();
+-
+-  useEffect(() => {
+-    if (theme && (theme === ThemeEnum.Light || theme === ThemeEnum.Dark)) {
+-      setTheme(theme as ThemeEnum);
+-    }
+-  }, [theme, setTheme]);
+-}
+\ No newline at end of file

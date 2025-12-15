@@ -1,0 +1,67 @@
+diff --git a/src/utils/document-util.ts b/src/utils/document-util.ts
+index 388a703..16cc5ea 100644
+--- a/src/utils/document-util.ts
++++ b/src/utils/document-util.ts
+@@ -8,37 +8,36 @@ import { v4 as uuid } from 'uuid';
+ export const buildChunkHighlights = (
+   selectedChunk: IChunk | IReferenceChunk,
+   size: { width: number; height: number },
+-  scale: number = 1,
+ ) => {
+   return Array.isArray(selectedChunk?.positions) &&
+     selectedChunk.positions.every((x) => Array.isArray(x))
+     ? selectedChunk?.positions?.map((x) => {
+-      const boundingRect = {
+-        width: size.width,
+-        height: size.height,
+-        x1: x[1] * scale,
+-        x2: x[2] * scale,
+-        y1: x[3] * scale,
+-        y2: x[4] * scale,
+-      };
+-      return {
+-        id: uuid(),
+-        comment: {
+-          text: '',
+-          emoji: '',
+-        },
+-        content: {
+-          text:
+-            get(selectedChunk, 'content_with_weight') ||
+-            get(selectedChunk, 'content', ''),
+-        },
+-        position: {
+-          boundingRect: boundingRect,
+-          rects: [boundingRect],
+-          pageNumber: x[0],
+-        },
+-      };
+-    })
++        const boundingRect = {
++          width: size.width,
++          height: size.height,
++          x1: x[1],
++          x2: x[2],
++          y1: x[3],
++          y2: x[4],
++        };
++        return {
++          id: uuid(),
++          comment: {
++            text: '',
++            emoji: '',
++          },
++          content: {
++            text:
++              get(selectedChunk, 'content_with_weight') ||
++              get(selectedChunk, 'content', ''),
++          },
++          position: {
++            boundingRect: boundingRect,
++            rects: [boundingRect],
++            pageNumber: x[0],
++          },
++        };
++      })
+     : [];
+ };

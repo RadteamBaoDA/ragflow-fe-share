@@ -1,0 +1,10 @@
+diff --git a/.gitignore b/.gitignore
+index 3f93e9e..fe4e6bf 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -10,4 +10,3 @@
+
+ *storybook.log
+ storybook-static
+-.env
+\ No newline at end of file

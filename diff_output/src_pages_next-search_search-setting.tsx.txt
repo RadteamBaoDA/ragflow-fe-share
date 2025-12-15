@@ -1,0 +1,13 @@
+diff --git a/src/pages/next-search/search-setting.tsx b/src/pages/next-search/search-setting.tsx
+index 61057ab..665d7e4 100644
+--- a/src/pages/next-search/search-setting.tsx
++++ b/src/pages/next-search/search-setting.tsx
+@@ -444,7 +444,7 @@ const SearchSetting: React.FC<SearchSettingProps> = ({
+                   name="search_config.top_k"
+                   render={({ field }) => (
+                     <FormItem>
+-                      <FormLabel>{t('search.topK')}</FormLabel>
++                      <FormLabel>Top K</FormLabel>
+                       <div
+                         className={cn(
+                           'flex items-center gap-4 justify-between',

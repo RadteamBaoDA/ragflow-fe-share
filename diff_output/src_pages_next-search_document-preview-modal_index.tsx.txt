@@ -1,0 +1,28 @@
+diff --git a/src/pages/next-search/document-preview-modal/index.tsx b/src/pages/next-search/document-preview-modal/index.tsx
+index 70bb32e..8e3419d 100644
+--- a/src/pages/next-search/document-preview-modal/index.tsx
++++ b/src/pages/next-search/document-preview-modal/index.tsx
+@@ -13,7 +13,7 @@ import { useEffect, useState } from 'react';
+ interface IProps extends IModalProps<any> {
+   documentId: string;
+   chunk: IChunk &
+-  IReferenceChunk & { docnm_kwd: string; document_name: string };
++    IReferenceChunk & { docnm_kwd: string; document_name: string };
+ }
+ function getFileExtensionRegex(filename: string): string {
+   const match = filename.match(/\.([^.]+)$/);
+@@ -51,13 +51,10 @@ const PdfDrawer = ({
+       }
+       onCancel={hideModal}
+       open={visible}
+-      className="!w-[95vw] !max-w-[95vw] !h-[95vh] !p-0 flex flex-col overflow-hidden"
+-      bodyClassName="flex-1 min-h-0 !p-0 !max-h-full !overflow-hidden"
+       showfooter={false}
+-      full={true}
+     >
+       <DocumentPreview
+-        className={'!h-full w-full'}
++        className={'!h-[calc(100dvh-300px)] overflow-auto'}
+         fileType={fileType}
+         highlights={highlights}
+         setWidthAndHeight={setWidthAndHeight}

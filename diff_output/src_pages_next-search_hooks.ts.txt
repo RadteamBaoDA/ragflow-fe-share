@@ -1,0 +1,57 @@
+diff --git a/src/pages/next-search/hooks.ts b/src/pages/next-search/hooks.ts
+index 64ef99c..5687055 100644
+--- a/src/pages/next-search/hooks.ts
++++ b/src/pages/next-search/hooks.ts
+@@ -54,7 +54,6 @@ export const useGetSharedSearchParams = () => {
+     locale: searchParams.get('locale'),
+     tenantId: searchParams.get('tenantId'),
+     data: data,
+-    theme: searchParams.get('theme') || 'dark',
+     visibleAvatar: searchParams.get('visible_avatar')
+       ? searchParams.get('visible_avatar') !== '1'
+       : true,
+@@ -94,7 +93,7 @@ export const useSearchFetchMindMap = () => {
+ export const useTestChunkRetrieval = (
+   tenantId?: string,
+ ): ResponsePostType<ITestingResult> & {
+-  testChunk: (...params: any[]) => Promise<ITestingResult>;
++  testChunk: (...params: any[]) => void;
+ } => {
+   const knowledgeBaseId = useKnowledgeBaseId();
+   const { page, size: pageSize } = useSetPaginationParams();
+@@ -289,15 +288,17 @@ export const useSendQuestion = (
+   const { pagination, setPagination } = useGetPaginationWithRouter();
+
+   const sendQuestion = useCallback(
+-    async (question: string, enableAI: boolean = true) => {
++    (question: string, enableAI: boolean = true) => {
+       const q = trim(question);
+       if (isEmpty(q)) return;
+       setPagination({ page: 1 });
+       setIsFirstRender(false);
+       setCurrentAnswer({} as IAnswer);
+-
+-      // First, retrieve documents
+-      const result = await testChunk({
++      if (enableAI) {
++        setSendingLoading(true);
++        send({ kb_ids: kbIds, question: q, tenantId, search_id: searchId });
++      }
++      testChunk({
+         kb_id: kbIds,
+         highlight: true,
+         question: q,
+@@ -306,13 +307,6 @@ export const useSendQuestion = (
+         search_id: searchId,
+       });
+
+-      // Only call AI summary if retrieval documents exist
+-      const retrievedChunks = (result as ITestingResult)?.chunks;
+-      if (enableAI && retrievedChunks && retrievedChunks.length > 0) {
+-        setSendingLoading(true);
+-        send({ kb_ids: kbIds, question: q, tenantId, search_id: searchId });
+-      }
+-
+       if (related_search) {
+         fetchRelatedQuestions(q);
+       }

@@ -1,0 +1,107 @@
+diff --git a/src/pages/next-search/search-view.tsx b/src/pages/next-search/search-view.tsx
+index c0a8566..1c4d998 100644
+--- a/src/pages/next-search/search-view.tsx
++++ b/src/pages/next-search/search-view.tsx
+@@ -1,7 +1,7 @@
+ import { FileIcon } from '@/components/icon-font';
+ import { ImageWithPopover } from '@/components/image';
+ import { Input } from '@/components/originui/input';
+-import { Spin } from '@/components/ui/spin';
++import { SkeletonCard } from '@/components/skeleton-card';
+ import { Button } from '@/components/ui/button';
+ import {
+   Popover,
+@@ -53,7 +53,6 @@ export default function SearchingView({
+   handleSearch,
+   pagination,
+   onChange,
+-  loading,
+ }: ISearchReturnProps & {
+   setIsSearching?: Dispatch<SetStateAction<boolean>>;
+   searchData: ISearchAppDetailProps;
+@@ -70,9 +69,6 @@ export default function SearchingView({
+   useEffect(() => {
+     setSearchtext(searchStr);
+   }, [searchStr, setSearchtext]);
+-
+-  // Show loading only when searching retrieval documents, not waiting for summary
+-  const showLoading = loading && (!chunks || chunks.length === 0);
+   return (
+     <section
+       className={cn(
+@@ -93,11 +89,11 @@ export default function SearchingView({
+             setIsSearching?.(false);
+           }}
+         >
+-          {t('search.ads')}
++          RAGFlow
+         </h1>
+         <div
+           className={cn(
+-            'rounded-lg text-primary text-xl flex flex-col justify-center flex-1 ml-8',
++            ' rounded-lg text-primary text-xl sticky flex flex-col justify-center w-2/3 max-w-[780px] transform scale-100 ml-16 ',
+           )}
+         >
+           <div className={cn('flex flex-col justify-start items-start w-full')}>
+@@ -154,15 +150,16 @@ export default function SearchingView({
+             className="w-full mt-5 overflow-auto scrollbar-none "
+             style={{ height: 'calc(100vh - 250px)' }}
+           >
+-
+-            {searchData.search_config.summary && !isSearchStrEmpty && chunks?.length > 0 && (
++            {searchData.search_config.summary && !isSearchStrEmpty && (
+               <>
+                 <div className="flex justify-start items-start text-text-primary text-2xl">
+                   {t('search.AISummary')}
+                 </div>
+-                {isEmpty(answer) && sendingLoading ? null : (
++                {isEmpty(answer) && sendingLoading ? (
++                  <SkeletonCard className=" mt-2" />
++                ) : (
+                   answer.answer && (
+-                    <div className="border rounded-lg p-4 mt-3 max-h-52 overflow-auto scrollbar-none w-[90%]">
++                    <div className="border rounded-lg p-4 mt-3 max-h-52 overflow-auto scrollbar-none">
+                       <MarkdownContent
+                         loading={sendingLoading}
+                         content={answer.answer}
+@@ -178,9 +175,9 @@ export default function SearchingView({
+               </>
+             )}
+             {/* retrieval documents */}
+-            {!isSearchStrEmpty && !sendingLoading && !showLoading && (
++            {!isSearchStrEmpty && !sendingLoading && (
+               <>
+-                <div className="mt-3 w-52">
++                <div className=" mt-3 w-44 ">
+                   <RetrievalDocuments
+                     selectedDocumentIds={selectedDocumentIds}
+                     setSelectedDocumentIds={setSelectedDocumentIds}
+@@ -191,13 +188,6 @@ export default function SearchingView({
+               </>
+             )}
+             <div className="mt-3 ">
+-              {/* No document found message */}
+-              {!isSearchStrEmpty && !loading && !sendingLoading && (!chunks || chunks.length === 0) && (
+-                <div className="flex flex-col items-center justify-center py-16 text-center">
+-                  <Search size={48} className="text-text-secondary opacity-50 mb-4" />
+-                  <p className="text-lg text-text-secondary">{t('search.noDocumentFound')}</p>
+-                </div>
+-              )}
+               {chunks?.length > 0 && (
+                 <>
+                   {chunks.map((chunk, index) => {
+@@ -324,14 +314,6 @@ export default function SearchingView({
+           chunk={selectedChunk}
+         ></PdfDrawer>
+       )}
+-      {showLoading && (
+-        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/50 backdrop-blur-sm">
+-          <Spin size="large" className="w-20 h-20" />
+-          <div className="mt-4 text-white font-medium text-lg">
+-            {t('search.searchingPleaseWait')}
+-          </div>
+-        </div>
+-      )}
+     </section>
+   );
+ }

@@ -1,0 +1,114 @@
+diff --git a/src/pages/chunk/parsed-result/add-knowledge/components/knowledge-chunk/components/document-preview/pdf-preview.tsx b/src/pages/chunk/parsed-result/add-knowledge/components/knowledge-chunk/components/document-preview/pdf-preview.tsx
+index af3c7b0..79b1c54 100644
+--- a/src/pages/chunk/parsed-result/add-knowledge/components/knowledge-chunk/components/document-preview/pdf-preview.tsx
++++ b/src/pages/chunk/parsed-result/add-knowledge/components/knowledge-chunk/components/document-preview/pdf-preview.tsx
+@@ -1,4 +1,4 @@
+-import { memo, useEffect, useRef, useState } from 'react';
++import { memo, useEffect, useRef } from 'react';
+ import {
+   AreaHighlight,
+   Highlight,
+@@ -15,12 +15,9 @@ import styles from './index.less';
+
+ export interface IProps {
+   highlights: IHighlight[];
+-  setWidthAndHeight: (width: number, height: number, scale?: number) => void;
++  setWidthAndHeight: (width: number, height: number) => void;
+   url: string;
+-  scale?: number;
+-  highlightsVisible?: boolean;
+ }
+-
+ const HighlightPopup = ({
+   comment,
+ }: {
+@@ -33,19 +30,13 @@ const HighlightPopup = ({
+   ) : null;
+
+ // TODO: merge with DocumentPreviewer
+-const PdfPreview = ({
+-  highlights: state,
+-  setWidthAndHeight,
+-  url,
+-  scale = 1,
+-  highlightsVisible = true,
+-}: IProps) => {
+-  const [docWidth, setDocWidth] = useState(0);
+-  const ref = useRef<(highlight: IHighlight) => void>(() => { });
+-  const containerRef = useRef<HTMLDivElement>(null);
++const PdfPreview = ({ highlights: state, setWidthAndHeight, url }: IProps) => {
++  // const url = useGetDocumentUrl();
++
++  const ref = useRef<(highlight: IHighlight) => void>(() => {});
+   const error = useCatchDocumentError(url);
+
+-  const resetHash = () => { };
++  const resetHash = () => {};
+
+   useEffect(() => {
+     if (state.length > 0) {
+@@ -53,27 +44,9 @@ const PdfPreview = ({
+     }
+   }, [state]);
+
+-  // Effect to update PDF scale when scale prop changes
+-  useEffect(() => {
+-    // The react-pdf-highlighter library listens to resize events to update scale
+-    // Dispatch a resize event to trigger the library's debouncedScaleValue
+-    // which will read the new pdfScaleValue prop and apply it
+-    const timeoutId = setTimeout(() => {
+-      window.dispatchEvent(new Event('resize'));
+-    }, 50);
+-    return () => clearTimeout(timeoutId);
+-  }, [scale]);
+-
+-  // Convert numeric scale to string format for pdfScaleValue
+-  const getPdfScaleValue = (): string => {
+-    return scale.toString();
+-  };
+-
+   return (
+     <div
+-      ref={containerRef}
+-      className={`${styles.documentContainer} ${!highlightsVisible ? styles.highlightsHidden : ''} rounded-[10px]`}
+-      style={{ width: '100%' }}
++      className={`${styles.documentContainer} rounded-[10px] overflow-hidden	`}
+     >
+       <PdfLoader
+         url={url}
+@@ -87,11 +60,10 @@ const PdfPreview = ({
+       >
+         {(pdfDocument) => {
+           pdfDocument.getPage(1).then((page) => {
+-            const viewport = page.getViewport({ scale: scale });
++            const viewport = page.getViewport({ scale: 1 });
+             const width = viewport.width;
+             const height = viewport.height;
+-            setWidthAndHeight(width, height, scale);
+-            setDocWidth(width);
++            setWidthAndHeight(width, height);
+           });
+
+           return (
+@@ -103,7 +75,6 @@ const PdfPreview = ({
+                 ref.current = scrollTo;
+               }}
+               onSelectionFinished={() => null}
+-              pdfScaleValue={getPdfScaleValue()}
+               highlightTransform={(
+                 highlight,
+                 index,
+@@ -127,7 +98,7 @@ const PdfPreview = ({
+                   <AreaHighlight
+                     isScrolledTo={isScrolledTo}
+                     highlight={highlight}
+-                    onChange={() => { }}
++                    onChange={() => {}}
+                   />
+                 );
+
+@@ -154,4 +125,3 @@ const PdfPreview = ({
+ };
+
+ export default memo(PdfPreview);
+-

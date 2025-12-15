@@ -1,0 +1,67 @@
+diff --git a/src/pages/next-search/retrieval-documents/index.tsx b/src/pages/next-search/retrieval-documents/index.tsx
+index 94a6aa7..e253ae5 100644
+--- a/src/pages/next-search/retrieval-documents/index.tsx
++++ b/src/pages/next-search/retrieval-documents/index.tsx
+@@ -22,7 +22,6 @@ import {
+ import { cn } from '@/lib/utils';
+ import { CheckIcon, ChevronDown, Files, XIcon } from 'lucide-react';
+ import { useMemo, useState } from 'react';
+-import { useTranslation } from 'react-i18next';
+
+ interface IProps {
+   onTesting(documentIds: string[]): void;
+@@ -35,7 +34,6 @@ const RetrievalDocuments = ({
+   selectedDocumentIds,
+   setSelectedDocumentIds,
+ }: IProps) => {
+-  const { t } = useTranslation();
+   const { documents: documentsAll } = useAllTestingResult();
+   const { documents } = useSelectTestingResult();
+   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+@@ -106,12 +104,12 @@ const RetrievalDocuments = ({
+           )}
+         >
+           <div className="flex justify-between items-center w-full">
+-            <div className="flex items-center gap-2">
++            <div className="flex flex-wrap items-center gap-2">
+               <Files />
+               <span>
+                 {selectedDocumentIds?.length ?? 0}/{useDocuments?.length ?? 0}
+               </span>
+-              {t('search.files')}
++              Files
+             </div>
+             <div className="flex items-center justify-between">
+               <XIcon
+@@ -137,11 +135,11 @@ const RetrievalDocuments = ({
+       >
+         <Command>
+           <CommandInput
+-            placeholder={t('search.searchPlaceholder')}
++            placeholder="Search..."
+             onKeyDown={handleInputKeyDown}
+           />
+           <CommandList>
+-            <CommandEmpty>{t('search.noResultsFound')}</CommandEmpty>
++            <CommandEmpty>No results found.</CommandEmpty>
+             <CommandGroup>
+               {!multiOptions.some((x) => 'options' in x) &&
+                 (multiOptions as unknown as MultiSelectOptionType[]).map(
+@@ -210,7 +208,7 @@ const RetrievalDocuments = ({
+                       onSelect={handleClear}
+                       className="flex-1 justify-center cursor-pointer"
+                     >
+-                      {t('search.clear')}
++                      Clear
+                     </CommandItem>
+                     <Separator
+                       orientation="vertical"
+@@ -222,7 +220,7 @@ const RetrievalDocuments = ({
+                   onSelect={() => setIsPopoverOpen(false)}
+                   className="flex-1 justify-center cursor-pointer max-w-full"
+                 >
+-                  {t('common.close')}
++                  Close
+                 </CommandItem>
+               </div>
+             </CommandGroup>

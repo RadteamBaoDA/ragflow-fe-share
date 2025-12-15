@@ -1,0 +1,47 @@
+diff --git a/src/hooks/document-hooks.ts b/src/hooks/document-hooks.ts
+index 448aa09..aa04bad 100644
+--- a/src/hooks/document-hooks.ts
++++ b/src/hooks/document-hooks.ts
+@@ -40,28 +40,20 @@ export const useGetDocumentUrl = (documentId?: string) => {
+ export const useGetChunkHighlights = (
+   selectedChunk: IChunk | IReferenceChunk,
+ ) => {
+-  const [size, setSize] = useState({ width: 849, height: 1200, scale: 1 });
++  const [size, setSize] = useState({ width: 849, height: 1200 });
+
+   const highlights: IHighlight[] = useMemo(() => {
+-    return buildChunkHighlights(selectedChunk, size, size.scale);
++    return buildChunkHighlights(selectedChunk, size);
+   }, [selectedChunk, size]);
+
+-  const setWidthAndHeight = useCallback((
+-    width: number,
+-    height: number,
+-    scale?: number,
+-  ) => {
++  const setWidthAndHeight = (width: number, height: number) => {
+     setSize((pre) => {
+-      if (
+-        pre.height !== height ||
+-        pre.width !== width ||
+-        (scale && pre.scale !== scale)
+-      ) {
+-        return { height, width, scale: scale || 1 };
++      if (pre.height !== height || pre.width !== width) {
++        return { height, width };
+       }
+       return pre;
+     });
+-  }, []);
++  };
+
+   return { highlights, setWidthAndHeight };
+ };
+@@ -462,7 +454,7 @@ export const useUploadAndParseDocument = (uploadMethod: string) => {
+         }
+         const data = await chatService.uploadAndParseExternal(formData);
+         return data?.data;
+-      } catch (error) { }
++      } catch (error) {}
+     },
+   });

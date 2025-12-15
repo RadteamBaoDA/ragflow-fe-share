@@ -1,0 +1,46 @@
+diff --git a/src/pages/next-search/share/index.tsx b/src/pages/next-search/share/index.tsx
+index 8601157..8b663ad 100644
+--- a/src/pages/next-search/share/index.tsx
++++ b/src/pages/next-search/share/index.tsx
+@@ -9,10 +9,8 @@ import { useCheckSettings, useGetSharedSearchParams } from '../hooks';
+ import '../index.less';
+ import SearchHome from '../search-home';
+ import SearchingPage from '../searching';
+-import { useSyncThemeFromParams } from '@/components/theme-provider';
+-import { useTranslation } from 'react-i18next';
+ export default function ShareSeachPage() {
+-  const { tenantId, locale, visibleAvatar, theme } = useGetSharedSearchParams();
++  const { tenantId, locale, visibleAvatar } = useGetSharedSearchParams();
+   const {
+     data: searchData = {
+       search_config: { kb_ids: [] },
+@@ -23,12 +21,6 @@ export default function ShareSeachPage() {
+   const { openSetting: canSearch } = useCheckSettings(
+     searchData as ISearchAppDetailProps,
+   );
+-  const { t } = useTranslation();
+-
+-  /**
+-   * Sync theme from URL parameter
+-   */
+-  useSyncThemeFromParams(theme);
+
+   useEffect(() => {
+     if (locale && i18n.language !== locale) {
+@@ -39,12 +31,12 @@ export default function ShareSeachPage() {
+     <>
+       {visibleAvatar && (
+         <div className="flex justify-start items-center gap-2 mx-6 mt-6 text-text-primary">
+-          {/* <RAGFlowAvatar
++          <RAGFlowAvatar
+             className="size-6"
+             avatar={searchData.avatar}
+-            name="ODC Knowledge Base"
+-          ></RAGFlowAvatar> */}
+-          <div>{searchData.name || t('header.search')}</div>
++            name={searchData.name}
++          ></RAGFlowAvatar>
++          <div>{searchData.name}</div>
+         </div>
+       )}
+       {/* <SearchingView {...searchingParam} searchData={searchData} />; */}

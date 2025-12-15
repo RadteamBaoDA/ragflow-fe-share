@@ -1,0 +1,23 @@
+diff --git a/.umirc.ts b/.umirc.ts
+index 463467b..044ea30 100644
+--- a/.umirc.ts
++++ b/.umirc.ts
+@@ -32,7 +32,6 @@ export default defineConfig({
+       hack: `true; @import "~@/less/index.less";`,
+     },
+   },
+-  //devtool: false,
+   devtool: 'source-map',
+   copy: [
+     { from: 'src/conf.json', to: 'dist/conf.json' },
+@@ -72,10 +71,5 @@ export default defineConfig({
+
+     return memo;
+   },
+-  define: {
+-    'process.env.EXTERNAL_TRACE_API_URL': process.env.EXTERNAL_TRACE_API_URL,
+-    'process.env.EXTERNAL_TRACE_URL': process.env.EXTERNAL_TRACE_URL,
+-    'process.env.EXTERNAL_TRACE_API_KEY': process.env.EXTERNAL_TRACE_API_KEY,
+-  },
+   tailwindcss: {},
+ });

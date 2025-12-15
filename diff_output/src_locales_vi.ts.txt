@@ -1,0 +1,69 @@
+diff --git a/src/locales/vi.ts b/src/locales/vi.ts
+index 76c000f..403dfd1 100644
+--- a/src/locales/vi.ts
++++ b/src/locales/vi.ts
+@@ -502,8 +502,6 @@ export default {
+         'Áp dụng LLM (Mô hình ngôn ngữ lớn) để phân tích câu hỏi của người dùng, trích xuất các từ khóa sẽ được nhấn mạnh trong quá trình tính toán độ liên quan. Hoạt động tốt với các truy vấn dài nhưng sẽ làm tăng thời gian phản hồi.',
+       languageTip:
+         'Cho phép viết lại câu với ngôn ngữ được chỉ định, hoặc sử dụng câu hỏi mới nhất nếu không chọn ngôn ngữ nào.',
+-      emptyConversation: 'Trống',
+-      you: 'Bạn',
+     },
+     setting: {
+       profile: 'Hồ sơ',
+@@ -1195,45 +1193,6 @@ export default {
+       promptMessage: 'Nhắc nhở là bắt buộc',
+       runningHintText: 'đang chạy...🕞',
+     },
+-    search: {
+-      searchApps: 'Ứng dụng Tìm kiếm',
+-      createSearch: 'Tạo Tìm kiếm',
+-      searchGreeting: 'Tôi có thể giúp gì cho bạn hôm nay?',
+-      profile: 'Ẩn Hồ sơ',
+-      locale: 'Ngôn ngữ',
+-      embedCode: 'Mã nhúng',
+-      id: 'ID',
+-      copySuccess: 'Sao chép thành công',
+-      welcomeBack: 'Chào mừng trở lại',
+-      searchSettings: 'Cài đặt Tìm kiếm',
+-      name: 'Tên',
+-      avatar: 'Ảnh đại diện',
+-      description: 'Mô tả',
+-      datasets: 'Bộ dữ liệu',
+-      rerankModel: 'Mô hình Rerank',
+-      AISummary: 'Tóm tắt AI',
+-      enableWebSearch: 'Bật Tìm kiếm Web',
+-      enableRelatedSearch: 'Bật Tìm kiếm Liên quan',
+-      showQueryMindmap: 'Hiển thị Sơ đồ Tư duy Truy vấn',
+-      embedApp: 'Nhúng Ứng dụng',
+-      relatedSearch: 'Tìm kiếm Liên quan',
+-      descriptionValue: 'Bạn là một trợ lý thông minh.',
+-      okText: 'Lưu',
+-      cancelText: 'Hủy',
+-      chooseDataset: 'Vui lòng chọn bộ dữ liệu trước',
+-      noDocumentFound: 'Không tìm thấy tài liệu',
+-      advancedDocumentSearch: 'Tìm kiếm Tài liệu Nâng cao',
+-      keywordBasedSearch: 'Tìm kiếm Tài liệu Dựa trên Từ khóa (Được cung cấp bởi RAGFlow)',
+-      ads: 'ADS',
+-      searchingPleaseWait: 'Đang tìm kiếm... Vui lòng đợi...',
+-      selectLocale: 'Chọn ngôn ngữ',
+-      copyId: 'Sao chép ID',
+-      topK: 'Top K',
+-      files: 'Tệp',
+-      searchPlaceholder: 'Tìm kiếm...',
+-      noResultsFound: 'Không tìm thấy kết quả.',
+-      clear: 'Xóa',
+-    },
+     footer: {
+       profile: 'All rights reserved @ React',
+     },
+@@ -1242,9 +1201,5 @@ export default {
+       knowledge: 'kiến thức',
+       chat: 'trò chuyện',
+     },
+-    pagination: {
+-      total: 'Tổng {{total}}',
+-      page: '{{page}} /Trang',
+-    },
+   },
+ };

@@ -1,0 +1,29 @@
+diff --git a/src/components/ui/spin.tsx b/src/components/ui/spin.tsx
+index 0d1bfaa..45e2a95 100644
+--- a/src/components/ui/spin.tsx
++++ b/src/components/ui/spin.tsx
+@@ -31,7 +31,7 @@ export const Spin: React.FC<SpinProps> = ({
+       className={cn(
+         'relative',
+         {
+-          'after:content-[""] after:absolute after:inset-0 after:z-10 after:transition-all after:duration-300 h-full w-full':
++          'after:content-[""] after:absolute after:inset-0 after:z-10 after:bg-text-primary/40 after:transition-all after:duration-300 h-full w-full':
+             spinning,
+         },
+         className,
+@@ -40,13 +40,13 @@ export const Spin: React.FC<SpinProps> = ({
+       {spinning && (
+         <div
+           className={cn(
+-            'absolute inset-0 z-10 flex items-center justify-center',
++            'absolute inset-0 z-10 flex items-center justify-center bg-text-primary/30',
+             minSizeClasses[size],
+           )}
+         >
+           <div
+             className={cn(
+-              'rounded-full border-[#40EBE3] border-2 border-t-transparent animate-spin',
++              'rounded-full border-muted-foreground border-2 border-t-transparent animate-spin',
+               sizeClasses[size],
+             )}
+           ></div>

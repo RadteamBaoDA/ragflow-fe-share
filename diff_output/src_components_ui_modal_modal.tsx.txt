@@ -1,0 +1,55 @@
+diff --git a/src/components/ui/modal/modal.tsx b/src/components/ui/modal/modal.tsx
+index 63df147..af516b1 100644
+--- a/src/components/ui/modal/modal.tsx
++++ b/src/components/ui/modal/modal.tsx
+@@ -16,7 +16,6 @@ export interface ModalProps {
+   footerClassName?: string;
+   showfooter?: boolean;
+   className?: string;
+-  bodyClassName?: string;
+   size?: 'small' | 'default' | 'large';
+   closable?: boolean;
+   closeIcon?: ReactNode;
+@@ -46,7 +45,6 @@ const Modal: ModalType = ({
+   footerClassName,
+   showfooter = true,
+   className = '',
+-  bodyClassName = '',
+   size = 'default',
+   closable = true,
+   closeIcon = <X className="w-4 h-4" />,
+@@ -164,7 +162,7 @@ const Modal: ModalType = ({
+           onClick={() => maskClosable && onOpenChange?.(false)}
+         >
+           <DialogPrimitive.Content
+-            className={`relative w-full ${full ? 'max-w-full' : sizeClasses[size]} ${className} bg-bg-base rounded-lg shadow-lg border border-border-default transition-all focus-visible:!outline-none`}
++            className={`relative w-[700px] ${full ? 'max-w-full' : sizeClasses[size]} ${className} bg-bg-base rounded-lg shadow-lg border border-border-default transition-all focus-visible:!outline-none`}
+             onClick={(e) => e.stopPropagation()}
+           >
+             {/* title */}
+@@ -200,12 +198,7 @@ const Modal: ModalType = ({
+             )}
+
+             {/* content */}
+-            <div
+-              className={cn(
+-                'py-2 px-6 overflow-y-auto scrollbar-auto max-h-[90vh] focus-visible:!outline-none',
+-                bodyClassName,
+-              )}
+-            >
++            <div className="py-2 px-6 overflow-y-auto scrollbar-auto max-h-[80vh] focus-visible:!outline-none">
+               {destroyOnClose && !open ? null : children}
+             </div>
+
+@@ -222,9 +215,9 @@ let modalIns = createPortalModal();
+ Modal.show = modalIns
+   ? modalIns.show
+   : () => {
+-    modalIns = createPortalModal();
+-    return modalIns.show;
+-  };
++      modalIns = createPortalModal();
++      return modalIns.show;
++    };
+ Modal.hide = modalIns.hide;
+ Modal.destroy = modalIns.destroy;

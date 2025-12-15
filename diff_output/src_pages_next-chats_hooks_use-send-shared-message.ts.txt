@@ -1,0 +1,17 @@
+diff --git a/src/pages/next-chats/hooks/use-send-shared-message.ts b/src/pages/next-chats/hooks/use-send-shared-message.ts
+index 2f2c1f7..fb287ff 100644
+--- a/src/pages/next-chats/hooks/use-send-shared-message.ts
++++ b/src/pages/next-chats/hooks/use-send-shared-message.ts
+@@ -33,13 +33,10 @@ export const useGetSharedChatSearchParams = () => {
+     from: searchParams.get('from') as SharedFrom,
+     sharedId: searchParams.get('shared_id'),
+     locale: searchParams.get('locale'),
+-    theme: searchParams.get('theme') || 'dark',
+     data: data,
+     visibleAvatar: searchParams.get('visible_avatar')
+       ? searchParams.get('visible_avatar') !== '1'
+       : true,
+-    email:
+-      searchParams.get('email') || searchParams.get('user_id') || 'anonymous',
+   };
+ };

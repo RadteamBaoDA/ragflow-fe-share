@@ -1,0 +1,22 @@
+diff --git a/src/pages/next-search/embed-app-modal.tsx b/src/pages/next-search/embed-app-modal.tsx
+index 6420078..dca773c 100644
+--- a/src/pages/next-search/embed-app-modal.tsx
++++ b/src/pages/next-search/embed-app-modal.tsx
+@@ -89,7 +89,7 @@ const EmbedAppModal = (props: IEmbedAppModalProps) => {
+             {t('locale')}
+           </label>
+           <RAGFlowSelect
+-            placeholder={t('selectLocale', { keyPrefix: 'search' })}
++            placeholder="Select a locale"
+             value={locale}
+             onChange={(value) => setLocale(value)}
+             options={languageOptions}
+@@ -123,7 +123,7 @@ const EmbedAppModal = (props: IEmbedAppModalProps) => {
+                 message.success(t('copySuccess'));
+               }}
+               className="ml-2 p-2 hover:text-white transition-colors"
+-              title={t('copyId', { keyPrefix: 'search' })}
++              title="Copy ID"
+             >
+               <svg
+                 xmlns="http://www.w3.org/2000/svg"

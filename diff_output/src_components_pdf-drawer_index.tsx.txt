@@ -1,0 +1,13 @@
+diff --git a/src/components/pdf-drawer/index.tsx b/src/components/pdf-drawer/index.tsx
+index 199f7c3..680aacc 100644
+--- a/src/components/pdf-drawer/index.tsx
++++ b/src/components/pdf-drawer/index.tsx
+@@ -16,7 +16,7 @@ export const PdfDrawer = ({
+   hideModal,
+   documentId,
+   chunk,
+-  width = '90vw',
++  width = '50vw',
+   height,
+ }: IProps) => {
+   return (
