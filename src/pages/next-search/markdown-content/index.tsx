@@ -1,6 +1,5 @@
 import Image from '@/components/image';
 import SvgIcon from '@/components/svg-icon';
-import { Spin } from '@/components/ui/spin';
 import { IReference, IReferenceChunk } from '@/interfaces/database/chat';
 import { getExtension } from '@/utils/document-util';
 import { InfoCircleOutlined } from '@ant-design/icons';
@@ -15,13 +14,14 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import { visitParents } from 'unist-util-visit-parents';
 
-import { useFetchDocumentThumbnailsByIds } from '@/hooks/document-hooks';
 import { useTranslation } from 'react-i18next';
 
 import 'katex/dist/katex.min.css'; // `rehype-katex` does not import the CSS for you
 
 import {
+  currentReg,
   preprocessLaTeX,
+  replaceTextByOldReg,
   replaceThinkToSection,
   showImage,
 } from '@/utils/chat';
@@ -32,7 +32,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { currentReg, replaceTextByOldReg } from '@/pages/next-chats/utils';
+import { useFetchDocumentThumbnailsByIds } from '@/hooks/use-document-request';
 import classNames from 'classnames';
 import { omit } from 'lodash';
 import { pipe } from 'lodash/fp';
@@ -55,7 +55,6 @@ const MarkdownContent = ({
   reference,
   clickDocumentButton,
   content,
-  loading,
 }: {
   content: string;
   loading: boolean;
@@ -233,12 +232,12 @@ const MarkdownContent = ({
             onClick={
               documentId
                 ? handleDocumentButtonClick(
-                  documentId,
-                  chunkItem,
-                  // fileExtension === 'pdf',
-                  // documentUrl,
-                )
-                : () => { }
+                    documentId,
+                    chunkItem,
+                    // fileExtension === 'pdf',
+                    // documentUrl,
+                  )
+                : () => {}
             }
           ></Image>
         ) : (
@@ -259,48 +258,41 @@ const MarkdownContent = ({
   );
 
   return (
-    <div className="relative">
-      {loading && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60 backdrop-blur-sm rounded-lg">
-          <Spin size="default" />
-        </div>
-      )}
-      <Markdown
-        rehypePlugins={[rehypeWrapReference, rehypeKatex, rehypeRaw]}
-        remarkPlugins={[remarkGfm, remarkMath]}
-        className="[&>section.think]:pl-[10px] [&>section.think]:text-[#8b8b8b] [&>section.think]:border-l-2 [&>section.think]:border-l-[#d5d3d3] [&>section.think]:mb-[10px] [&>section.think]:text-xs [&>blockquote]:pl-[10px] [&>blockquote]:border-l-4 [&>blockquote]:border-l-[#ccc] text-sm"
-        components={
-          {
-            'custom-typography': ({ children }: { children: string }) =>
-              renderReference(children),
-            code(props: any) {
-              const { children, className, ...rest } = props;
-              const restProps = omit(rest, 'node');
-              const match = /language-(\w+)/.exec(className || '');
-              return match ? (
-                <SyntaxHighlighter
-                  {...restProps}
-                  PreTag="div"
-                  language={match[1]}
-                  wrapLongLines
-                >
-                  {String(children).replace(/\n$/, '')}
-                </SyntaxHighlighter>
-              ) : (
-                <code
-                  {...restProps}
-                  className={classNames(className, 'text-wrap')}
-                >
-                  {children}
-                </code>
-              );
-            },
-          } as any
-        }
-      >
-        {contentWithCursor}
-      </Markdown>
-    </div>
+    <Markdown
+      rehypePlugins={[rehypeWrapReference, rehypeKatex, rehypeRaw]}
+      remarkPlugins={[remarkGfm, remarkMath]}
+      className="[&>section.think]:pl-[10px] [&>section.think]:text-[#8b8b8b] [&>section.think]:border-l-2 [&>section.think]:border-l-[#d5d3d3] [&>section.think]:mb-[10px] [&>section.think]:text-xs [&>blockquote]:pl-[10px] [&>blockquote]:border-l-4 [&>blockquote]:border-l-[#ccc] text-sm"
+      components={
+        {
+          'custom-typography': ({ children }: { children: string }) =>
+            renderReference(children),
+          code(props: any) {
+            const { children, className, ...rest } = props;
+            const restProps = omit(rest, 'node');
+            const match = /language-(\w+)/.exec(className || '');
+            return match ? (
+              <SyntaxHighlighter
+                {...restProps}
+                PreTag="div"
+                language={match[1]}
+                wrapLongLines
+              >
+                {String(children).replace(/\n$/, '')}
+              </SyntaxHighlighter>
+            ) : (
+              <code
+                {...restProps}
+                className={classNames(className, 'text-wrap')}
+              >
+                {children}
+              </code>
+            );
+          },
+        } as any
+      }
+    >
+      {contentWithCursor}
+    </Markdown>
   );
 };
 

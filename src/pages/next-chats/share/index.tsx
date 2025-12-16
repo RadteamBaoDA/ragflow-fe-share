@@ -3,28 +3,26 @@ import { NextMessageInput } from '@/components/message-input/next';
 import MessageItem from '@/components/message-item';
 import PdfDrawer from '@/components/pdf-drawer';
 import { useClickDrawer } from '@/components/pdf-drawer/hooks';
+import { useSyncThemeFromParams } from '@/components/theme-provider';
 import { MessageType, SharedFrom } from '@/constants/chat';
-import { useFetchNextConversationSSE } from '@/hooks/chat-hooks';
-import { useFetchFlowSSE } from '@/hooks/flow-hooks';
-import { useFetchExternalChatInfo } from '@/hooks/use-chat-request';
+import { useFetchFlowSSE } from '@/hooks/use-agent-request';
+import {
+  useFetchExternalChatInfo,
+  useFetchNextConversationSSE,
+} from '@/hooks/use-chat-request';
+import { useExternalTrace } from '@/hooks/user-external-trace';
 import i18n from '@/locales/config';
-import { useSendButtonDisabled } from '@/pages/chat/hooks';
 import { buildMessageUuidWithRole } from '@/utils/chat';
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { v4 as uuidv4 } from 'uuid';
+import { useSendButtonDisabled } from '../hooks/use-button-disabled';
 import {
   useGetSharedChatSearchParams,
   useSendSharedMessage,
 } from '../hooks/use-send-shared-message';
 import { buildMessageItemReference } from '../utils';
-import { v4 as uuidv4 } from 'uuid';
-import { useSyncThemeFromParams } from '@/components/theme-provider';
-import { useExternalTrace } from '@/hooks/user-external-trace';
 
-/**
- * ChatContainer component for displaying and interacting with shared chat conversations.
- * It handles fetching chat data, managing messages, and user input.
- */
 const ChatContainer = () => {
   const { t } = useTranslation();
   const {
@@ -36,20 +34,11 @@ const ChatContainer = () => {
     email,
   } = useGetSharedChatSearchParams();
 
-  /**
-   * Sync theme from URL parameter
-   */
   useSyncThemeFromParams(theme);
 
-  /**
-   * useClickDrawer hook for handling document click events
-   */
   const { visible, hideModal, documentId, selectedChunk, clickDocumentButton } =
     useClickDrawer();
 
-  /**
-   * useSendSharedMessage hook for handling message sending
-   */
   const {
     handlePressEnter,
     handleInputChange,
@@ -63,14 +52,7 @@ const ChatContainer = () => {
     removeAllMessagesExceptFirst,
   } = useSendSharedMessage();
 
-  /**
-   * useSendButtonDisabled hook for handling send button disabled state
-   */
   const sendDisabled = useSendButtonDisabled(value);
-
-  /**
-   * useFetchExternalChatInfo hook for fetching chat info
-   */
   const { data: chatInfo } = useFetchExternalChatInfo();
 
   /**
@@ -155,27 +137,18 @@ const ChatContainer = () => {
     setInternalChatId(uuidv4());
   };
 
-  /**
-   * Get avatar data
-   */
   const useFetchAvatar = useMemo(() => {
     return from === SharedFrom.Agent
       ? useFetchFlowSSE
       : useFetchNextConversationSSE;
   }, [from]);
 
-  /**
-   * Set locale and visible avatar
-   */
   React.useEffect(() => {
     if (locale && i18n.language !== locale) {
       i18n.changeLanguage(locale);
     }
   }, [locale, visibleAvatar]);
 
-  /**
-   * Fetch avatar data
-   */
   const { data: avatarData } = useFetchAvatar();
 
   if (!conversationId) {

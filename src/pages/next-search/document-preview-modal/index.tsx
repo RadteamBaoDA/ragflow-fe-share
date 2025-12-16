@@ -1,19 +1,19 @@
+import DocumentPreview from '@/components/document-preview';
 import { FileIcon } from '@/components/icon-font';
 import { Modal } from '@/components/ui/modal/modal';
 import {
   useGetChunkHighlights,
   useGetDocumentUrl,
-} from '@/hooks/document-hooks';
+} from '@/hooks/use-document-request';
 import { IModalProps } from '@/interfaces/common';
 import { IReferenceChunk } from '@/interfaces/database/chat';
 import { IChunk } from '@/interfaces/database/knowledge';
-import DocumentPreview from '@/pages/chunk/parsed-result/add-knowledge/components/knowledge-chunk/components/document-preview';
 import { useEffect, useState } from 'react';
 
 interface IProps extends IModalProps<any> {
   documentId: string;
   chunk: IChunk &
-  IReferenceChunk & { docnm_kwd: string; document_name: string };
+    IReferenceChunk & { docnm_kwd: string; document_name: string };
 }
 function getFileExtensionRegex(filename: string): string {
   const match = filename.match(/\.([^.]+)$/);
