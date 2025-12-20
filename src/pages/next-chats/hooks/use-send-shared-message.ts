@@ -74,7 +74,6 @@ export const useSendSharedMessage = () => {
         quote: true,
         question: message.content,
         session_id: get(derivedMessages, '0.session_id'),
-        stream: false, // Disable streaming to prevent browser freeze
       });
 
       if (isCompletionError(res)) {
@@ -102,7 +101,7 @@ export const useSendSharedMessage = () => {
   );
 
   const fetchSessionId = useCallback(async () => {
-    const payload = { question: '', stream: false };
+    const payload = { question: '' };
     const ret = await send({ ...payload, ...data });
     if (isCompletionError(ret)) {
       message.error(ret?.data.message);

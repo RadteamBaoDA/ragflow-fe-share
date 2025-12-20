@@ -285,32 +285,6 @@ export const useSendMessageWithSse = (
         });
 
         console.debug('[SSE] Response received, status:', response.status);
-
-        // Check if this is a non-streaming JSON response
-        const contentType = response.headers.get('content-type') || '';
-        const isJsonResponse = contentType.includes('application/json');
-
-        if (isJsonResponse) {
-          // Handle non-streaming JSON response (when stream: false)
-          console.debug('[SSE] Detected JSON response (non-streaming mode)');
-          const jsonData = await response.json();
-          console.debug('[SSE] JSON response data:', jsonData);
-
-          if (jsonData?.data && typeof jsonData.data !== 'boolean') {
-            // Set the answer directly from JSON response
-            setAnswer({
-              ...jsonData.data,
-              conversationId: body?.conversation_id,
-              chatBoxId: body.chatBoxId,
-            });
-          }
-
-          setDoneValue(body, true);
-          resetAnswer();
-          return { data: jsonData, response };
-        }
-
-        // Handle SSE streaming response
         const res = response.clone().json();
 
         const reader = response?.body

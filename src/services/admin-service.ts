@@ -13,7 +13,7 @@ import { convertTheKeysOfTheObjectToSnake } from '@/utils/common-util';
 import { ResultCode, RetcodeMessage } from '@/utils/request';
 
 const request = axios.create({
-  timeout: 600000, // 10 minutes
+  timeout: 300000,
 });
 
 request.interceptors.request.use((config) => {
