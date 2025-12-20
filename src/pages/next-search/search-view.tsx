@@ -24,6 +24,7 @@ import './index.less';
 import MarkdownContent from './markdown-content';
 import MindMapDrawer from './mindmap-drawer';
 import RetrievalDocuments from './retrieval-documents';
+import { SkeletonCard } from '@/components/skeleton-card';
 export default function SearchingView({
   setIsSearching,
   searchData,
@@ -66,6 +67,7 @@ export default function SearchingView({
   //   changeLanguage();
   // }, [i18n]);
   const [searchtext, setSearchtext] = useState<string>('');
+  const [retrievalLoading, setRetrievalLoading] = useState(false);
 
   useEffect(() => {
     setSearchtext(searchStr);
@@ -160,7 +162,9 @@ export default function SearchingView({
                 <div className="flex justify-start items-start text-text-primary text-2xl">
                   {t('search.AISummary')}
                 </div>
-                {isEmpty(answer) && sendingLoading ? null : (
+                {isEmpty(answer) && sendingLoading ? (
+                  <SkeletonCard className=" mt-2" />
+                ) : (
                   answer.answer && (
                     <div className="border rounded-lg p-4 mt-3 max-h-52 overflow-auto scrollbar-none w-[90%]">
                       <MarkdownContent
@@ -185,19 +189,15 @@ export default function SearchingView({
                     selectedDocumentIds={selectedDocumentIds}
                     setSelectedDocumentIds={setSelectedDocumentIds}
                     onTesting={handleTestChunk}
+                    setLoading={(loading: boolean) => {
+                      setRetrievalLoading(loading);
+                    }}
                   ></RetrievalDocuments>
                 </div>
                 {/* <div className="w-full border-b border-border-default/80 my-6"></div> */}
               </>
             )}
             <div className="mt-3 ">
-              {/* No document found message */}
-              {!isSearchStrEmpty && !loading && !sendingLoading && (!chunks || chunks.length === 0) && (
-                <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <Search size={48} className="text-text-secondary opacity-50 mb-4" />
-                  <p className="text-lg text-text-secondary">{t('search.noDocumentFound')}</p>
-                </div>
-              )}
               {chunks?.length > 0 && (
                 <>
                   {chunks.map((chunk, index) => {
@@ -206,14 +206,17 @@ export default function SearchingView({
                         <div className="w-full flex flex-col">
                           <div className="w-full highlightContent">
                             <ImageWithPopover
-                              id={chunk.img_id}
+                              id={chunk.image_id || chunk.img_id}
                             ></ImageWithPopover>
                             <Popover>
                               <PopoverTrigger asChild>
                                 <div
                                   dangerouslySetInnerHTML={{
                                     __html: DOMPurify.sanitize(
-                                      `${chunk.highlight}...`,
+                                      `${chunk.highlight ??
+                                      chunk.content_with_weight ??
+                                      ''
+                                      }...`,
                                     ),
                                   }}
                                   className="text-sm text-text-primary mb-1"
