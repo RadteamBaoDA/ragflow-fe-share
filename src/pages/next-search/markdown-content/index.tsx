@@ -55,7 +55,6 @@ const MarkdownContent = ({
   reference,
   clickDocumentButton,
   content,
-  loading,
 }: {
   content: string;
   loading: boolean;
@@ -259,48 +258,41 @@ const MarkdownContent = ({
   );
 
   return (
-    <div className="relative">
-      {loading && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60 backdrop-blur-sm rounded-lg">
-          <Spin size="default" />
-        </div>
-      )}
-      <Markdown
-        rehypePlugins={[rehypeWrapReference, rehypeKatex, rehypeRaw]}
-        remarkPlugins={[remarkGfm, remarkMath]}
-        className="[&>section.think]:pl-[10px] [&>section.think]:text-[#8b8b8b] [&>section.think]:border-l-2 [&>section.think]:border-l-[#d5d3d3] [&>section.think]:mb-[10px] [&>section.think]:text-xs [&>blockquote]:pl-[10px] [&>blockquote]:border-l-4 [&>blockquote]:border-l-[#ccc] text-sm"
-        components={
-          {
-            'custom-typography': ({ children }: { children: string }) =>
-              renderReference(children),
-            code(props: any) {
-              const { children, className, ...rest } = props;
-              const restProps = omit(rest, 'node');
-              const match = /language-(\w+)/.exec(className || '');
-              return match ? (
-                <SyntaxHighlighter
-                  {...restProps}
-                  PreTag="div"
-                  language={match[1]}
-                  wrapLongLines
-                >
-                  {String(children).replace(/\n$/, '')}
-                </SyntaxHighlighter>
-              ) : (
-                <code
-                  {...restProps}
-                  className={classNames(className, 'text-wrap')}
-                >
-                  {children}
-                </code>
-              );
-            },
-          } as any
-        }
-      >
-        {contentWithCursor}
-      </Markdown>
-    </div>
+    <Markdown
+      rehypePlugins={[rehypeWrapReference, rehypeKatex, rehypeRaw]}
+      remarkPlugins={[remarkGfm, remarkMath]}
+      className="[&>section.think]:pl-[10px] [&>section.think]:text-[#8b8b8b] [&>section.think]:border-l-2 [&>section.think]:border-l-[#d5d3d3] [&>section.think]:mb-[10px] [&>section.think]:text-xs [&>blockquote]:pl-[10px] [&>blockquote]:border-l-4 [&>blockquote]:border-l-[#ccc] text-sm"
+      components={
+        {
+          'custom-typography': ({ children }: { children: string }) =>
+            renderReference(children),
+          code(props: any) {
+            const { children, className, ...rest } = props;
+            const restProps = omit(rest, 'node');
+            const match = /language-(\w+)/.exec(className || '');
+            return match ? (
+              <SyntaxHighlighter
+                {...restProps}
+                PreTag="div"
+                language={match[1]}
+                wrapLongLines
+              >
+                {String(children).replace(/\n$/, '')}
+              </SyntaxHighlighter>
+            ) : (
+              <code
+                {...restProps}
+                className={classNames(className, 'text-wrap')}
+              >
+                {children}
+              </code>
+            );
+          },
+        } as any
+      }
+    >
+      {contentWithCursor}
+    </Markdown>
   );
 };
 

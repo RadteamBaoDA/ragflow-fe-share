@@ -1,38 +1,49 @@
+import classNames from 'classnames';
 import Markdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
+import {
+  oneDark,
+  oneLight,
+} from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 import 'katex/dist/katex.min.css'; // `rehype-katex` does not import the CSS for you
 
 import { preprocessLaTeX } from '@/utils/chat';
+import { useIsDarkTheme } from '@/components/theme-provider';
+import styles from './index.less';
 
 const HightLightMarkdown = ({
   children,
 }: {
   children: string | null | undefined;
 }) => {
+  const isDarkTheme = useIsDarkTheme();
+
   return (
     <Markdown
       remarkPlugins={[remarkGfm, remarkMath]}
       rehypePlugins={[rehypeRaw, rehypeKatex]}
-      className="text-text-primary text-sm"
+      className={classNames(styles.text)}
       components={
         {
           code(props: any) {
             const { children, className, ...rest } = props;
             const match = /language-(\w+)/.exec(className || '');
             return match ? (
-              <SyntaxHighlighter {...rest} PreTag="div" language={match[1]}>
+              <SyntaxHighlighter
+                {...rest}
+                PreTag="div"
+                language={match[1]}
+                style={isDarkTheme ? oneDark : oneLight}
+              >
                 {String(children).replace(/\n$/, '')}
               </SyntaxHighlighter>
             ) : (
-              <code
-                {...rest}
-                className={`${className} pt-1 px-2 pb-2 m-0 whitespace-break-spaces rounded text-text-primary text-sm`}
-              >
+              <code {...rest} className={`${className} ${styles.code}`}>
                 {children}
               </code>
             );

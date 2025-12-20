@@ -205,6 +205,11 @@ export const useSendMessageWithSse = (
     useSetDoneRecord();
   const timer = useRef<any>();
   const sseRef = useRef<AbortController>();
+  // Refs for throttling SSE updates to prevent UI freezing
+  const pendingAnswerRef = useRef<IAnswer | null>(null);
+  const throttleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastUpdateTimeRef = useRef<number>(0);
+  const UPDATE_INTERVAL_MS = 50; // Update at most every 50ms
 
   const initializeSseRef = useCallback(() => {
     sseRef.current = new AbortController();
@@ -230,6 +235,46 @@ export const useSendMessageWithSse = (
     },
     [setDoneRecordById],
   );
+
+  // Flush pending answer to state
+  const flushPendingAnswer = useCallback(() => {
+    if (pendingAnswerRef.current) {
+      setAnswer(pendingAnswerRef.current);
+      lastUpdateTimeRef.current = Date.now();
+    }
+    throttleTimerRef.current = null;
+  }, []);
+
+  // Cleanup throttle timer
+  const cleanupThrottle = useCallback(() => {
+    if (throttleTimerRef.current !== null) {
+      clearTimeout(throttleTimerRef.current);
+      throttleTimerRef.current = null;
+    }
+    // Flush any remaining pending answer
+    if (pendingAnswerRef.current) {
+      setAnswer(pendingAnswerRef.current);
+      pendingAnswerRef.current = null;
+    }
+  }, []);
+
+  // Throttled setAnswer to prevent UI freezing during rapid SSE updates
+  const throttledSetAnswer = useCallback((answerData: IAnswer) => {
+    pendingAnswerRef.current = answerData;
+
+    const now = Date.now();
+    const timeSinceLastUpdate = now - lastUpdateTimeRef.current;
+
+    // If enough time has passed, update immediately
+    if (timeSinceLastUpdate >= UPDATE_INTERVAL_MS) {
+      flushPendingAnswer();
+    } else if (throttleTimerRef.current === null) {
+      // Schedule an update for the remaining time
+      const remainingTime = UPDATE_INTERVAL_MS - timeSinceLastUpdate;
+      throttleTimerRef.current = setTimeout(flushPendingAnswer, remainingTime);
+    }
+    // If timer is already scheduled, just update pendingAnswerRef (already done above)
+  }, [flushPendingAnswer]);
 
   const send = useCallback(
     async (
@@ -262,6 +307,8 @@ export const useSendMessageWithSse = (
             if (x) {
               const { done, value } = x;
               if (done) {
+                // Flush any pending answer before finishing
+                cleanupThrottle();
                 resetAnswer();
                 break;
               }
@@ -269,7 +316,8 @@ export const useSendMessageWithSse = (
                 const val = JSON.parse(value?.data || '');
                 const d = val?.data;
                 if (typeof d !== 'boolean') {
-                  setAnswer({
+                  // Use throttled update to prevent UI freezing
+                  throttledSetAnswer({
                     ...d,
                     conversationId: body?.conversation_id,
                     chatBoxId: body.chatBoxId,
@@ -282,6 +330,8 @@ export const useSendMessageWithSse = (
           } catch (e) {
             if (e instanceof DOMException && e.name === 'AbortError') {
               console.log('Request was aborted by user or logic.');
+              // Clean up throttle on abort
+              cleanupThrottle();
               break;
             }
           }
@@ -291,12 +341,13 @@ export const useSendMessageWithSse = (
         return { data: await res, response };
       } catch (e) {
         setDoneValue(body, true);
-
+        // Clean up throttle on error
+        cleanupThrottle();
         resetAnswer();
         // Swallow fetch errors silently
       }
     },
-    [initializeSseRef, setDoneValue, url, resetAnswer],
+    [initializeSseRef, setDoneValue, url, resetAnswer, throttledSetAnswer, cleanupThrottle],
   );
 
   const stopOutputMessage = useCallback(() => {
@@ -543,14 +594,14 @@ export const useSelectDerivedMessages = () => {
           const latestMessage = nextMessages.at(-1);
           nextMessages = latestMessage
             ? [
-                ...nextMessages.slice(0, -1),
-                {
-                  ...latestMessage,
-                  content: '',
-                  reference: undefined,
-                  prompt: undefined,
-                },
-              ]
+              ...nextMessages.slice(0, -1),
+              {
+                ...latestMessage,
+                content: '',
+                reference: undefined,
+                prompt: undefined,
+              },
+            ]
             : nextMessages;
           return nextMessages;
         }
@@ -609,14 +660,14 @@ export const useRemoveMessagesAfterCurrentMessage = (
           const latestMessage = nextMessages.at(-1);
           nextMessages = latestMessage
             ? [
-                ...nextMessages.slice(0, -1),
-                {
-                  ...latestMessage,
-                  content: '',
-                  reference: undefined,
-                  prompt: undefined,
-                },
-              ]
+              ...nextMessages.slice(0, -1),
+              {
+                ...latestMessage,
+                content: '',
+                reference: undefined,
+                prompt: undefined,
+              },
+            ]
             : nextMessages;
           return {
             ...pre,
