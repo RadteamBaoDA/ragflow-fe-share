@@ -73,7 +73,7 @@ const errorHandler = (error: {
 
 const request = axios.create({
   //   errorHandler,
-  timeout: 300000,
+  timeout: 600000, // 10 minutes
   //   getResponse: true,
 });
 
@@ -141,6 +141,6 @@ export const post = (url: string, body: any) => {
   return request.post(url, { data: body });
 };
 
-export const drop = () => {};
+export const drop = () => { };
 
-export const put = () => {};
+export const put = () => { };
