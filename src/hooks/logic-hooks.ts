@@ -205,11 +205,6 @@ export const useSendMessageWithSse = (
     useSetDoneRecord();
   const timer = useRef<any>();
   const sseRef = useRef<AbortController>();
-  // Refs for throttling SSE updates to prevent UI freezing
-  const pendingAnswerRef = useRef<IAnswer | null>(null);
-  const throttleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastUpdateTimeRef = useRef<number>(0);
-  const UPDATE_INTERVAL_MS = 50; // Update at most every 50ms
 
   const initializeSseRef = useCallback(() => {
     sseRef.current = new AbortController();
@@ -236,45 +231,39 @@ export const useSendMessageWithSse = (
     [setDoneRecordById],
   );
 
-  // Flush pending answer to state
-  const flushPendingAnswer = useCallback(() => {
-    if (pendingAnswerRef.current) {
-      setAnswer(pendingAnswerRef.current);
-      lastUpdateTimeRef.current = Date.now();
-    }
-    throttleTimerRef.current = null;
+  // Helper to yield to browser event loop
+  const yieldToMain = useCallback(() => {
+    return new Promise<void>((resolve) => setTimeout(resolve, 0));
   }, []);
 
-  // Cleanup throttle timer
-  const cleanupThrottle = useCallback(() => {
-    if (throttleTimerRef.current !== null) {
-      clearTimeout(throttleTimerRef.current);
-      throttleTimerRef.current = null;
+  // Refs for batching state updates
+  const pendingAnswerRef = useRef<IAnswer | null>(null);
+  const updateScheduledRef = useRef(false);
+
+  // Schedule a batched state update
+  const scheduleAnswerUpdate = useCallback((answerData: IAnswer) => {
+    pendingAnswerRef.current = answerData;
+
+    if (!updateScheduledRef.current) {
+      updateScheduledRef.current = true;
+      // Use setTimeout to batch updates and yield to main thread
+      setTimeout(() => {
+        if (pendingAnswerRef.current) {
+          setAnswer(pendingAnswerRef.current);
+        }
+        updateScheduledRef.current = false;
+      }, 16); // ~60fps, gives browser time to breathe
     }
-    // Flush any remaining pending answer
+  }, []);
+
+  // Flush any pending updates immediately
+  const flushPendingUpdate = useCallback(() => {
     if (pendingAnswerRef.current) {
       setAnswer(pendingAnswerRef.current);
       pendingAnswerRef.current = null;
     }
+    updateScheduledRef.current = false;
   }, []);
-
-  // Throttled setAnswer to prevent UI freezing during rapid SSE updates
-  const throttledSetAnswer = useCallback((answerData: IAnswer) => {
-    pendingAnswerRef.current = answerData;
-
-    const now = Date.now();
-    const timeSinceLastUpdate = now - lastUpdateTimeRef.current;
-
-    // If enough time has passed, update immediately
-    if (timeSinceLastUpdate >= UPDATE_INTERVAL_MS) {
-      flushPendingAnswer();
-    } else if (throttleTimerRef.current === null) {
-      // Schedule an update for the remaining time
-      const remainingTime = UPDATE_INTERVAL_MS - timeSinceLastUpdate;
-      throttleTimerRef.current = setTimeout(flushPendingAnswer, remainingTime);
-    }
-    // If timer is already scheduled, just update pendingAnswerRef (already done above)
-  }, [flushPendingAnswer]);
 
   const send = useCallback(
     async (
@@ -284,6 +273,7 @@ export const useSendMessageWithSse = (
       initializeSseRef();
       try {
         setDoneValue(body, false);
+        console.debug('[SSE] Starting request to:', url);
         const response = await fetch(url, {
           method: 'POST',
           headers: {
@@ -294,6 +284,7 @@ export const useSendMessageWithSse = (
           signal: controller?.signal || sseRef.current?.signal,
         });
 
+        console.debug('[SSE] Response received, status:', response.status);
         const res = response.clone().json();
 
         const reader = response?.body
@@ -301,53 +292,65 @@ export const useSendMessageWithSse = (
           .pipeThrough(new EventSourceParserStream())
           .getReader();
 
+        let eventCount = 0;
+        const YIELD_INTERVAL = 10; // Yield to main thread every N events
+
         while (true) {
           try {
             const x = await reader?.read();
             if (x) {
               const { done, value } = x;
               if (done) {
-                // Flush any pending answer before finishing
-                cleanupThrottle();
+                console.debug('[SSE] Stream done, total events:', eventCount);
+                // Flush any pending updates before finishing
+                flushPendingUpdate();
                 resetAnswer();
                 break;
               }
+              eventCount++;
+
+              // Yield to main thread periodically to keep browser responsive
+              if (eventCount % YIELD_INTERVAL === 0) {
+                await yieldToMain();
+              }
+
               try {
                 const val = JSON.parse(value?.data || '');
                 const d = val?.data;
                 if (typeof d !== 'boolean') {
-                  // Use throttled update to prevent UI freezing
-                  throttledSetAnswer({
+                  // Use batched update to prevent overwhelming React
+                  scheduleAnswerUpdate({
                     ...d,
                     conversationId: body?.conversation_id,
                     chatBoxId: body.chatBoxId,
                   });
                 }
               } catch (e) {
-                // Swallow parse errors silently
+                console.debug('[SSE] Parse error at event', eventCount, ':', e);
               }
             }
           } catch (e) {
             if (e instanceof DOMException && e.name === 'AbortError') {
-              console.log('Request was aborted by user or logic.');
-              // Clean up throttle on abort
-              cleanupThrottle();
+              console.log('[SSE] Request was aborted by user or logic.');
+              flushPendingUpdate();
               break;
             }
+            console.debug('[SSE] Read error:', e);
           }
         }
         setDoneValue(body, true);
+        console.debug('[SSE] Request completed');
         resetAnswer();
         return { data: await res, response };
       } catch (e) {
+        console.error('[SSE] Fatal error:', e);
         setDoneValue(body, true);
-        // Clean up throttle on error
-        cleanupThrottle();
+        flushPendingUpdate();
         resetAnswer();
         // Swallow fetch errors silently
       }
     },
-    [initializeSseRef, setDoneValue, url, resetAnswer, throttledSetAnswer, cleanupThrottle],
+    [initializeSseRef, setDoneValue, url, resetAnswer, yieldToMain, scheduleAnswerUpdate, flushPendingUpdate],
   );
 
   const stopOutputMessage = useCallback(() => {

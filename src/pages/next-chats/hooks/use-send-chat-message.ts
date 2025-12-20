@@ -197,11 +197,14 @@ export const useSendMessage = (controller: AbortController) => {
   });
 
   useEffect(() => {
-    //  #1289
-    if (answer.answer && conversationId && isNew !== 'true') {
+    //  #1289 - Updated to use answer.conversationId for more reliable detection
+    // This ensures streaming works even when transitioning from new to existing conversation
+    console.debug('[Chat] Answer effect - answer:', answer.answer?.length || 0, 'conversationId:', conversationId, 'answer.conversationId:', answer.conversationId);
+    if (answer.answer && (conversationId || answer.conversationId)) {
+      console.debug('[Chat] Calling addNewestAnswer');
       addNewestAnswer(answer);
     }
-  }, [answer, addNewestAnswer, conversationId, isNew]);
+  }, [answer, addNewestAnswer, conversationId]);
 
   const handlePressEnter = useCallback(() => {
     if (trim(value) === '') return;
