@@ -141,6 +141,6 @@ export const post = (url: string, body: any) => {
   return request.post(url, { data: body });
 };
 
-export const drop = () => {};
+export const drop = () => { };
 
-export const put = () => {};
+export const put = () => { };
