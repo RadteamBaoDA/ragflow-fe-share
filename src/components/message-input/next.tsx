@@ -15,7 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { t } from 'i18next';
+import { useTranslation } from 'react-i18next';
 import { CircleStop, Paperclip, Send, Upload, X } from 'lucide-react';
 import * as React from 'react';
 import { toast } from 'sonner';
@@ -51,13 +51,22 @@ export function NextMessageInput({
   onPressEnter,
   removeFile,
 }: IProps) {
+  const { t } = useTranslation();
   const [files, setFiles] = React.useState<File[]>([]);
 
-  const onFileReject = React.useCallback((file: File, message: string) => {
-    toast(message, {
-      description: `"${file.name.length > 20 ? `${file.name.slice(0, 20)}...` : file.name}" has been rejected`,
-    });
-  }, []);
+  const onFileReject = React.useCallback(
+    (file: File, message: string) => {
+      toast(message, {
+        description: t('chat.fileRejected', {
+          fileName:
+            file.name.length > 20
+              ? `${file.name.slice(0, 20)}...`
+              : file.name,
+        }),
+      });
+    },
+    [t],
+  );
 
   const submit = React.useCallback(() => {
     if (isUploading) return;
@@ -106,10 +115,8 @@ export function NextMessageInput({
           <div className="flex items-center justify-center rounded-full border p-2.5">
             <Upload className="size-6 text-muted-foreground" />
           </div>
-          <p className="font-medium text-sm">Drag & drop files here</p>
-          <p className="text-muted-foreground text-xs">
-            Upload max 5 files each up to 5MB
-          </p>
+          <p className="font-medium text-sm">{t('chat.dragAndDrop')}</p>
+          <p className="text-muted-foreground text-xs">{t('chat.uploadMax')}</p>
         </div>
       </FileUploadDropzone>
       <form
@@ -162,7 +169,7 @@ export function NextMessageInput({
                 disabled={isUploading || sendLoading}
               >
                 <Paperclip className="size-3.5" />
-                <span className="sr-only">Attach file</span>
+                <span className="sr-only">{t('chat.attachFile')}</span>
               </Button>
             </FileUploadTrigger>
           )}
@@ -178,7 +185,7 @@ export function NextMessageInput({
               }
             >
               <Send />
-              <span className="sr-only">Send message</span>
+              <span className="sr-only">{t('chat.sendMessage')}</span>
             </Button>
           )}
         </div>

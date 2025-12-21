@@ -496,8 +496,18 @@ export default {
       },
       cancel: 'キャンセル',
       chatSetting: 'チャット設定',
+      tocEnhance: '目次強化',
+      tocEnhanceTip:
+        'ドキュメントの解析中に生成された目次情報を使用し、ユーザーのクエリに関連する目次項目を返すことで、関連するチャンクの検索とランク付けを改善します。',
       emptyConversation: '空',
       you: 'あなた',
+      dragAndDrop: 'ここにファイルをドラッグ＆ドロップ',
+      uploadMax: '最大5ファイル、各5MBまでアップロード可能',
+      attachFile: 'ファイルを添付',
+      sendMessage: 'メッセージを送信',
+      fileRejected: '"{{fileName}}" は拒否されました',
+      documentPreviewer: 'ドキュメントプレビュー',
+      reset: 'リセット',
     },
     setting: {
       profile: 'プロファイル',

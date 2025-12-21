@@ -11,6 +11,8 @@ interface IProps extends IModalProps<any> {
   height?: string | number;
 }
 
+import { useTranslation } from 'react-i18next';
+
 export const PdfDrawer = ({
   visible = false,
   hideModal,
@@ -19,9 +21,10 @@ export const PdfDrawer = ({
   width = '90vw',
   height,
 }: IProps) => {
+  const { t } = useTranslation();
   return (
     <Drawer
-      title="Document Previewer"
+      title={t('chat.documentPreviewer')}
       onClose={hideModal}
       open={visible}
       width={width}
