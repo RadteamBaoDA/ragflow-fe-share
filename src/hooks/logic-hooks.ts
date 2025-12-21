@@ -230,40 +230,9 @@ export const useSendMessageWithSse = (
     },
     [setDoneRecordById],
   );
-
-  // Helper to yield to browser event loop
-  const yieldToMain = useCallback(() => {
-    return new Promise<void>((resolve) => setTimeout(resolve, 0));
-  }, []);
-
-  // Refs for batching state updates
-  const pendingAnswerRef = useRef<IAnswer | null>(null);
-  const updateScheduledRef = useRef(false);
-
-  // Schedule a batched state update
-  const scheduleAnswerUpdate = useCallback((answerData: IAnswer) => {
-    pendingAnswerRef.current = answerData;
-
-    if (!updateScheduledRef.current) {
-      updateScheduledRef.current = true;
-      // Use setTimeout to batch updates and yield to main thread
-      setTimeout(() => {
-        if (pendingAnswerRef.current) {
-          setAnswer(pendingAnswerRef.current);
-        }
-        updateScheduledRef.current = false;
-      }, 16); // ~60fps, gives browser time to breathe
-    }
-  }, []);
-
-  // Flush any pending updates immediately
-  const flushPendingUpdate = useCallback(() => {
-    if (pendingAnswerRef.current) {
-      setAnswer(pendingAnswerRef.current);
-      pendingAnswerRef.current = null;
-    }
-    updateScheduledRef.current = false;
-  }, []);
+  // Timeout constants
+  const RESPONSE_TIMEOUT_MS = 180000; // 3 minutes for initial response
+  const STREAM_TIMEOUT_MS = 720000; // 12 minutes for stream inactivity
 
   const send = useCallback(
     async (
@@ -271,9 +240,23 @@ export const useSendMessageWithSse = (
       controller?: AbortController,
     ): Promise<{ response: Response; data: ResponseType } | undefined> => {
       initializeSseRef();
+
+      // Create a timeout controller for the initial fetch
+      const timeoutController = new AbortController();
+      const effectiveController = controller || sseRef.current;
+
+      // Link the timeout controller to the effective controller
+      const abortHandler = () => timeoutController.abort();
+      effectiveController?.signal?.addEventListener('abort', abortHandler);
+
+      // Set up initial response timeout
+      const responseTimeoutId = setTimeout(() => {
+        console.warn('[SSE] Response timeout - aborting request');
+        timeoutController.abort();
+      }, RESPONSE_TIMEOUT_MS);
+
       try {
         setDoneValue(body, false);
-        console.debug('[SSE] Starting request to:', url);
         const response = await fetch(url, {
           method: 'POST',
           headers: {
@@ -281,10 +264,12 @@ export const useSendMessageWithSse = (
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(omit(body, 'chatBoxId')),
-          signal: controller?.signal || sseRef.current?.signal,
+          signal: timeoutController.signal,
         });
 
-        console.debug('[SSE] Response received, status:', response.status);
+        // Clear initial response timeout since we got a response
+        clearTimeout(responseTimeoutId);
+
         const res = response.clone().json();
 
         const reader = response?.body
@@ -292,8 +277,28 @@ export const useSendMessageWithSse = (
           .pipeThrough(new EventSourceParserStream())
           .getReader();
 
-        let eventCount = 0;
-        const YIELD_INTERVAL = 10; // Yield to main thread every N events
+        // Set up stream inactivity timeout
+        let streamTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+        const resetStreamTimeout = () => {
+          if (streamTimeoutId) {
+            clearTimeout(streamTimeoutId);
+          }
+          streamTimeoutId = setTimeout(() => {
+            console.warn('[SSE] Stream timeout - no data received, aborting');
+            timeoutController.abort();
+          }, STREAM_TIMEOUT_MS);
+        };
+
+        const clearStreamTimeout = () => {
+          if (streamTimeoutId) {
+            clearTimeout(streamTimeoutId);
+            streamTimeoutId = null;
+          }
+        };
+
+        // Start the stream timeout
+        resetStreamTimeout();
 
         while (true) {
           try {
@@ -301,56 +306,55 @@ export const useSendMessageWithSse = (
             if (x) {
               const { done, value } = x;
               if (done) {
-                console.debug('[SSE] Stream done, total events:', eventCount);
-                // Flush any pending updates before finishing
-                flushPendingUpdate();
+                clearStreamTimeout();
                 resetAnswer();
                 break;
               }
-              eventCount++;
 
-              // Yield to main thread periodically to keep browser responsive
-              if (eventCount % YIELD_INTERVAL === 0) {
-                await yieldToMain();
-              }
+              // Reset stream timeout on each received event
+              resetStreamTimeout();
 
               try {
                 const val = JSON.parse(value?.data || '');
                 const d = val?.data;
                 if (typeof d !== 'boolean') {
-                  // Use batched update to prevent overwhelming React
-                  scheduleAnswerUpdate({
+                  setAnswer({
                     ...d,
                     conversationId: body?.conversation_id,
                     chatBoxId: body.chatBoxId,
                   });
                 }
               } catch (e) {
-                console.debug('[SSE] Parse error at event', eventCount, ':', e);
+                // Swallow parse errors silently
               }
             }
           } catch (e) {
+            clearStreamTimeout();
             if (e instanceof DOMException && e.name === 'AbortError') {
-              console.log('[SSE] Request was aborted by user or logic.');
-              flushPendingUpdate();
+              console.log('Request was aborted by user, logic, or timeout.');
               break;
             }
-            console.debug('[SSE] Read error:', e);
           }
         }
+
+        // Cleanup
+        effectiveController?.signal?.removeEventListener('abort', abortHandler);
         setDoneValue(body, true);
-        console.debug('[SSE] Request completed');
         resetAnswer();
         return { data: await res, response };
       } catch (e) {
-        console.error('[SSE] Fatal error:', e);
+        clearTimeout(responseTimeoutId);
+        effectiveController?.signal?.removeEventListener('abort', abortHandler);
         setDoneValue(body, true);
-        flushPendingUpdate();
         resetAnswer();
+
+        if (e instanceof DOMException && e.name === 'AbortError') {
+          console.log('Request was aborted - possibly due to timeout');
+        }
         // Swallow fetch errors silently
       }
     },
-    [initializeSseRef, setDoneValue, url, resetAnswer, yieldToMain, scheduleAnswerUpdate, flushPendingUpdate],
+    [initializeSseRef, setDoneValue, url, resetAnswer],
   );
 
   const stopOutputMessage = useCallback(() => {
