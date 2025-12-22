@@ -205,10 +205,33 @@ export const useSendMessageWithSse = (
     useSetDoneRecord();
   const timer = useRef<any>();
   const sseRef = useRef<AbortController>();
+  // RAF throttling refs for smooth UI during streaming
+  const pendingAnswerRef = useRef<IAnswer | null>(null);
+  const rafIdRef = useRef<number | null>(null);
 
   const initializeSseRef = useCallback(() => {
     sseRef.current = new AbortController();
   }, []);
+
+  // Flush pending answer to state (called via RAF)
+  const flushPendingAnswer = useCallback(() => {
+    if (pendingAnswerRef.current) {
+      setAnswer(pendingAnswerRef.current);
+      pendingAnswerRef.current = null;
+    }
+    rafIdRef.current = null;
+  }, []);
+
+  // Throttled answer update using RAF for smooth UI
+  const throttledSetAnswer = useCallback(
+    (newAnswer: IAnswer) => {
+      pendingAnswerRef.current = newAnswer;
+      if (rafIdRef.current === null) {
+        rafIdRef.current = requestAnimationFrame(flushPendingAnswer);
+      }
+    },
+    [flushPendingAnswer],
+  );
 
   const resetAnswer = useCallback(() => {
     if (timer.current) {
@@ -307,6 +330,15 @@ export const useSendMessageWithSse = (
               const { done, value } = x;
               if (done) {
                 clearStreamTimeout();
+                // Flush any pending answer immediately on stream end
+                if (pendingAnswerRef.current) {
+                  setAnswer(pendingAnswerRef.current);
+                  pendingAnswerRef.current = null;
+                }
+                if (rafIdRef.current !== null) {
+                  cancelAnimationFrame(rafIdRef.current);
+                  rafIdRef.current = null;
+                }
                 resetAnswer();
                 break;
               }
@@ -318,7 +350,7 @@ export const useSendMessageWithSse = (
                 const val = JSON.parse(value?.data || '');
                 const d = val?.data;
                 if (typeof d !== 'boolean') {
-                  setAnswer({
+                  throttledSetAnswer({
                     ...d,
                     conversationId: body?.conversation_id,
                     chatBoxId: body.chatBoxId,
@@ -354,11 +386,25 @@ export const useSendMessageWithSse = (
         // Swallow fetch errors silently
       }
     },
-    [initializeSseRef, setDoneValue, url, resetAnswer],
+    [initializeSseRef, setDoneValue, url, resetAnswer, throttledSetAnswer],
   );
 
   const stopOutputMessage = useCallback(() => {
     sseRef.current?.abort();
+    // Cancel any pending RAF on stop
+    if (rafIdRef.current !== null) {
+      cancelAnimationFrame(rafIdRef.current);
+      rafIdRef.current = null;
+    }
+  }, []);
+
+  // Cleanup RAF on unmount
+  useEffect(() => {
+    return () => {
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current);
+      }
+    };
   }, []);
 
   return {

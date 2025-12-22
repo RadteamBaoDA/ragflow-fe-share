@@ -60,7 +60,7 @@ const ChatContainer = () => {
     stopOutputMessage,
     scrollRef,
     messageContainerRef,
-    removeAllMessagesExceptFirst,
+    resetSession,
   } = useSendSharedMessage();
 
   /**
@@ -149,8 +149,8 @@ const ChatContainer = () => {
   /**
    * Handle reset for chat
    */
-  const handleReset = () => {
-    removeAllMessagesExceptFirst();
+  const handleReset = async () => {
+    await resetSession();
     setLastTraceId(uuidv4());
     setInternalChatId(uuidv4());
   };

@@ -119,6 +119,12 @@ export const useSendSharedMessage = () => {
     }
   }, [answer, addNewestAnswer]);
 
+  // Reset session: clear all messages and fetch a new session_id
+  const resetSession = useCallback(async () => {
+    removeAllMessages();
+    await fetchSessionId();
+  }, [removeAllMessages, fetchSessionId]);
+
   const handlePressEnter = useCallback(
     (documentIds: string[]) => {
       if (trim(value) === '') return;
@@ -154,5 +160,6 @@ export const useSendSharedMessage = () => {
     messageContainerRef,
     removeAllMessages,
     removeAllMessagesExceptFirst,
+    resetSession,
   };
 };
