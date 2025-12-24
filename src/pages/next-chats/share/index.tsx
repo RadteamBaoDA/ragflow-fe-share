@@ -203,7 +203,6 @@ const ChatContainer = () => {
       <EmbedContainer
         title={chatInfo.title}
         avatar={chatInfo.avatar}
-        handleReset={handleReset}
       >
         <div className="flex flex-1 flex-col p-2.5  h-[90vh] m-3">
           <div

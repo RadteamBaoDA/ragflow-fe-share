@@ -32,16 +32,18 @@ export function EmbedContainer({
             <RAGFlowAvatar avatar={avatar} name={title} isPerson />
             <div className="text-xl text-foreground">{title}</div>
           </div>
-          <Button
-            variant={'secondary'}
-            className="text-sm text-foreground cursor-pointer"
-            onClick={handleReset}
-          >
-            <div className="flex gap-1 items-center">
-              <RefreshCcw size={14} />
-              <span className="text-lg ">{t('chat.reset')}</span>
-            </div>
-          </Button>
+          {handleReset && (
+            <Button
+              variant={'secondary'}
+              className="text-sm text-foreground cursor-pointer"
+              onClick={handleReset}
+            >
+              <div className="flex gap-1 items-center">
+                <RefreshCcw size={14} />
+                <span className="text-lg ">{t('chat.reset')}</span>
+              </div>
+            </Button>
+          )}
         </div>
         {children}
       </div>
