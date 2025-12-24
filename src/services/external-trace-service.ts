@@ -28,6 +28,19 @@ interface TraceResponse {
     error?: string;
 }
 
+interface FeedbackPayload {
+    email: string;
+    traceId: string;
+    value: number;
+    name?: string;
+    comment?: string;
+}
+
+interface FeedbackResponse {
+    success: boolean;
+    error?: string;
+}
+
 /**
  * ExternalTraceApi is a class that provides methods for sending trace data to an external tracing API.
  */
@@ -73,6 +86,26 @@ class ExternalTraceApi {
          * Send a POST request to the external tracing API.
          */
         const { data } = await this.client.post<TraceResponse>(path, payload);
+        return data;
+    }
+
+    /**
+     * Sends a feedback payload to the external tracing API.
+     * @param payload The feedback data to send.
+     * @returns A promise that resolves to a FeedbackResponse indicating success or failure.
+     */
+    async sendFeedback(payload: FeedbackPayload): Promise<FeedbackResponse> {
+        /**
+         * Determine the correct path. If baseURL already includes the path, use empty string.
+         */
+        const baseURL = this.client.defaults.baseURL || '';
+        const path = baseURL.includes('/api/external/feedback')
+            ? ''
+            : '/api/external/feedback';
+        /**
+         * Send a POST request to the external tracing API.
+         */
+        const { data } = await this.client.post<FeedbackResponse>(path, payload);
         return data;
     }
 

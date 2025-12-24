@@ -24,6 +24,8 @@ interface IProps {
   showLikeButton: boolean;
   audioBinary?: string;
   showLoudspeaker?: boolean;
+  onLike?: () => void;
+  onDislike?: (feedback: string) => void;
 }
 
 export const AssistantGroupButton = ({
@@ -33,6 +35,8 @@ export const AssistantGroupButton = ({
   audioBinary,
   showLikeButton,
   showLoudspeaker = true,
+  onLike,
+  onDislike,
 }: IProps) => {
   const { visible, hideModal, showModal, onFeedbackOk, loading } =
     useSendFeedback(messageId);
@@ -46,7 +50,18 @@ export const AssistantGroupButton = ({
 
   const handleLike = useCallback(() => {
     onFeedbackOk({ thumbup: true });
-  }, [onFeedbackOk]);
+    onLike?.();
+  }, [onFeedbackOk, onLike]);
+
+  const handleFeedbackOk = useCallback(
+    async (params: IFeedbackRequestBody) => {
+      await onFeedbackOk(params);
+      if (params.thumbup === false) {
+        onDislike?.(params.feedback || '');
+      }
+    },
+    [onFeedbackOk, onDislike],
+  );
 
   return (
     <>
@@ -82,7 +97,7 @@ export const AssistantGroupButton = ({
         <FeedbackModal
           visible={visible}
           hideModal={hideModal}
-          onOk={onFeedbackOk}
+          onOk={handleFeedbackOk}
           loading={loading}
         ></FeedbackModal>
       )}
