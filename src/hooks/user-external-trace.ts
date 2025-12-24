@@ -47,7 +47,7 @@ export function useExternalTrace({ email, chatId }: UseExternalTraceOptions) {
                     usage,
                     lastTraceId || undefined,
                 );
-                if (result.traceId && !lastTraceId) setLastTraceId(result.traceId);
+                if (result.traceId) setLastTraceId(result.traceId);
                 return result;
             } finally {
                 setIsTracing(false);
