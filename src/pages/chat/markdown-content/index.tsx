@@ -219,12 +219,12 @@ const MarkdownContent = ({
             onClick={
               documentId
                 ? handleDocumentButtonClick(
-                    documentId,
-                    chunkItem,
-                    fileExtension === 'pdf',
-                    documentUrl,
-                  )
-                : () => {}
+                  documentId,
+                  chunkItem,
+                  fileExtension === 'pdf',
+                  documentUrl,
+                )
+                : () => { }
             }
           ></Image>
         ) : (
