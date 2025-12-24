@@ -86,7 +86,7 @@ const MarkdownContent = ({
     [clickDocumentButton],
   );
 
-  const rehypeWrapReference = () => {
+  const rehypeWrapReference = useCallback(() => {
     return function wrapTextTransform(tree: any) {
       visitParents(tree, 'text', (node, ancestors) => {
         const latestAncestor = ancestors.at(-1);
@@ -101,7 +101,7 @@ const MarkdownContent = ({
         }
       });
     };
-  };
+  }, []);
 
   const getReferenceInfo = useCallback(
     (chunkIndex: number) => {
@@ -242,39 +242,46 @@ const MarkdownContent = ({
     [getPopoverContent, getReferenceInfo, handleDocumentButtonClick],
   );
 
+  const rehypePlugins = useMemo(
+    () => [rehypeWrapReference, rehypeKatex, rehypeRaw],
+    [rehypeWrapReference],
+  );
+  const remarkPlugins = useMemo(() => [remarkGfm, remarkMath], []);
+
+  const components = useMemo(
+    () =>
+      ({
+        'custom-typography': ({ children }: { children: string }) =>
+          renderReference(children),
+        code(props: any) {
+          const { children, className, ...rest } = props;
+          const restProps = omit(rest, 'node');
+          const match = /language-(\w+)/.exec(className || '');
+          return match ? (
+            <SyntaxHighlighter
+              {...restProps}
+              PreTag="div"
+              language={match[1]}
+              wrapLongLines
+            >
+              {String(children).replace(/\n$/, '')}
+            </SyntaxHighlighter>
+          ) : (
+            <code {...restProps} className={classNames(className, 'text-wrap')}>
+              {children}
+            </code>
+          );
+        },
+      }) as any,
+    [renderReference],
+  );
+
   return (
     <Markdown
-      rehypePlugins={[rehypeWrapReference, rehypeKatex, rehypeRaw]}
-      remarkPlugins={[remarkGfm, remarkMath]}
+      rehypePlugins={rehypePlugins}
+      remarkPlugins={remarkPlugins}
       className={styles.markdownContentWrapper}
-      components={
-        {
-          'custom-typography': ({ children }: { children: string }) =>
-            renderReference(children),
-          code(props: any) {
-            const { children, className, ...rest } = props;
-            const restProps = omit(rest, 'node');
-            const match = /language-(\w+)/.exec(className || '');
-            return match ? (
-              <SyntaxHighlighter
-                {...restProps}
-                PreTag="div"
-                language={match[1]}
-                wrapLongLines
-              >
-                {String(children).replace(/\n$/, '')}
-              </SyntaxHighlighter>
-            ) : (
-              <code
-                {...restProps}
-                className={classNames(className, 'text-wrap')}
-              >
-                {children}
-              </code>
-            );
-          },
-        } as any
-      }
+      components={components}
     >
       {contentWithCursor}
     </Markdown>
