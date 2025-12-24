@@ -20,6 +20,7 @@ import { buildMessageItemReference } from '../utils';
 import { v4 as uuidv4 } from 'uuid';
 import { useSyncThemeFromParams } from '@/components/theme-provider';
 import { useExternalTrace } from '@/hooks/user-external-trace';
+import { useCallback } from 'react';
 
 /**
  * ChatContainer component for displaying and interacting with shared chat conversations.
@@ -88,11 +89,26 @@ const ChatContainer = () => {
   /**
    * useExternalTrace hook for tracing user and assistant messages
    */
-  const { traceUserMessage, traceAssistantResponse, setLastTraceId } =
-    useExternalTrace({
-      email,
-      chatId: internalChatId,
-    });
+  const {
+    traceUserMessage,
+    traceAssistantResponse,
+    traceScore,
+    setLastTraceId,
+  } = useExternalTrace({
+    email,
+    chatId: internalChatId,
+  });
+
+  const handleLike = useCallback(() => {
+    traceScore(1);
+  }, [traceScore]);
+
+  const handleDislike = useCallback(
+    (feedback: string) => {
+      traceScore(0, feedback);
+    },
+    [traceScore],
+  );
 
   /**
    * Handle press enter for sending message
@@ -219,8 +235,10 @@ const ChatContainer = () => {
                     }
                     index={i}
                     clickDocumentButton={clickDocumentButton}
-                    showLikeButton={false}
+                    showLikeButton={true}
                     showLoudspeaker={false}
+                    onLike={handleLike}
+                    onDislike={handleDislike}
                   ></MessageItem>
                 );
               })}

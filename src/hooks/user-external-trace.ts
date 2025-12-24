@@ -56,9 +56,30 @@ export function useExternalTrace({ email, chatId }: UseExternalTraceOptions) {
         [email, chatId, lastTraceId],
     );
 
+    const traceScore = useCallback(
+        async (score: number, comment?: string, name: string = "user-feedback") => {
+            if (!lastTraceId) return;
+            setIsTracing(true);
+            try {
+                const result = await externalTraceApi.sendFeedback({
+                    email,
+                    traceId: lastTraceId,
+                    value: score,
+                    comment,
+                    name,
+                });
+                return result;
+            } finally {
+                setIsTracing(false);
+            }
+        },
+        [email, lastTraceId],
+    );
+
     return {
         traceUserMessage,
         traceAssistantResponse,
+        traceScore,
         isTracing,
         lastTraceId,
         setLastTraceId,
