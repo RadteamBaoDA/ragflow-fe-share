@@ -64,6 +64,7 @@ export const useSendSharedMessage = () => {
     messageContainerRef,
     removeAllMessages,
     removeAllMessagesExceptFirst,
+    scrollToBottom,
   } = useSelectDerivedMessages();
   const [hasError, setHasError] = useState(false);
 
@@ -116,8 +117,10 @@ export const useSendSharedMessage = () => {
   useEffect(() => {
     if (answer.answer) {
       addNewestAnswer(answer);
+      // Explicitly scroll to bottom during streaming
+      scrollToBottom();
     }
-  }, [answer, addNewestAnswer]);
+  }, [answer, addNewestAnswer, scrollToBottom]);
 
   // Reset session: clear all messages and fetch a new session_id
   const resetSession = useCallback(async () => {

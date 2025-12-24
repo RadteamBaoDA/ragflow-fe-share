@@ -205,29 +205,43 @@ export const useSendMessageWithSse = (
     useSetDoneRecord();
   const timer = useRef<any>();
   const sseRef = useRef<AbortController>();
-  // RAF throttling refs for smooth UI during streaming
+  // Throttling refs for smooth UI during streaming
   const pendingAnswerRef = useRef<IAnswer | null>(null);
-  const rafIdRef = useRef<number | null>(null);
+  const throttleTimeoutRef = useRef<number | null>(null);
+  const lastUpdateRef = useRef<number>(0);
 
   const initializeSseRef = useCallback(() => {
     sseRef.current = new AbortController();
   }, []);
 
-  // Flush pending answer to state (called via RAF)
+  // Flush pending answer to state
   const flushPendingAnswer = useCallback(() => {
     if (pendingAnswerRef.current) {
       setAnswer(pendingAnswerRef.current);
       pendingAnswerRef.current = null;
     }
-    rafIdRef.current = null;
+    throttleTimeoutRef.current = null;
+    lastUpdateRef.current = Date.now();
   }, []);
 
-  // Throttled answer update using RAF for smooth UI
+  // Throttled answer update using setTimeout (100ms) for smooth UI
   const throttledSetAnswer = useCallback(
     (newAnswer: IAnswer) => {
       pendingAnswerRef.current = newAnswer;
-      if (rafIdRef.current === null) {
-        rafIdRef.current = requestAnimationFrame(flushPendingAnswer);
+
+      const now = Date.now();
+      const timeSinceLastUpdate = now - lastUpdateRef.current;
+      const THROTTLE_DELAY = 100;
+
+      if (throttleTimeoutRef.current === null) {
+        if (timeSinceLastUpdate >= THROTTLE_DELAY) {
+          flushPendingAnswer();
+        } else {
+          throttleTimeoutRef.current = window.setTimeout(
+            flushPendingAnswer,
+            THROTTLE_DELAY - timeSinceLastUpdate,
+          );
+        }
       }
     },
     [flushPendingAnswer],
@@ -335,9 +349,9 @@ export const useSendMessageWithSse = (
                   setAnswer(pendingAnswerRef.current);
                   pendingAnswerRef.current = null;
                 }
-                if (rafIdRef.current !== null) {
-                  cancelAnimationFrame(rafIdRef.current);
-                  rafIdRef.current = null;
+                if (throttleTimeoutRef.current !== null) {
+                  clearTimeout(throttleTimeoutRef.current);
+                  throttleTimeoutRef.current = null;
                 }
                 resetAnswer();
                 break;
@@ -391,18 +405,22 @@ export const useSendMessageWithSse = (
 
   const stopOutputMessage = useCallback(() => {
     sseRef.current?.abort();
-    // Cancel any pending RAF on stop
-    if (rafIdRef.current !== null) {
-      cancelAnimationFrame(rafIdRef.current);
-      rafIdRef.current = null;
+    // Flush any pending answer before stopping
+    if (pendingAnswerRef.current) {
+      flushPendingAnswer();
     }
-  }, []);
+    // Cancel any pending throttle on stop
+    if (throttleTimeoutRef.current !== null) {
+      clearTimeout(throttleTimeoutRef.current);
+      throttleTimeoutRef.current = null;
+    }
+  }, [flushPendingAnswer]);
 
-  // Cleanup RAF on unmount
+  // Cleanup throttle on unmount
   useEffect(() => {
     return () => {
-      if (rafIdRef.current !== null) {
-        cancelAnimationFrame(rafIdRef.current);
+      if (throttleTimeoutRef.current !== null) {
+        clearTimeout(throttleTimeoutRef.current);
       }
     };
   }, []);
@@ -456,6 +474,8 @@ export const useScrollToBottom = (
   const ref = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const isAtBottomRef = useRef(true);
+  // Track if user was at bottom before latest content update for streaming
+  const wasAtBottomBeforeUpdate = useRef(true);
 
   useEffect(() => {
     isAtBottomRef.current = isAtBottom;
@@ -464,7 +484,8 @@ export const useScrollToBottom = (
   const checkIfUserAtBottom = useCallback(() => {
     if (!containerRef?.current) return true;
     const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
-    return Math.abs(scrollTop + clientHeight - scrollHeight) < 25;
+    // Increased tolerance to 100px to handle rapid streaming updates better
+    return Math.abs(scrollTop + clientHeight - scrollHeight) < 100;
   }, [containerRef]);
 
   useEffect(() => {
@@ -494,14 +515,16 @@ export const useScrollToBottom = (
   useEffect(() => {
     if (!messages) return;
     if (!containerRef?.current) return;
+    // Save the current at-bottom state before the scroll update
+    wasAtBottomBeforeUpdate.current = isAtBottomRef.current || checkIfUserAtBottom();
+
     requestAnimationFrame(() => {
-      setTimeout(() => {
-        if (isAtBottomRef.current) {
-          scrollToBottom();
-        }
-      }, 100);
+      // Scroll immediately without delay for streaming responsiveness
+      if (wasAtBottomBeforeUpdate.current) {
+        scrollToBottom();
+      }
     });
-  }, [messages, containerRef, scrollToBottom]);
+  }, [messages, containerRef, scrollToBottom, checkIfUserAtBottom]);
 
   return { scrollRef: ref, isAtBottom, scrollToBottom };
 };
