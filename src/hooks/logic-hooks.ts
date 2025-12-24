@@ -474,6 +474,8 @@ export const useScrollToBottom = (
   const ref = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const isAtBottomRef = useRef(true);
+  // Track if user was at bottom before latest content update for streaming
+  const wasAtBottomBeforeUpdate = useRef(true);
 
   useEffect(() => {
     isAtBottomRef.current = isAtBottom;
@@ -482,7 +484,8 @@ export const useScrollToBottom = (
   const checkIfUserAtBottom = useCallback(() => {
     if (!containerRef?.current) return true;
     const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
-    return Math.abs(scrollTop + clientHeight - scrollHeight) < 25;
+    // Increased tolerance to 100px to handle rapid streaming updates better
+    return Math.abs(scrollTop + clientHeight - scrollHeight) < 100;
   }, [containerRef]);
 
   useEffect(() => {
@@ -512,14 +515,16 @@ export const useScrollToBottom = (
   useEffect(() => {
     if (!messages) return;
     if (!containerRef?.current) return;
+    // Save the current at-bottom state before the scroll update
+    wasAtBottomBeforeUpdate.current = isAtBottomRef.current || checkIfUserAtBottom();
+
     requestAnimationFrame(() => {
-      setTimeout(() => {
-        if (isAtBottomRef.current) {
-          scrollToBottom();
-        }
-      }, 100);
+      // Scroll immediately without delay for streaming responsiveness
+      if (wasAtBottomBeforeUpdate.current) {
+        scrollToBottom();
+      }
     });
-  }, [messages, containerRef, scrollToBottom]);
+  }, [messages, containerRef, scrollToBottom, checkIfUserAtBottom]);
 
   return { scrollRef: ref, isAtBottom, scrollToBottom };
 };
