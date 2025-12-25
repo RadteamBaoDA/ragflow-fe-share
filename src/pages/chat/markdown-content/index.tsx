@@ -3,7 +3,7 @@ import SvgIcon from '@/components/svg-icon';
 import { IReference, IReferenceChunk } from '@/interfaces/database/chat';
 import { getExtension } from '@/utils/document-util';
 import { InfoCircleOutlined } from '@ant-design/icons';
-import { Button, Flex, Popover, Spin } from 'antd';
+import { Button, Flex, Popover } from 'antd';
 import DOMPurify from 'dompurify';
 import { useCallback, useEffect, useMemo } from 'react';
 import Markdown from 'react-markdown';
@@ -279,8 +279,11 @@ const MarkdownContent = ({
 
   if (loading && !content) {
     return (
-      <div className="flex items-center justify-center py-2">
-        <Spin />
+      <div className={styles.loadingContainer}>
+        {t('chat.searching').replace(/\.{3}$/, '')}
+        <span className={styles.dot}></span>
+        <span className={styles.dot}></span>
+        <span className={styles.dot}></span>
       </div>
     );
   }
