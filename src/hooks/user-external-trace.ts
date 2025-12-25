@@ -62,11 +62,9 @@ export function useExternalTrace({ email, chatId }: UseExternalTraceOptions) {
             setIsTracing(true);
             try {
                 const result = await externalTraceApi.sendFeedback({
-                    email,
                     traceId: lastTraceId,
                     value: score,
                     comment,
-                    name,
                 });
                 return result;
             } finally {

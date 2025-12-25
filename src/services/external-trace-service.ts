@@ -1,23 +1,27 @@
 import axios, { AxiosInstance } from 'axios';
+import { Authorization } from '@/constants/authorization';
+import { getAuthorization } from '@/utils/authorization-util';
 
 interface TracePayload {
-    email: string;
-    message: string;
-    role?: 'user' | 'assistant';
-    response?: string;
+    email: string; // REQUIRED: Valid system user email
+    message: string; // REQUIRED: The message content
+    role: 'user' | 'assistant'; // "user" or "assistant" (default: "user")
+    response?: string; // REQUIRED if role="assistant"
     metadata?: {
-        source?: string;
-        chatId?: string;
-        sessionId?: string;
-        model?: string;
-        modelName?: string;
-        task?: string;
+        chatId?: string; // REQUIRED for conversation threading
+        sessionId?: string; // Alternative to chatId
+        source?: string; // Identifier for your application
+        task?: string; // Custom task name (default: user_response/llm_response)
+        model?: string; // Model ID
+        modelName?: string; // Human-readable model name
+        tags?: string[]; // Array of tags for categorization
+        timestamp?: string; // ISO timestamp
         usage?: {
+            // Token usage (for assistant responses)
             promptTokens?: number;
             completionTokens?: number;
             totalTokens?: number;
         };
-        tags?: string[];
         [key: string]: unknown;
     };
 }
@@ -29,11 +33,11 @@ interface TraceResponse {
 }
 
 interface FeedbackPayload {
-    email: string;
-    traceId: string;
-    value: number;
-    name?: string;
-    comment?: string;
+    traceId: string; // REQUIRED: The ID from the Submit response
+    messageId?: string; // Alternative to traceId
+    value: number; // 1 = Positive, 0 = Negative (or custom scale)
+    score?: number; // Alternative to value
+    comment?: string; // Optional feedback text
 }
 
 interface FeedbackResponse {
@@ -63,10 +67,24 @@ class ExternalTraceApi {
             headers: {
                 'Content-Type': 'application/json',
                 ...(process.env.EXTERNAL_TRACE_API_KEY && {
-                    'x-api-key': process.env.EXTERNAL_TRACE_API_KEY,
+                    'X-API-Key': process.env.EXTERNAL_TRACE_API_KEY,
                 }),
             },
         });
+
+        // Add request interceptor to inject Authorization header if available
+        this.client.interceptors.request.use(
+            (config) => {
+                const token = getAuthorization();
+                if (token) {
+                    config.headers[Authorization] = token;
+                }
+                return config;
+            },
+            (error) => {
+                return Promise.reject(error);
+            },
+        );
     }
 
     /**
@@ -75,18 +93,27 @@ class ExternalTraceApi {
      * @returns A promise that resolves to a TraceResponse indicating success or failure.
      */
     async sendTrace(payload: TracePayload): Promise<TraceResponse> {
-        /**
-         * Determine the correct path. If baseURL already includes the path, use empty string.
-         */
-        const baseURL = this.client.defaults.baseURL || '';
-        const path = baseURL.includes('/api/external/trace')
-            ? ''
-            : '/api/external/trace';
-        /**
-         * Send a POST request to the external tracing API.
-         */
-        const { data } = await this.client.post<TraceResponse>(path, payload);
-        return data;
+        try {
+            /**
+             * Determine the correct path. If baseURL already includes the path, use empty string.
+             */
+            const baseURL = this.client.defaults.baseURL || '';
+            const path = baseURL.includes('/api/external/trace/submit')
+                ? ''
+                : '/api/external/trace/submit';
+            /**
+             * Send a POST request to the external tracing API.
+             */
+            const { data } = await this.client.post<TraceResponse>(path, {
+                ...payload
+            });
+            console.log(`trace submit: ${JSON.stringify(data)}`);
+            return data;
+        } catch (error) {
+            console.warn('Failed to submit trace:', error);
+            // Return failure object instead of throwing, to prevent app crash/logout on 401
+            return { success: false, error: 'Failed to submit trace' };
+        }
     }
 
     /**
@@ -95,18 +122,25 @@ class ExternalTraceApi {
      * @returns A promise that resolves to a FeedbackResponse indicating success or failure.
      */
     async sendFeedback(payload: FeedbackPayload): Promise<FeedbackResponse> {
-        /**
-         * Determine the correct path. If baseURL already includes the path, use empty string.
-         */
-        const baseURL = this.client.defaults.baseURL || '';
-        const path = baseURL.includes('/api/external/feedback')
-            ? ''
-            : '/api/external/feedback';
-        /**
-         * Send a POST request to the external tracing API.
-         */
-        const { data } = await this.client.post<FeedbackResponse>(path, payload);
-        return data;
+        try {
+            /**
+             * Determine the correct path. If baseURL already includes the path, use empty string.
+             */
+            const baseURL = this.client.defaults.baseURL || '';
+            const path = baseURL.includes('/api/external/trace/feedback')
+                ? ''
+                : '/api/external/trace/feedback';
+            /**
+             * Send a POST request to the external tracing API.
+             */
+            console.log(`feedback submit: ${JSON.stringify(payload)}`);
+            const { data } = await this.client.post<FeedbackResponse>(path, payload);
+            return data;
+        } catch (error) {
+            console.warn('Failed to submit feedback:', error);
+            // Return failure object instead of throwing
+            return { success: false, error: 'Failed to submit feedback' };
+        }
     }
 
     /**
