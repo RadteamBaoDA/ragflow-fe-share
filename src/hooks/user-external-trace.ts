@@ -47,7 +47,7 @@ export function useExternalTrace({ email, chatId }: UseExternalTraceOptions) {
                     usage,
                     lastTraceId || undefined,
                 );
-                if (result.traceId && !lastTraceId) setLastTraceId(result.traceId);
+                if (result.traceId) setLastTraceId(result.traceId);
                 return result;
             } finally {
                 setIsTracing(false);
@@ -56,9 +56,28 @@ export function useExternalTrace({ email, chatId }: UseExternalTraceOptions) {
         [email, chatId, lastTraceId],
     );
 
+    const traceScore = useCallback(
+        async (score: number, comment?: string, name: string = "user-feedback") => {
+            if (!lastTraceId) return;
+            setIsTracing(true);
+            try {
+                const result = await externalTraceApi.sendFeedback({
+                    traceId: lastTraceId,
+                    value: score,
+                    comment,
+                });
+                return result;
+            } finally {
+                setIsTracing(false);
+            }
+        },
+        [email, lastTraceId],
+    );
+
     return {
         traceUserMessage,
         traceAssistantResponse,
+        traceScore,
         isTracing,
         lastTraceId,
         setLastTraceId,

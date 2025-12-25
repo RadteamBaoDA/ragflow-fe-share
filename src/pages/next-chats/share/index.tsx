@@ -3,23 +3,31 @@ import { NextMessageInput } from '@/components/message-input/next';
 import MessageItem from '@/components/message-item';
 import PdfDrawer from '@/components/pdf-drawer';
 import { useClickDrawer } from '@/components/pdf-drawer/hooks';
+import { useSyncThemeFromParams } from '@/components/theme-provider';
 import { MessageType, SharedFrom } from '@/constants/chat';
 import { useFetchNextConversationSSE } from '@/hooks/chat-hooks';
 import { useFetchFlowSSE } from '@/hooks/flow-hooks';
 import { useFetchExternalChatInfo } from '@/hooks/use-chat-request';
+import { useExternalTrace } from '@/hooks/user-external-trace';
 import i18n from '@/locales/config';
 import { useSendButtonDisabled } from '@/pages/chat/hooks';
 import { buildMessageUuidWithRole } from '@/utils/chat';
-import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
+import { Input, Modal } from 'antd';
+import React, {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useTranslation } from 'react-i18next';
+import { v4 as uuidv4 } from 'uuid';
 import {
   useGetSharedChatSearchParams,
   useSendSharedMessage,
 } from '../hooks/use-send-shared-message';
 import { buildMessageItemReference } from '../utils';
-import { v4 as uuidv4 } from 'uuid';
-import { useSyncThemeFromParams } from '@/components/theme-provider';
-import { useExternalTrace } from '@/hooks/user-external-trace';
 
 /**
  * ChatContainer component for displaying and interacting with shared chat conversations.
@@ -88,11 +96,38 @@ const ChatContainer = () => {
   /**
    * useExternalTrace hook for tracing user and assistant messages
    */
-  const { traceUserMessage, traceAssistantResponse, setLastTraceId } =
-    useExternalTrace({
-      email,
-      chatId: internalChatId,
-    });
+  const {
+    traceUserMessage,
+    traceAssistantResponse,
+    traceScore,
+    setLastTraceId,
+  } = useExternalTrace({
+    email,
+    chatId: internalChatId,
+  });
+
+  // Feedback Modal State
+  const [feedbackVisible, setFeedbackVisible] = useState(false);
+  const [feedbackComment, setFeedbackComment] = useState('');
+
+  const handleLike = useCallback(() => {
+    traceScore(1);
+  }, [traceScore]);
+
+  const handleDislike = useCallback(() => {
+    setFeedbackVisible(true);
+  }, []);
+
+  const handleFeedbackSubmit = useCallback(() => {
+    traceScore(0, feedbackComment);
+    setFeedbackVisible(false);
+    setFeedbackComment('');
+  }, [traceScore, feedbackComment]);
+
+  const handleFeedbackCancel = useCallback(() => {
+    setFeedbackVisible(false);
+    setFeedbackComment('');
+  }, []);
 
   /**
    * Handle press enter for sending message
@@ -122,8 +157,8 @@ const ChatContainer = () => {
         if (lastMsg.role === MessageType.Assistant) {
           // Trace the assistant response
           // 400 ERROR FIX: Only trace if we have a valid question (not initial load)
-          // EMPTY/ERROR FIX: Only trace if content exists and no error occurred
-          if (lastQuestion && !hasError && lastMsg.content) {
+          // EMPTY/ERROR FIX: Only trace if content exists (allow empty string) and no error occurred
+          if (lastQuestion && !hasError && typeof lastMsg.content === 'string') {
             traceAssistantResponse(lastQuestion, lastMsg.content);
           }
           pendingTrace.current = false;
@@ -184,10 +219,7 @@ const ChatContainer = () => {
 
   return (
     <>
-      <EmbedContainer
-        title={chatInfo.title}
-        avatar={chatInfo.avatar}
-      >
+      <EmbedContainer title={chatInfo.title} avatar={chatInfo.avatar}>
         <div className="flex flex-1 flex-col p-2.5  h-[90vh] m-3">
           <div
             className={
@@ -218,8 +250,11 @@ const ChatContainer = () => {
                     }
                     index={i}
                     clickDocumentButton={clickDocumentButton}
-                    showLikeButton={false}
+                    showLikeButton={true}
                     showLoudspeaker={false}
+                    onLike={handleLike}
+                    onDislike={handleDislike}
+                    disableInternalFeedback={true}
                   ></MessageItem>
                 );
               })}
@@ -245,6 +280,24 @@ const ChatContainer = () => {
           </div>
         </div>
       </EmbedContainer>
+
+      <Modal
+        title={t('feedback.title', 'Provide Feedback')}
+        open={feedbackVisible}
+        onOk={handleFeedbackSubmit}
+        onCancel={handleFeedbackCancel}
+      >
+        <Input.TextArea
+          rows={4}
+          value={feedbackComment}
+          onChange={(e) => setFeedbackComment(e.target.value)}
+          placeholder={t(
+            'feedback.placeholder',
+            'Please verify your feedback...',
+          )}
+        />
+      </Modal>
+
       {visible && (
         <PdfDrawer
           visible={visible}
