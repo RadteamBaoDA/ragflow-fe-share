@@ -3,7 +3,7 @@ import SvgIcon from '@/components/svg-icon';
 import { IReference, IReferenceChunk } from '@/interfaces/database/chat';
 import { getExtension } from '@/utils/document-util';
 import { InfoCircleOutlined } from '@ant-design/icons';
-import { Button, Flex, Popover } from 'antd';
+import { Button, Flex, Popover, Spin } from 'antd';
 import DOMPurify from 'dompurify';
 import { useCallback, useEffect, useMemo } from 'react';
 import Markdown from 'react-markdown';
@@ -38,6 +38,7 @@ const MarkdownContent = ({
   reference,
   clickDocumentButton,
   content,
+  loading,
 }: {
   content: string;
   loading: boolean;
@@ -275,6 +276,14 @@ const MarkdownContent = ({
       }) as any,
     [renderReference],
   );
+
+  if (loading && !content) {
+    return (
+      <div className="flex items-center justify-center py-2">
+        <Spin />
+      </div>
+    );
+  }
 
   return (
     <Markdown
