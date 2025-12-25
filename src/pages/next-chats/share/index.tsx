@@ -167,7 +167,7 @@ const ChatContainer = () => {
                 session_id: conversationId || internalChatId,
                 user_prompt: lastQuestion,
                 llm_response: lastMsg.content,
-                citations: lastMsg.reference ? Object.values(lastMsg.reference).flatMap(r => r.map(c => c.doc_name)) : [],
+                citations: lastMsg.reference?.doc_aggs?.map((x) => x.doc_name) ?? [],
                 user_email: email,
             });
           }
