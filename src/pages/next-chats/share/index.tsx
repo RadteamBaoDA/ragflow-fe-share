@@ -23,6 +23,7 @@ import React, {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import { v4 as uuidv4 } from 'uuid';
+import { externalHistoryService } from '@/services/external-history-service';
 import {
   useGetSharedChatSearchParams,
   useSendSharedMessage,
@@ -160,6 +161,15 @@ const ChatContainer = () => {
           // EMPTY/ERROR FIX: Only trace if content exists (allow empty string) and no error occurred
           if (lastQuestion && !hasError && typeof lastMsg.content === 'string') {
             traceAssistantResponse(lastQuestion, lastMsg.content);
+
+            // Send to External History API
+            externalHistoryService.sendChatHistory({
+                session_id: conversationId || internalChatId,
+                user_prompt: lastQuestion,
+                llm_response: lastMsg.content,
+                citations: lastMsg.reference ? Object.values(lastMsg.reference).flatMap(r => r.map(c => c.doc_name)) : [],
+                user_email: email,
+            });
           }
           pendingTrace.current = false;
         } else if (justFinished) {

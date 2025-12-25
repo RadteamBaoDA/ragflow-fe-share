@@ -25,6 +25,9 @@ import MarkdownContent from './markdown-content';
 import MindMapDrawer from './mindmap-drawer';
 import RetrievalDocuments from './retrieval-documents';
 import { SkeletonCard } from '@/components/skeleton-card';
+import { externalHistoryService } from '@/services/external-history-service';
+import { useGetSharedSearchParams } from './hooks';
+
 export default function SearchingView({
   setIsSearching,
   searchData,
@@ -68,10 +71,47 @@ export default function SearchingView({
   // }, [i18n]);
   const [searchtext, setSearchtext] = useState<string>('');
   const [retrievalLoading, setRetrievalLoading] = useState(false);
+  const { email } = useGetSharedSearchParams();
+
+  // Track previous sendingLoading state to detect completion
+  const [prevLoading, setPrevLoading] = useState(false);
+  const [hasLoggedHistory, setHasLoggedHistory] = useState(false);
 
   useEffect(() => {
     setSearchtext(searchStr);
   }, [searchStr, setSearchtext]);
+
+  // Detect when search/summary is finished
+  useEffect(() => {
+    // If we were loading and now we are not, and we have results
+    if (prevLoading && !sendingLoading && !loading) {
+       // Check if we have an answer or chunks
+       if ((chunks && chunks.length > 0) || (answer && answer.answer)) {
+           // Avoid duplicate logging if props change but search didn't restart
+           // We might need a way to reset hasLoggedHistory when search starts
+           if (!hasLoggedHistory) {
+               const fileResults = chunks?.map(c => c.docnm_kwd) || [];
+               externalHistoryService.sendSearchHistory({
+                   search_input: searchStr || searchtext,
+                   user_email: email,
+                   ai_summary: answer?.answer || '',
+                   file_results: fileResults
+               });
+               setHasLoggedHistory(true);
+           }
+       }
+    }
+
+    if (loading || sendingLoading) {
+        setPrevLoading(true);
+        if (loading) { // New search started
+            setHasLoggedHistory(false);
+        }
+    } else {
+        setPrevLoading(false);
+    }
+  }, [loading, sendingLoading, chunks, answer, searchStr, searchtext, email, prevLoading, hasLoggedHistory]);
+
 
   // Show loading only when searching retrieval documents, not waiting for summary
   const showLoading = loading && (!chunks || chunks.length === 0);
