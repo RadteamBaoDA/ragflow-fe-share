@@ -58,6 +58,7 @@ export const useGetSharedSearchParams = () => {
     visibleAvatar: searchParams.get('visible_avatar')
       ? searchParams.get('visible_avatar') !== '1'
       : true,
+    email: searchParams.get('email'),
   };
 };
 

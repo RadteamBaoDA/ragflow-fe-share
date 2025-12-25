@@ -189,6 +189,9 @@ const ChatContainer = () => {
     lastQuestion,
     traceAssistantResponse,
     hasError,
+    email,
+    conversationId,
+    internalChatId,
   ]);
 
   /**
