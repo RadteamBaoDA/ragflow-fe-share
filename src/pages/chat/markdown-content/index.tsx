@@ -38,6 +38,7 @@ const MarkdownContent = ({
   reference,
   clickDocumentButton,
   content,
+  loading,
 }: {
   content: string;
   loading: boolean;
@@ -275,6 +276,17 @@ const MarkdownContent = ({
       }) as any,
     [renderReference],
   );
+
+  if (loading && !content) {
+    return (
+      <div className={styles.loadingContainer}>
+        {t('chat.searching').replace(/\.{3}$/, '')}
+        <span className={styles.dot}></span>
+        <span className={styles.dot}></span>
+        <span className={styles.dot}></span>
+      </div>
+    );
+  }
 
   return (
     <Markdown
