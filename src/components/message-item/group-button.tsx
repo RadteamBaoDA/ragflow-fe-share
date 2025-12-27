@@ -28,6 +28,7 @@ interface IProps {
   onLike?: () => void;
   onDislike?: (feedback: string) => void;
   disableInternalFeedback?: boolean;
+  isLoading?: boolean;
 }
 
 export const AssistantGroupButton = ({
@@ -40,6 +41,7 @@ export const AssistantGroupButton = ({
   onLike,
   onDislike,
   disableInternalFeedback = false,
+  isLoading = false,
 }: IProps) => {
   const { visible, hideModal, showModal, onFeedbackOk, loading } =
     useSendFeedback(messageId);
@@ -96,10 +98,10 @@ export const AssistantGroupButton = ({
         )}
         {showLikeButton && (
           <>
-            <Radio.Button value="c" onClick={handleLike}>
+            <Radio.Button value="c" onClick={handleLike} disabled={isLoading}>
               <LikeOutlined />
             </Radio.Button>
-            <Radio.Button value="d" onClick={handleDislike}>
+            <Radio.Button value="d" onClick={handleDislike} disabled={isLoading}>
               <DislikeOutlined />
             </Radio.Button>
           </>

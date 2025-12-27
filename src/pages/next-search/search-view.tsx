@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 import DOMPurify from 'dompurify';
 import { isEmpty } from 'lodash';
 import { BrainCircuit, Search, X } from 'lucide-react';
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ISearchAppDetailProps } from '../next-searches/hooks';
 import PdfDrawer from './document-preview-modal';
@@ -27,6 +27,7 @@ import RetrievalDocuments from './retrieval-documents';
 import { SkeletonCard } from '@/components/skeleton-card';
 import { externalHistoryService } from '@/services/external-history-service';
 import { useGetSharedSearchParams } from './hooks';
+import { v4 as uuidv4 } from 'uuid';
 
 export default function SearchingView({
   setIsSearching,
@@ -77,40 +78,87 @@ export default function SearchingView({
   const [prevLoading, setPrevLoading] = useState(false);
   const [hasLoggedHistory, setHasLoggedHistory] = useState(false);
 
+  // Generate a unique session ID for this search session
+  const sessionId = useMemo(() => uuidv4(), []);
+
   useEffect(() => {
     setSearchtext(searchStr);
   }, [searchStr, setSearchtext]);
 
+  // Ref to track if we've seen sendingLoading become true (stream started)
+  const hasStartedSending = useRef(false);
+  // Ref to access latest answer inside setTimeout
+  const answerRef = useRef(answer);
+  answerRef.current = answer;
+  // Ref to access latest chunks inside setTimeout
+  const chunksRef = useRef(chunks);
+  chunksRef.current = chunks;
+
   // Detect when search/summary is finished
   useEffect(() => {
-    // If we were loading and now we are not, and we have results
-    if (prevLoading && !sendingLoading && !loading) {
-       // Check if we have an answer or chunks
-       if ((chunks && chunks.length > 0) || (answer && answer.answer)) {
-           // Avoid duplicate logging if props change but search didn't restart
-           // We might need a way to reset hasLoggedHistory when search starts
-           if (!hasLoggedHistory) {
-               const fileResults = chunks?.map(c => c.docnm_kwd) || [];
-               externalHistoryService.sendSearchHistory({
-                   search_input: searchStr || searchtext,
-                   user_email: email,
-                   ai_summary: answer?.answer || '',
-                   file_results: fileResults
-               });
-               setHasLoggedHistory(true);
-           }
-       }
+    // Track when sending starts
+    if (sendingLoading) {
+      hasStartedSending.current = true;
     }
 
-    if (loading || sendingLoading) {
-        setPrevLoading(true);
-        if (loading) { // New search started
-            setHasLoggedHistory(false);
-        }
-    } else {
-        setPrevLoading(false);
+    // Only trigger history when:
+    // 1. We've seen sendingLoading true at some point (stream was started)
+    // 2. sendingLoading is now false (stream finished)
+    // 3. loading is false (retrieval finished)
+    // 4. We haven't logged yet
+    const streamFinished = hasStartedSending.current && !sendingLoading && !loading;
+
+    if (streamFinished && !hasLoggedHistory) {
+      // Check if we have results
+      if ((chunks && chunks.length > 0) || (answer && answer.answer)) {
+        // Mark as logged immediately to prevent duplicate calls
+        setHasLoggedHistory(true);
+        hasStartedSending.current = false;
+
+        // Capture search input now (it won't change)
+        const capturedSearchStr = searchStr;
+        const capturedSearchtext = searchtext;
+
+        // Add delay to ensure AI summary data is fully settled
+        // Then fetch LATEST answer from ref inside the callback
+        const delayMs = 1000; // Increased delay to get final answer
+        setTimeout(() => {
+          // Get LATEST answer and chunks from refs
+          const latestAnswer = answerRef.current?.answer || '';
+          const latestChunks = chunksRef.current || [];
+
+          // Get unique file names from latest chunks
+          const fileResults = [...new Set(latestChunks?.map(c => c.docnm_kwd).filter(Boolean) || [])];
+          const searchInput = capturedSearchStr || capturedSearchtext;
+
+          console.log('[SearchView] Sending history after stream complete:', {
+            session_id: sessionId,
+            search_input: searchInput?.substring(0, 50) + '...',
+            ai_summary: latestAnswer?.substring(0, 100) + '...',
+            ai_summary_length: latestAnswer?.length,
+            file_results: fileResults,
+          });
+
+          // Only send if we have the required fields
+          if (searchInput) {
+            externalHistoryService.sendSearchHistory({
+              session_id: sessionId,
+              search_input: searchInput,
+              user_email: email || undefined,
+              ai_summary: latestAnswer,
+              file_results: fileResults
+            });
+          }
+        }, delayMs);
+      }
     }
-  }, [loading, sendingLoading, chunks, answer, searchStr, searchtext, email, prevLoading, hasLoggedHistory]);
+
+    // Reset hasLoggedHistory when a new search starts
+    if (loading) {
+      setHasLoggedHistory(false);
+      hasStartedSending.current = false;
+    }
+  }, [loading, sendingLoading, chunks, answer, searchStr, searchtext, email, sessionId, hasLoggedHistory]);
 
 
   // Show loading only when searching retrieval documents, not waiting for summary
@@ -202,7 +250,7 @@ export default function SearchingView({
                 <div className="flex justify-start items-start text-text-primary text-2xl">
                   {t('search.AISummary')}
                 </div>
-                {isEmpty(answer) && sendingLoading ? (
+                {!answer.answer && sendingLoading ? (
                   <SkeletonCard className=" mt-2" />
                 ) : (
                   answer.answer && (

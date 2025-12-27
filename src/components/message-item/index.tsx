@@ -122,6 +122,7 @@ const MessageItem = ({
                     onLike={onLike}
                     onDislike={onDislike}
                     disableInternalFeedback={disableInternalFeedback}
+                    isLoading={loading}
                   ></AssistantGroupButton>
                 )
               ) : (

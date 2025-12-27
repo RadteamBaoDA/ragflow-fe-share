@@ -378,8 +378,12 @@ export const useSendMessageWithSse = (
             clearStreamTimeout();
             if (e instanceof DOMException && e.name === 'AbortError') {
               console.log('Request was aborted by user, logic, or timeout.');
-              break;
+            } else {
+              // Log other errors and break out of the loop
+              console.warn('[SSE] Stream read error:', e);
             }
+            // Always break on errors to prevent infinite loop
+            break;
           }
         }
 

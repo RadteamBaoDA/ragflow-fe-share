@@ -7,6 +7,7 @@ interface ChatHistoryPayload {
 }
 
 interface SearchHistoryPayload {
+  session_id: string;
   search_input: string;
   user_email?: string;
   ai_summary?: string;
@@ -37,6 +38,7 @@ class ExternalHistoryService {
 
   public sendChatHistory(payload: ChatHistoryPayload) {
     if (!this.worker) return;
+    console.log('[ExternalHistoryService] sendChatHistory - payload:', payload);
     this.worker.postMessage({
       type: 'chat',
       payload,
@@ -46,6 +48,7 @@ class ExternalHistoryService {
 
   public sendSearchHistory(payload: SearchHistoryPayload) {
     if (!this.worker) return;
+    console.log('[ExternalHistoryService] sendSearchHistory - payload:', payload);
     this.worker.postMessage({
       type: 'search',
       payload,

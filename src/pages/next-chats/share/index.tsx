@@ -86,13 +86,15 @@ const ChatContainer = () => {
    * useExternalTrace hook for tracing user and assistant messages
    */
   const [lastQuestion, setLastQuestion] = useState<string>('');
-  const prevSendLoading = useRef(false);
-  const pendingTrace = useRef(false);
 
   /*  *
    * Get user ID (email) from URL params
    */
-  const [internalChatId, setInternalChatId] = useState<string>(uuidv4());
+  const [internalChatId, setInternalChatId] = useState<string>(() => {
+    const newId = uuidv4();
+    console.log('[ChatContainer] Initializing internalChatId:', newId);
+    return newId;
+  });
 
   /**
    * useExternalTrace hook for tracing user and assistant messages
@@ -140,49 +142,163 @@ const ChatContainer = () => {
     traceUserMessage(currentQuestion);
   };
 
+  // Track the last traced message ID to avoid duplicate traces
+  const lastTracedMessageId = useRef<string | null>(null);
+  // Track if a trace is pending (setTimeout in progress)
+  const pendingTraceRef = useRef<boolean>(false);
+  // Ref to access latest derivedMessages inside setTimeout
+  const derivedMessagesRef = useRef(derivedMessages);
+  derivedMessagesRef.current = derivedMessages;
+
   /**
-   * Handle send loading state
+   * Handle completed assistant messages - trace when:
+   * 1. Not currently loading (stream finished)
+   * 2. Have a pending question
+   * 3. Have a new assistant message we haven't traced yet
+   * 
+   * Uses derivedMessagesRef to fetch LATEST content inside setTimeout
    */
   useEffect(() => {
-    if (sendLoading) {
-      pendingTrace.current = false;
-    }
-    // Check if send loading has just finished
-    const justFinished = !sendLoading && prevSendLoading.current;
-    // Check if pending trace is true and send loading is false
-    if (justFinished || (pendingTrace.current && !sendLoading)) {
-      if (derivedMessages && derivedMessages.length > 0) {
-        // Get the last message
-        const lastMsg = derivedMessages[derivedMessages.length - 1];
-        // Check if the last message is an assistant message
-        if (lastMsg.role === MessageType.Assistant) {
-          // Trace the assistant response
-          // 400 ERROR FIX: Only trace if we have a valid question (not initial load)
-          // EMPTY/ERROR FIX: Only trace if content exists (allow empty string) and no error occurred
-          if (lastQuestion && !hasError && typeof lastMsg.content === 'string') {
-            traceAssistantResponse(lastQuestion, lastMsg.content);
+    // Debug: Log all relevant state on every effect run
+    console.log('[ChatContainer] Trace effect triggered:', {
+      sendLoading,
+      lastQuestion: lastQuestion ? lastQuestion.substring(0, 30) + '...' : null,
+      messagesCount: derivedMessages?.length ?? 0,
+      lastMsgRole: derivedMessages?.[derivedMessages.length - 1]?.role,
+      lastMsgContentLength: derivedMessages?.[derivedMessages.length - 1]?.content?.length,
+      lastTracedId: lastTracedMessageId.current,
+      pendingTrace: pendingTraceRef.current,
+      hasError,
+    });
 
-            // Send to External History API
-            externalHistoryService.sendChatHistory({
-                session_id: conversationId || internalChatId,
-                user_prompt: lastQuestion,
-                llm_response: lastMsg.content,
-                citations: lastMsg.reference?.doc_aggs?.map((x) => x.doc_name) ?? [],
-                user_email: email,
-            });
-          }
-          pendingTrace.current = false;
-        } else if (justFinished) {
-          // Set pending trace to true
-          pendingTrace.current = true;
-        }
-      } else if (justFinished) {
-        // Set pending trace to true
-        pendingTrace.current = true;
-      }
+    // Skip if still loading
+    if (sendLoading) {
+      console.log('[ChatContainer] ⏳ Skip: Still loading');
+      return;
     }
-    // Update previous send loading state
-    prevSendLoading.current = sendLoading;
+
+    // Skip if a trace is already pending
+    if (pendingTraceRef.current) {
+      console.log('[ChatContainer] ⏳ Skip: Trace already pending');
+      return;
+    }
+
+    // Skip if no messages or no pending question
+    if (!derivedMessages || derivedMessages.length === 0) {
+      console.log('[ChatContainer] ⏳ Skip: No messages');
+      return;
+    }
+
+    if (!lastQuestion) {
+      console.log('[ChatContainer] ⏳ Skip: No lastQuestion');
+      return;
+    }
+
+    const lastMsg = derivedMessages[derivedMessages.length - 1];
+
+    // Only process assistant messages
+    if (lastMsg.role !== MessageType.Assistant) {
+      console.log('[ChatContainer] ⏳ Skip: Last message is not assistant, role:', lastMsg.role);
+      return;
+    }
+
+    // Generate a unique ID based on message ID and messages count (not content which changes)
+    const messageId = lastMsg.id || `msg_${derivedMessages.length}`;
+
+    // Skip if already traced this message
+    if (lastTracedMessageId.current === messageId) {
+      console.log('[ChatContainer] ⏳ Skip: Already traced this message:', messageId);
+      return;
+    }
+
+    // Skip if has error or no content
+    if (hasError) {
+      console.log('[ChatContainer] ⏳ Skip: Has error');
+      return;
+    }
+
+    if (typeof lastMsg.content !== 'string') {
+      console.log('[ChatContainer] ⏳ Skip: Content is not string, type:', typeof lastMsg.content);
+      return;
+    }
+
+    console.log('[ChatContainer] ✅ All checks passed, scheduling trace for:', messageId);
+
+    // Mark this message as traced and pending BEFORE making API calls
+    lastTracedMessageId.current = messageId;
+    pendingTraceRef.current = true;
+
+    // Capture question now (it won't change)
+    const capturedQuestion = lastQuestion;
+    const capturedMessageIndex = derivedMessages.length - 1;
+
+    // Add delay to ensure stream data is fully settled before sending
+    // Then fetch LATEST content from derivedMessagesRef inside the callback
+    const delayMs = 1000; // Increased delay to allow content to fully settle
+    setTimeout(() => {
+      // Mark pending as complete
+      pendingTraceRef.current = false;
+
+      // Get LATEST content from ref (not captured value)
+      const latestMessages = derivedMessagesRef.current;
+      const latestMsg = latestMessages?.[capturedMessageIndex];
+
+      if (!latestMsg) {
+        console.warn('[ChatContainer] Message not found at index:', capturedMessageIndex);
+        return;
+      }
+
+      const latestContent = latestMsg.content;
+      const latestReference = latestMsg.reference;
+
+      console.log('[ChatContainer] Tracing completed assistant response after delay:', {
+        messageId,
+        capturedIndex: capturedMessageIndex,
+        contentLength: latestContent?.length,
+        content: latestContent?.substring(0, 100) + '...',
+        hasReference: !!latestReference,
+        docAggs: latestReference?.doc_aggs,
+      });
+
+      // Trace to external trace API
+      traceAssistantResponse(capturedQuestion, latestContent);
+
+      // Validate required fields for history API
+      const sessionId = internalChatId;
+      const userPrompt = capturedQuestion;
+      const llmResponse = latestContent;
+
+      if (!sessionId || !userPrompt || !llmResponse) {
+        console.warn('[ChatContainer] Missing required fields for history API:', {
+          hasSessionId: !!sessionId,
+          hasUserPrompt: !!userPrompt,
+          hasLlmResponse: !!llmResponse,
+        });
+        return;
+      }
+
+      // Send to External History API with full citation data
+      const citations = latestReference?.doc_aggs?.map((x) => x.doc_name) ?? [];
+      console.log('[ChatContainer] Sending to history API:', {
+        session_id: sessionId,
+        user_prompt: userPrompt.substring(0, 50) + '...',
+        llm_response: llmResponse.substring(0, 50) + '...',
+        llm_response_length: llmResponse.length,
+        citations,
+      });
+
+      externalHistoryService.sendChatHistory({
+        session_id: sessionId,
+        user_prompt: userPrompt,
+        llm_response: llmResponse,
+        citations: citations,
+        user_email: email,
+      });
+    }, delayMs);
+
+    // Note: Not using cleanup to cancel timeout because lastTracedMessageId ref
+    // already prevents duplicate traces. The timeout should complete even if
+    // the effect re-runs due to dependency changes.
   }, [
     sendLoading,
     derivedMessages,
@@ -190,7 +306,6 @@ const ChatContainer = () => {
     traceAssistantResponse,
     hasError,
     email,
-    conversationId,
     internalChatId,
   ]);
 
