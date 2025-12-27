@@ -250,27 +250,27 @@ export default function SearchingView({
                 <div className="flex justify-start items-start text-text-primary text-2xl">
                   {t('search.AISummary')}
                 </div>
-                {!answer.answer && sendingLoading ? (
-                  <SkeletonCard className=" mt-2" />
-                ) : (
-                  answer.answer && (
-                    <div className="border rounded-lg p-4 mt-3 max-h-52 overflow-auto scrollbar-none w-[90%]">
+                {/* AI Summary container with fixed height */}
+                <div className="border rounded-lg p-4 mt-3 h-52 overflow-auto scrollbar-none w-[90%]">
+                  {!answer.answer && sendingLoading ? (
+                    <SkeletonCard className="" />
+                  ) : (
+                    answer.answer && (
                       <MarkdownContent
                         loading={sendingLoading}
                         content={answer.answer}
                         reference={answer.reference ?? ({} as IReference)}
                         clickDocumentButton={clickDocumentButton}
                       ></MarkdownContent>
-                    </div>
-                  )
-                )}
-                {answer.answer && !sendingLoading && (
-                  <div className="w-full border-b border-border-default/80 my-6"></div>
-                )}
+                    )
+                  )}
+                </div>
+                {/* Divider - always show when chunks exist */}
+                <div className="w-full border-b border-border-default/80 my-6"></div>
               </>
             )}
-            {/* retrieval documents */}
-            {!isSearchStrEmpty && !sendingLoading && !showLoading && (
+            {/* retrieval documents - show immediately when chunks available, not waiting for stream */}
+            {!isSearchStrEmpty && !showLoading && chunks?.length > 0 && (
               <>
                 <div className="mt-3 w-52">
                   <RetrievalDocuments
