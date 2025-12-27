@@ -12,6 +12,7 @@ export function useExternalTrace({ email, chatId }: UseExternalTraceOptions) {
 
     const traceUserMessage = useCallback(
         async (message: string = "") => {
+            console.log('[ExternalTrace] traceUserMessage - chatId:', chatId, 'sessionId:', lastTraceId);
             setIsTracing(true);
             try {
                 const result = await externalTraceApi.sendUserMessage(

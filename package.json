@@ -162,7 +162,7 @@
     "remark-loader": "^6.0.0",
     "storybook": "^9.1.4",
     "tailwindcss": "^3",
-    "terser-webpack-plugin": "^5.3.11",
+    "terser-webpack-plugin": "^5.3.16",
     "ts-node": "^10.9.2",
     "typescript": "^5.0.3",
     "umi-plugin-icons": "^0.1.1"

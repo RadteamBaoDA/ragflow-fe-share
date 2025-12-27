@@ -58,6 +58,7 @@ export const useGetSharedSearchParams = () => {
     visibleAvatar: searchParams.get('visible_avatar')
       ? searchParams.get('visible_avatar') !== '1'
       : true,
+    email: searchParams.get('email'),
   };
 };
 
@@ -294,7 +295,7 @@ export const useSendQuestion = (
       if (isEmpty(q)) return;
       setPagination({ page: 1 });
       setIsFirstRender(false);
-      setCurrentAnswer({} as IAnswer);
+      setCurrentAnswer({} as IAnswer); // Reset answer for new search
 
       // First, retrieve documents
       const result = await testChunk({
@@ -382,11 +383,13 @@ export const useSendQuestion = (
     ],
   );
 
+  // Copy answer to currentAnswer when it updates (answer gets reset after stream)
   useEffect(() => {
     if (!isEmpty(answer)) {
       setCurrentAnswer(answer);
     }
   }, [answer]);
+
 
   useEffect(() => {
     if (done) {
@@ -402,7 +405,7 @@ export const useSendQuestion = (
     setSelectedDocumentIds,
     loading,
     sendingLoading,
-    answer: currentAnswer,
+    answer: currentAnswer, // Use currentAnswer to persist after stream resets
     relatedQuestions: relatedQuestions?.slice(0, 5) ?? [],
     searchStr,
     setSearchStr,
