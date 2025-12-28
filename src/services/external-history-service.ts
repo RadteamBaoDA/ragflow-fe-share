@@ -1,5 +1,6 @@
 interface ChatHistoryPayload {
   session_id: string;
+  share_id?: string;
   user_email?: string;
   user_prompt: string;
   llm_response: string;
@@ -8,6 +9,7 @@ interface ChatHistoryPayload {
 
 interface SearchHistoryPayload {
   session_id: string;
+  share_id?: string;
   search_input: string;
   user_email?: string;
   ai_summary?: string;

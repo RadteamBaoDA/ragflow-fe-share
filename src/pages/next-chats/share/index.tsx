@@ -107,6 +107,7 @@ const ChatContainer = () => {
   } = useExternalTrace({
     email,
     chatId: internalChatId,
+    shareId: conversationId || undefined,
   });
 
   // Feedback Modal State
@@ -264,36 +265,26 @@ const ChatContainer = () => {
       traceAssistantResponse(capturedQuestion, latestContent);
 
       // Validate required fields for history API
-      const sessionId = internalChatId;
-      const userPrompt = capturedQuestion;
-      const llmResponse = latestContent;
-
-      if (!sessionId || !userPrompt || !llmResponse) {
-        console.warn('[ChatContainer] Missing required fields for history API:', {
-          hasSessionId: !!sessionId,
-          hasUserPrompt: !!userPrompt,
-          hasLlmResponse: !!llmResponse,
-        });
-        return;
-      }
-
-      // Send to External History API with full citation data
-      const citations = latestReference?.doc_aggs?.map((x) => x.doc_name) ?? [];
-      console.log('[ChatContainer] Sending to history API:', {
-        session_id: sessionId,
-        user_prompt: userPrompt.substring(0, 50) + '...',
-        llm_response: llmResponse.substring(0, 50) + '...',
-        llm_response_length: llmResponse.length,
-        citations,
-      });
-
-      externalHistoryService.sendChatHistory({
-        session_id: sessionId,
-        user_prompt: userPrompt,
-        llm_response: llmResponse,
-        citations: citations,
+      // Construct payload with explicit validation
+      const payload = {
+        session_id: internalChatId,
+        share_id: conversationId || undefined,
         user_email: email,
+        user_prompt: capturedQuestion,
+        llm_response: latestContent,
+        citations: latestReference?.chunks?.map((c) => c.document_name) || [],
+      };
+
+      console.log('[ChatContainer] Sending to history API:', {
+        session_id: payload.session_id,
+        share_id: payload.share_id,
+        user_prompt: payload.user_prompt.substring(0, 50) + '...',
+        llm_response: payload.llm_response.substring(0, 50) + '...',
+        llm_response_length: payload.llm_response.length,
+        citations: payload.citations,
       });
+
+      externalHistoryService.sendChatHistory(payload);
     }, delayMs);
 
     // Note: Not using cleanup to cancel timeout because lastTracedMessageId ref

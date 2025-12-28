@@ -72,7 +72,7 @@ export default function SearchingView({
   // }, [i18n]);
   const [searchtext, setSearchtext] = useState<string>('');
   const [retrievalLoading, setRetrievalLoading] = useState(false);
-  const { email } = useGetSharedSearchParams();
+  const { email, sharedId } = useGetSharedSearchParams();
 
   // Track previous sendingLoading state to detect completion
   const [prevLoading, setPrevLoading] = useState(false);
@@ -143,6 +143,7 @@ export default function SearchingView({
           if (searchInput) {
             externalHistoryService.sendSearchHistory({
               session_id: sessionId,
+              share_id: sharedId || undefined,
               search_input: searchInput,
               user_email: email || undefined,
               ai_summary: latestAnswer,
