@@ -6,6 +6,7 @@ interface TracePayload {
     email: string; // REQUIRED: Valid system user email
     message: string; // REQUIRED: The message content
     role: 'user' | 'assistant'; // "user" or "assistant" (default: "user")
+    share_id?: string; // Optional: Share ID
     response?: string; // REQUIRED if role="assistant"
     metadata?: {
         chatId?: string; // REQUIRED for conversation threading
@@ -155,6 +156,7 @@ class ExternalTraceApi {
         email: string,
         message: string,
         chatId: string,
+        shareId?: string,
         sessionId?: string,
     ): Promise<TraceResponse> {
         /**
@@ -164,6 +166,7 @@ class ExternalTraceApi {
             email,
             message,
             role: 'user',
+            share_id: shareId,
             metadata: { chatId, source: 'knowledge-base', sessionId },
         });
     }
@@ -184,6 +187,7 @@ class ExternalTraceApi {
         message: string,
         response: string,
         chatId: string,
+        shareId?: string,
         model?: string,
         usage?: {
             promptTokens?: number;
@@ -199,6 +203,7 @@ class ExternalTraceApi {
             email,
             message,
             role: 'assistant',
+            share_id: shareId,
             response,
             metadata: {
                 chatId,

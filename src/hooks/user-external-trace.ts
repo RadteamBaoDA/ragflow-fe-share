@@ -4,21 +4,23 @@ import { externalTraceApi } from '@/services/external-trace-service';
 interface UseExternalTraceOptions {
     email: string;
     chatId: string;
+    shareId?: string;
 }
 
-export function useExternalTrace({ email, chatId }: UseExternalTraceOptions) {
+export function useExternalTrace({ email, chatId, shareId }: UseExternalTraceOptions) {
     const [isTracing, setIsTracing] = useState(false);
     const [lastTraceId, setLastTraceId] = useState<string | null>(null);
 
     const traceUserMessage = useCallback(
         async (message: string = "") => {
-            console.log('[ExternalTrace] traceUserMessage - chatId:', chatId, 'sessionId:', lastTraceId);
+            console.log('[ExternalTrace] traceUserMessage - chatId:', chatId, 'shareId:', shareId, 'sessionId:', lastTraceId);
             setIsTracing(true);
             try {
                 const result = await externalTraceApi.sendUserMessage(
                     email,
                     message,
                     chatId,
+                    shareId,
                     lastTraceId || undefined,
                 );
                 if (result.traceId) setLastTraceId(result.traceId);
@@ -27,7 +29,7 @@ export function useExternalTrace({ email, chatId }: UseExternalTraceOptions) {
                 setIsTracing(false);
             }
         },
-        [email, chatId, lastTraceId],
+        [email, chatId, shareId, lastTraceId],
     );
 
     const traceAssistantResponse = useCallback(
@@ -44,6 +46,7 @@ export function useExternalTrace({ email, chatId }: UseExternalTraceOptions) {
                     message,
                     response,
                     chatId,
+                    shareId,
                     model,
                     usage,
                     lastTraceId || undefined,
@@ -54,7 +57,7 @@ export function useExternalTrace({ email, chatId }: UseExternalTraceOptions) {
                 setIsTracing(false);
             }
         },
-        [email, chatId, lastTraceId],
+        [email, chatId, shareId, lastTraceId],
     );
 
     const traceScore = useCallback(
