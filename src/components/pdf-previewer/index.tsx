@@ -1,7 +1,7 @@
 import {
   useGetChunkHighlights,
   useGetDocumentUrl,
-} from '@/hooks/document-hooks';
+} from '@/hooks/use-document-request';
 import { IReferenceChunk } from '@/interfaces/database/chat';
 import { IChunk } from '@/interfaces/database/knowledge';
 import FileError from '@/pages/document-viewer/file-error';

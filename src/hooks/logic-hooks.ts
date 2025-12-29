@@ -1,14 +1,19 @@
 import { Authorization } from '@/constants/authorization';
 import { MessageType } from '@/constants/chat';
 import { LanguageTranslationMap } from '@/constants/common';
+import { Pagination } from '@/interfaces/common';
 import { ResponseType } from '@/interfaces/database/base';
-import { IAnswer, Message } from '@/interfaces/database/chat';
+import {
+  IAnswer,
+  IClientConversation,
+  IMessage,
+  Message,
+} from '@/interfaces/database/chat';
 import { IKnowledgeFile } from '@/interfaces/database/knowledge';
-import { IClientConversation, IMessage } from '@/pages/chat/interface';
 import api from '@/utils/api';
 import { getAuthorization } from '@/utils/authorization-util';
 import { buildMessageUuid } from '@/utils/chat';
-import { PaginationProps, message } from 'antd';
+import { message } from 'antd';
 import { FormInstance } from 'antd/lib';
 import axios from 'axios';
 import { EventSourceParserStream } from 'eventsource-parser/stream';
@@ -67,8 +72,8 @@ export const useGetPaginationWithRouter = () => {
     size: pageSize,
   } = useSetPaginationParams();
 
-  const onPageChange: PaginationProps['onChange'] = useCallback(
-    (pageNumber: number, pageSize: number) => {
+  const onPageChange: Pagination['onChange'] = useCallback(
+    (pageNumber: number, pageSize?: number) => {
       setPaginationParams(pageNumber, pageSize);
     },
     [setPaginationParams],
@@ -84,7 +89,7 @@ export const useGetPaginationWithRouter = () => {
     [setPaginationParams, pageSize],
   );
 
-  const pagination: PaginationProps = useMemo(() => {
+  const pagination: Pagination = useMemo(() => {
     return {
       showQuickJumper: true,
       total: 0,
@@ -93,7 +98,7 @@ export const useGetPaginationWithRouter = () => {
       pageSize: pageSize,
       pageSizeOptions: [1, 2, 10, 20, 50, 100],
       onChange: onPageChange,
-      showTotal: (total) => `${t('total')} ${total}`,
+      showTotal: (total: number) => `${t('total')} ${total}`,
     };
   }, [t, onPageChange, page, pageSize]);
 
@@ -105,7 +110,7 @@ export const useGetPaginationWithRouter = () => {
 
 export const useHandleSearchChange = () => {
   const [searchString, setSearchString] = useState('');
-  const { setPagination } = useGetPaginationWithRouter();
+  const { pagination, setPagination } = useGetPaginationWithRouter();
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       const value = e.target.value;
@@ -115,21 +120,21 @@ export const useHandleSearchChange = () => {
     [setPagination],
   );
 
-  return { handleInputChange, searchString };
+  return { handleInputChange, searchString, pagination, setPagination };
 };
 
 export const useGetPagination = () => {
   const [pagination, setPagination] = useState({ page: 1, pageSize: 10 });
   const { t } = useTranslate('common');
 
-  const onPageChange: PaginationProps['onChange'] = useCallback(
+  const onPageChange: Pagination['onChange'] = useCallback(
     (pageNumber: number, pageSize: number) => {
       setPagination({ page: pageNumber, pageSize });
     },
     [],
   );
 
-  const currentPagination: PaginationProps = useMemo(() => {
+  const currentPagination: Pagination = useMemo(() => {
     return {
       showQuickJumper: true,
       total: 0,
@@ -138,7 +143,7 @@ export const useGetPagination = () => {
       pageSize: pagination.pageSize,
       pageSizeOptions: [1, 2, 10, 20, 50, 100],
       onChange: onPageChange,
-      showTotal: (total) => `${t('total')} ${total}`,
+      showTotal: (total: number) => `${t('total')} ${total}`,
     };
   }, [t, onPageChange, pagination]);
 
@@ -205,47 +210,10 @@ export const useSendMessageWithSse = (
     useSetDoneRecord();
   const timer = useRef<any>();
   const sseRef = useRef<AbortController>();
-  // Throttling refs for smooth UI during streaming
-  const pendingAnswerRef = useRef<IAnswer | null>(null);
-  const throttleTimeoutRef = useRef<number | null>(null);
-  const lastUpdateRef = useRef<number>(0);
 
   const initializeSseRef = useCallback(() => {
     sseRef.current = new AbortController();
   }, []);
-
-  // Flush pending answer to state
-  const flushPendingAnswer = useCallback(() => {
-    if (pendingAnswerRef.current) {
-      setAnswer(pendingAnswerRef.current);
-      pendingAnswerRef.current = null;
-    }
-    throttleTimeoutRef.current = null;
-    lastUpdateRef.current = Date.now();
-  }, []);
-
-  // Throttled answer update using setTimeout (100ms) for smooth UI
-  const throttledSetAnswer = useCallback(
-    (newAnswer: IAnswer) => {
-      pendingAnswerRef.current = newAnswer;
-
-      const now = Date.now();
-      const timeSinceLastUpdate = now - lastUpdateRef.current;
-      const THROTTLE_DELAY = 100;
-
-      if (throttleTimeoutRef.current === null) {
-        if (timeSinceLastUpdate >= THROTTLE_DELAY) {
-          flushPendingAnswer();
-        } else {
-          throttleTimeoutRef.current = window.setTimeout(
-            flushPendingAnswer,
-            THROTTLE_DELAY - timeSinceLastUpdate,
-          );
-        }
-      }
-    },
-    [flushPendingAnswer],
-  );
 
   const resetAnswer = useCallback(() => {
     if (timer.current) {
@@ -267,9 +235,6 @@ export const useSendMessageWithSse = (
     },
     [setDoneRecordById],
   );
-  // Timeout constants
-  const RESPONSE_TIMEOUT_MS = 180000; // 3 minutes for initial response
-  const STREAM_TIMEOUT_MS = 720000; // 12 minutes for stream inactivity
 
   const send = useCallback(
     async (
@@ -277,21 +242,6 @@ export const useSendMessageWithSse = (
       controller?: AbortController,
     ): Promise<{ response: Response; data: ResponseType } | undefined> => {
       initializeSseRef();
-
-      // Create a timeout controller for the initial fetch
-      const timeoutController = new AbortController();
-      const effectiveController = controller || sseRef.current;
-
-      // Link the timeout controller to the effective controller
-      const abortHandler = () => timeoutController.abort();
-      effectiveController?.signal?.addEventListener('abort', abortHandler);
-
-      // Set up initial response timeout
-      const responseTimeoutId = setTimeout(() => {
-        console.warn('[SSE] Response timeout - aborting request');
-        timeoutController.abort();
-      }, RESPONSE_TIMEOUT_MS);
-
       try {
         setDoneValue(body, false);
         const response = await fetch(url, {
@@ -301,11 +251,8 @@ export const useSendMessageWithSse = (
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(omit(body, 'chatBoxId')),
-          signal: timeoutController.signal,
+          signal: controller?.signal || sseRef.current?.signal,
         });
-
-        // Clear initial response timeout since we got a response
-        clearTimeout(responseTimeoutId);
 
         const res = response.clone().json();
 
@@ -314,57 +261,20 @@ export const useSendMessageWithSse = (
           .pipeThrough(new EventSourceParserStream())
           .getReader();
 
-        // Set up stream inactivity timeout
-        let streamTimeoutId: ReturnType<typeof setTimeout> | null = null;
-
-        const resetStreamTimeout = () => {
-          if (streamTimeoutId) {
-            clearTimeout(streamTimeoutId);
-          }
-          streamTimeoutId = setTimeout(() => {
-            console.warn('[SSE] Stream timeout - no data received, aborting');
-            timeoutController.abort();
-          }, STREAM_TIMEOUT_MS);
-        };
-
-        const clearStreamTimeout = () => {
-          if (streamTimeoutId) {
-            clearTimeout(streamTimeoutId);
-            streamTimeoutId = null;
-          }
-        };
-
-        // Start the stream timeout
-        resetStreamTimeout();
-
         while (true) {
           try {
             const x = await reader?.read();
             if (x) {
               const { done, value } = x;
               if (done) {
-                clearStreamTimeout();
-                // Flush any pending answer immediately on stream end
-                if (pendingAnswerRef.current) {
-                  setAnswer(pendingAnswerRef.current);
-                  pendingAnswerRef.current = null;
-                }
-                if (throttleTimeoutRef.current !== null) {
-                  clearTimeout(throttleTimeoutRef.current);
-                  throttleTimeoutRef.current = null;
-                }
                 resetAnswer();
                 break;
               }
-
-              // Reset stream timeout on each received event
-              resetStreamTimeout();
-
               try {
                 const val = JSON.parse(value?.data || '');
                 const d = val?.data;
                 if (typeof d !== 'boolean') {
-                  throttledSetAnswer({
+                  setAnswer({
                     ...d,
                     conversationId: body?.conversation_id,
                     chatBoxId: body.chatBoxId,
@@ -375,58 +285,27 @@ export const useSendMessageWithSse = (
               }
             }
           } catch (e) {
-            clearStreamTimeout();
             if (e instanceof DOMException && e.name === 'AbortError') {
-              console.log('Request was aborted by user, logic, or timeout.');
-            } else {
-              // Log other errors and break out of the loop
-              console.warn('[SSE] Stream read error:', e);
+              console.log('Request was aborted by user or logic.');
+              break;
             }
-            // Always break on errors to prevent infinite loop
-            break;
           }
         }
-
-        // Cleanup
-        effectiveController?.signal?.removeEventListener('abort', abortHandler);
         setDoneValue(body, true);
         resetAnswer();
         return { data: await res, response };
       } catch (e) {
-        clearTimeout(responseTimeoutId);
-        effectiveController?.signal?.removeEventListener('abort', abortHandler);
         setDoneValue(body, true);
-        resetAnswer();
 
-        if (e instanceof DOMException && e.name === 'AbortError') {
-          console.log('Request was aborted - possibly due to timeout');
-        }
+        resetAnswer();
         // Swallow fetch errors silently
       }
     },
-    [initializeSseRef, setDoneValue, url, resetAnswer, throttledSetAnswer],
+    [initializeSseRef, setDoneValue, url, resetAnswer],
   );
 
   const stopOutputMessage = useCallback(() => {
     sseRef.current?.abort();
-    // Flush any pending answer before stopping
-    if (pendingAnswerRef.current) {
-      flushPendingAnswer();
-    }
-    // Cancel any pending throttle on stop
-    if (throttleTimeoutRef.current !== null) {
-      clearTimeout(throttleTimeoutRef.current);
-      throttleTimeoutRef.current = null;
-    }
-  }, [flushPendingAnswer]);
-
-  // Cleanup throttle on unmount
-  useEffect(() => {
-    return () => {
-      if (throttleTimeoutRef.current !== null) {
-        clearTimeout(throttleTimeoutRef.current);
-      }
-    };
   }, []);
 
   return {
@@ -478,8 +357,6 @@ export const useScrollToBottom = (
   const ref = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const isAtBottomRef = useRef(true);
-  // Track if user was at bottom before latest content update for streaming
-  const wasAtBottomBeforeUpdate = useRef(true);
 
   useEffect(() => {
     isAtBottomRef.current = isAtBottom;
@@ -488,8 +365,7 @@ export const useScrollToBottom = (
   const checkIfUserAtBottom = useCallback(() => {
     if (!containerRef?.current) return true;
     const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
-    // Increased tolerance to 100px to handle rapid streaming updates better
-    return Math.abs(scrollTop + clientHeight - scrollHeight) < 100;
+    return Math.abs(scrollTop + clientHeight - scrollHeight) < 25;
   }, [containerRef]);
 
   useEffect(() => {
@@ -519,16 +395,14 @@ export const useScrollToBottom = (
   useEffect(() => {
     if (!messages) return;
     if (!containerRef?.current) return;
-    // Save the current at-bottom state before the scroll update
-    wasAtBottomBeforeUpdate.current = isAtBottomRef.current || checkIfUserAtBottom();
-
     requestAnimationFrame(() => {
-      // Scroll immediately without delay for streaming responsiveness
-      if (wasAtBottomBeforeUpdate.current) {
-        scrollToBottom();
-      }
+      setTimeout(() => {
+        if (isAtBottomRef.current) {
+          scrollToBottom();
+        }
+      }, 100);
     });
-  }, [messages, containerRef, scrollToBottom, checkIfUserAtBottom]);
+  }, [messages, containerRef, scrollToBottom]);
 
   return { scrollRef: ref, isAtBottom, scrollToBottom };
 };
@@ -560,7 +434,7 @@ export const useSelectDerivedMessages = () => {
   );
 
   const addNewestQuestion = useCallback(
-    (message: Message, answer: string = '') => {
+    (message: IMessage, answer: string = '') => {
       setDerivedMessages((pre) => {
         return [
           ...pre,
@@ -573,6 +447,7 @@ export const useSelectDerivedMessages = () => {
           {
             role: MessageType.Assistant,
             content: answer,
+            conversationId: message.conversationId,
             id: buildMessageUuid({ ...message, role: MessageType.Assistant }),
           },
         ];
