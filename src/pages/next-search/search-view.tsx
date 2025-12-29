@@ -14,12 +14,10 @@ import { cn } from '@/lib/utils';
 import DOMPurify from 'dompurify';
 import { isEmpty } from 'lodash';
 import { BrainCircuit, Search, X } from 'lucide-react';
-import { Dispatch, SetStateAction, useEffect, useState, useMemo, useRef } from '
-react';
+import { Dispatch, SetStateAction, useEffect, useState, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ISearchAppDetailProps } from '../next-searches/hooks';
 import PdfDrawer from './document-preview-modal';
-import HightLightMarkdown from './highlight-markdown';
 import { ISearchReturnProps } from './hooks';
 import './index.less';
 import MarkdownContent from './markdown-content';
@@ -29,6 +27,7 @@ import { SkeletonCard } from '@/components/skeleton-card';
 import { externalHistoryService } from '@/services/external-history-service';
 import { useGetSharedSearchParams } from './hooks';
 import { v4 as uuidv4 } from 'uuid';
+import HighLightMarkdown from '@/components/highlight-markdown';
 
 export default function SearchingView({
   setIsSearching,
@@ -107,8 +106,7 @@ export default function SearchingView({
     // 2. sendingLoading is now false (stream finished)
     // 3. loading is false (retrieval finished)
     // 4. We haven't logged yet
-    const streamFinished = hasStartedSending.current && !sendingLoading && !load
-ing;
+    const streamFinished = hasStartedSending.current && !sendingLoading && !loading;
 
     if (streamFinished && !hasLoggedHistory) {
       // Check if we have results
@@ -130,8 +128,7 @@ ing;
           const latestChunks = chunksRef.current || [];
 
           // Get unique file names from latest chunks
-          const fileResults = [...new Set(latestChunks?.map(c => c.docnm_kwd).fi
-lter(Boolean) || [])];
+          const fileResults = [...new Set(latestChunks?.map(c => c.docnm_kwd).filter(Boolean) || [])];
           const searchInput = capturedSearchStr || capturedSearchtext;
 
           console.log('[SearchView] Sending history after stream complete:', {
@@ -162,12 +159,10 @@ lter(Boolean) || [])];
       setHasLoggedHistory(false);
       hasStartedSending.current = false;
     }
-  }, [loading, sendingLoading, chunks, answer, searchStr, searchtext, email, ses
-sionId, hasLoggedHistory]);
+  }, [loading, sendingLoading, chunks, answer, searchStr, searchtext, email, sessionId, hasLoggedHistory]);
 
 
-  // Show loading only when searching retrieval documents, not waiting for summa
-ry
+  // Show loading only when searching retrieval documents, not waiting for summary
   const showLoading = loading && (!chunks || chunks.length === 0);
   return (
     <section
@@ -178,14 +173,12 @@ ry
       {/* search header */}
       <div
         className={cn(
-          'relative z-10 px-8 pt-8 flex  text-transparent justify-start items-st
-art w-full',
+          'relative z-10 px-8 pt-8 flex  text-transparent justify-start items-start w-full',
         )}
       >
         <h1
           className={cn(
-            'text-4xl font-bold bg-gradient-to-l from-[#40EBE3] to-[#4A51FF] bg-
-clip-text cursor-pointer',
+            'text-4xl font-bold bg-gradient-to-l from-[#40EBE3] to-[#4A51FF] bg-clip-text cursor-pointer',
           )}
           onClick={() => {
             setIsSearching?.(false);
@@ -195,8 +188,7 @@ clip-text cursor-pointer',
         </h1>
         <div
           className={cn(
-            'rounded-lg text-primary text-xl flex flex-col justify-center flex-1
- ml-8',
+            'rounded-lg text-primary text-xl flex flex-col justify-center flex-1 ml-8',
           )}
         >
           <div className={cn('flex flex-col justify-start items-start w-full')}>
@@ -204,8 +196,7 @@ clip-text cursor-pointer',
               <Input
                 placeholder={t('search.searchGreeting')}
                 className={cn(
-                  'w-full rounded-full py-6 pl-4 !pr-[8rem] text-primary text-lg
- bg-bg-base',
+                  'w-full rounded-full py-6 pl-4 !pr-[8rem] text-primary text-lg bg-bg-base',
                 )}
                 value={searchtext}
                 onChange={(e) => {
@@ -257,11 +248,9 @@ w w-12 h-8 ml-4"
             style={{ height: 'calc(100vh - 250px)' }}
           >
 
-            {searchData.search_config.summary && !isSearchStrEmpty && chunks?.le
-ngth > 0 && (
+            {searchData.search_config.summary && !isSearchStrEmpty && chunks?.length > 0 && (
               <>
-                <div className="flex justify-start items-start text-text-primary
- text-2xl">
+                <div className="flex justify-start items-start text-text-primary text-2xl">
                   {t('search.AISummary')}
                 </div>
                 {/* AI Summary container with fixed height */}
@@ -281,8 +270,7 @@ rollbar-none w-[90%]">
                   )}
                 </div>
                 {/* Divider - always show when chunks exist */}
-                <div className="w-full border-b border-border-default/80 my-6"><
-/div>
+                <div className="w-full border-b border-border-default/80 my-6"></div>
               </>
             )}
             {/* retrieval documents - show immediately when chunks available, no
@@ -328,20 +316,17 @@ t waiting for stream */}
                                   className="text-sm text-text-primary mb-1"
                                 ></div>
                               </PopoverTrigger>
-                              <PopoverContent className="text-text-primary !w-fu
-ll max-w-lg ">
-                                <div className="max-h-96 overflow-auto scrollbar
--thin">
-                                  <HightLightMarkdown>
+                              <PopoverContent className="text-text-primary !w-full max-w-lg ">
+                                <div className="max-h-96 overflow-auto scrollbar-thin">
+                                  <HighLightMarkdown>
                                     {chunk.content_with_weight}
-                                  </HightLightMarkdown>
+                                  </HighLightMarkdown>
                                 </div>
                               </PopoverContent>
                             </Popover>
                           </div>
                           <div
-                            className="flex gap-2 items-center text-xs text-text
--secondary border p-1 rounded-lg w-fit mt-3"
+                            className="flex gap-2 items-center text-xs text-text-secondary border p-1 rounded-lg w-fit mt-3"
                             onClick={() =>
                               clickDocumentButton(chunk.doc_id, chunk as any)
                             }
@@ -351,8 +336,7 @@ ll max-w-lg ">
                           </div>
                         </div>
                         {index < chunks.length - 1 && (
-                          <div className="w-full border-b border-border-default/
-80 mt-6"></div>
+                          <div className="w-full border-b border-border-default/80 mt-6"></div>
                         )}
                       </div>
                     );
@@ -362,11 +346,9 @@ ll max-w-lg ">
               {relatedQuestions?.length > 0 &&
                 searchData.search_config.related_search && (
                   <>
-                    <div className="w-full border-b border-border-default/80 mt-
-6"></div>
+                    <div className="w-full border-b border-border-default/80 mt-6"></div>
 
-                    <div className="mt-6 w-full overflow-hidden opacity-100 max-
-h-96">
+                    <div className="mt-6 w-full overflow-hidden opacity-100 max-h-96">
                       <p className="text-text-primary mb-2 text-xl">
                         {t('search.relatedSearch')}
                       </p>
@@ -421,8 +403,7 @@ h-96">
           <Popover>
             <PopoverTrigger asChild>
               <div
-                className="rounded-lg h-16 w-16 p-0 absolute top-28 right-3 z-30
- border cursor-pointer flex justify-center items-center bg-bg-card"
+                className="rounded-lg h-16 w-16 p-0 absolute top-28 right-3 z-30 border cursor-pointer flex justify-center items-center bg-bg-card"
                 onClick={showMindMapModal}
               >
                 {/* <SvgIcon name="paper-clip" width={24} height={30}></SvgIcon>
@@ -442,8 +423,7 @@ h-96">
         ></PdfDrawer>
       )}
       {showLoading && (
-        <div className="fixed inset-0 z-[100] flex flex-col items-center justify
--center bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/50 backdrop-blur-sm">
           <Spin size="large" className="w-20 h-20" />
           <div className="mt-4 text-white font-medium text-lg">
             {t('search.searchingPleaseWait')}

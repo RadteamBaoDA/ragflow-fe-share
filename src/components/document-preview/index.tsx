@@ -46,10 +46,10 @@ const Preview = ({
       {['jpg', 'png', 'gif', 'jpeg', 'svg', 'bmp', 'ico', 'tif'].indexOf(
         fileType,
       ) > -1 && (
-        <section>
-          <ImagePreviewer className={className} url={url} />
-        </section>
-      )}
+          <section>
+            <ImagePreviewer className={className} url={url} />
+          </section>
+        )}
       {[
         'mp4',
         'avi',
@@ -63,10 +63,10 @@ const Preview = ({
         'rm',
         'rmvb',
       ].indexOf(fileType) > -1 && (
-        <section>
-          <VideoPreviewer className={className} url={url} />
-        </section>
-      )}
+          <section>
+            <VideoPreviewer className={className} url={url} />
+          </section>
+        )}
       {['pptx'].indexOf(fileType) > -1 && (
         <section>
           <PptPreviewer className={className} url={url} />

@@ -4,8 +4,7 @@ interface ChatHistoryPayload {
   user_email?: string;
   user_prompt: string;
   llm_response: string;
-  citations?: string[]; // Assuming simple string list of citations or file name
-s
+  citations?: string[]; // Assuming simple string list of citations or file names
 }
 
 interface SearchHistoryPayload {
@@ -24,22 +23,17 @@ class ExternalHistoryService {
   constructor() {
     if (typeof window !== 'undefined') {
       try {
-        this.worker = new Worker(new URL('../workers/external-history.worker.ts'
-, import.meta.url), { type: 'module' });
+        this.worker = new Worker(new URL('../workers/external-history.worker.ts', import.meta.url), { type: 'module' });
 
         // Initialize config from environment variables if available
-        // Note: process.env might need to be replaced by import.meta.env in Vit
-e,
-        // but this project seems to use process.env (based on external-trace-se
-rvice.ts)
+        // Note: process.env might need to be replaced by import.meta.env in Vite,
+        // but this project seems to use process.env (based on external-trace-service.ts)
         this.config = {
-          baseURL: process.env.EXTERNAL_TRACE_API_URL || process.env.EXTERNAL_TR
-ACE_URL,
+          baseURL: process.env.EXTERNAL_TRACE_API_URL || process.env.EXTERNAL_TRACE_URL,
           apiKey: process.env.EXTERNAL_TRACE_API_KEY,
         };
       } catch (error) {
-        console.error('Failed to initialize ExternalHistoryService worker:', err
-or);
+        console.error('Failed to initialize ExternalHistoryService worker:', error);
       }
     }
   }
@@ -56,8 +50,7 @@ or);
 
   public sendSearchHistory(payload: SearchHistoryPayload) {
     if (!this.worker) return;
-    console.log('[ExternalHistoryService] sendSearchHistory - payload:', payload
-);
+    console.log('[ExternalHistoryService] sendSearchHistory - payload:', payload);
     this.worker.postMessage({
       type: 'search',
       payload,

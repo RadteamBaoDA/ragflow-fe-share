@@ -7,8 +7,7 @@ import {
 import { IModalProps } from '@/interfaces/common';
 import { IReferenceChunk } from '@/interfaces/database/chat';
 import { IChunk } from '@/interfaces/database/knowledge';
-import DocumentPreview from '@/pages/chunk/parsed-result/add-knowledge/component
-s/knowledge-chunk/components/document-preview';
+import DocumentPreview from '@/components/document-preview';
 import { useEffect, useState } from 'react';
 
 interface IProps extends IModalProps<any> {
@@ -52,8 +51,6 @@ const PdfDrawer = ({
       }
       onCancel={hideModal}
       open={visible}
-      className="!w-[90vw] !max-w-[90vw] !h-[95vh] !p-0 flex flex-col overflow-hidden"
-      bodyClassName="flex-1 min-h-0 !p-0 !max-h-full !overflow-hidden"
       showfooter={false}
       full={true}
     >

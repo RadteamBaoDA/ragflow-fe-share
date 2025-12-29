@@ -183,7 +183,7 @@ const InnerPdfPreview = memo(({
   // Effect to update PDF scale when scale prop changes
   useEffect(() => {
     // The react-pdf-highlighter library listens to resize events to update scal
-e
+    e
     // Dispatch a resize event to trigger the library's debouncedScaleValue
     // which will read the new pdfScaleValue prop and apply it
     const timeoutId = setTimeout(() => {
@@ -193,8 +193,7 @@ e
   }, [scale]);
 
   return (
-    <div ref={containerRef} className={`${styles.pdfContentArea} ${!highlightsVi
-sible ? styles.highlightsHidden : ''}`}>
+    <div ref={containerRef} className={`${styles.pdfContentArea} ${!highlightsVisible ? styles.highlightsHidden : ''}`}>
       <PdfLoader
         url={url}
         beforeLoad={<Skeleton active />}
@@ -235,13 +234,11 @@ const DocumentPreviewer = ({ chunk, documentId, visible }: IProps) => {
   }, [visible]);
 
   // Clamp scale to min/max bounds
-  const clampScale = (value: number) => Math.min(Math.max(value, MIN_SCALE), MAX
-_SCALE);
+  const clampScale = (value: number) => Math.min(Math.max(value, MIN_SCALE), MAX_SCALE);
 
   // Check if current scale matches a preset
   const isPresetScale = (scaleValue: number) => {
-    return ZOOM_PRESETS.some(p => parseFloat(p.value) === scaleValue && !isNaN(p
-arseFloat(p.value)));
+    return ZOOM_PRESETS.some(p => parseFloat(p.value) === scaleValue && !isNaN(parseFloat(p.value)));
   };
 
   // Generate dropdown options including current custom scale if needed
@@ -263,8 +260,9 @@ arseFloat(p.value)));
         // Add at the end if larger than all presets
         options.push({ value: customValue, label: customLabel });
       } else {
-        options.splice(insertIndex, 0, { value: customValue, label: customLabel
-});
+        options.splice(insertIndex, 0, {
+          value: customValue, label: customLabel
+        });
       }
     }
 
@@ -275,7 +273,7 @@ arseFloat(p.value)));
   const getCurrentDropdownValue = () => {
     // Check if scale matches a preset
     const matchingPreset = ZOOM_PRESETS.find(p => parseFloat(p.value) === scale)
-;
+      ;
     if (matchingPreset) {
       return matchingPreset.value;
     }
@@ -379,8 +377,7 @@ arseFloat(p.value)));
   );
 
   return (
-    <div className={styles.documentContainer} style={{ height: '100%', width: '1
-00%' }}>
+    <div className={styles.documentContainer} style={{ height: '100%', width: '100%' }}>
       {renderPdfToolbar()}
       <InnerPdfPreview
         url={url}

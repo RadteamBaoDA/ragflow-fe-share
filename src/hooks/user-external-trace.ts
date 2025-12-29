@@ -7,15 +7,12 @@ interface UseExternalTraceOptions {
     shareId?: string;
 }
 
-export function useExternalTrace({ email, chatId, shareId }: UseExternalTraceOpt
-ions) {
+export function useExternalTrace({ email, chatId, shareId }: UseExternalTraceOptions) {
     const [isTracing, setIsTracing] = useState(false);
     const [lastTraceId, setLastTraceId] = useState<string | null>(null);
 
     const traceUserMessage = useCallback(
         async (message: string = "") => {
-            console.log('[ExternalTrace] traceUserMessage - chatId:', chatId, 's
-hareId:', shareId, 'sessionId:', lastTraceId);
             setIsTracing(true);
             try {
                 const result = await externalTraceApi.sendUserMessage(
@@ -63,8 +60,7 @@ hareId:', shareId, 'sessionId:', lastTraceId);
     );
 
     const traceScore = useCallback(
-        async (score: number, comment?: string, name: string = "user-feedback")
-=> {
+        async (score: number, comment?: string, name: string = "user-feedback") => {
             if (!lastTraceId) return;
             setIsTracing(true);
             try {

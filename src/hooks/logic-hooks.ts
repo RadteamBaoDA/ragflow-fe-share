@@ -25,7 +25,7 @@ import { useTranslation } from 'react-i18next';
 import { v4 as uuid } from 'uuid';
 import { useTranslate } from './common-hooks';
 import { useSetPaginationParams } from './route-hook';
-import { useFetchTenantInfo, useSaveSetting } from './user-setting-hooks';
+import { useFetchTenantInfo, useSaveSetting } from './use-user-setting-request';
 
 export function usePrevious<T>(value: T) {
   const ref = useRef<T>();
@@ -520,8 +520,7 @@ export const useScrollToBottom = (
     if (!messages) return;
     if (!containerRef?.current) return;
     // Save the current at-bottom state before the scroll update
-    wasAtBottomBeforeUpdate.current = isAtBottomRef.current || checkIfUserAtBott
-om();
+    wasAtBottomBeforeUpdate.current = isAtBottomRef.current || checkIfUserAtBottom();
 
     requestAnimationFrame(() => {
       // Scroll immediately without delay for streaming responsiveness
@@ -567,12 +566,9 @@ export const useSelectDerivedMessages = () => {
           ...pre,
           {
             ...message,
-            id: buildMessageUuid(message), // The message id is generated on the
- front end,
-            // and the message id returned by the back end is the same as the qu
-estion id,
-            //  so that the pair of messages can be deleted together when deleti
-ng the message
+            id: buildMessageUuid(message), // The message id is generated on the front end,
+            // and the message id returned by the back end is the same as the question id,
+            //  so that the pair of messages can be deleted together when deleting the message
           },
           {
             role: MessageType.Assistant,
@@ -591,12 +587,9 @@ ng the message
         ...pre,
         {
           ...message,
-          id: buildMessageUuid(message), // The message id is generated on the f
-ront end,
-          // and the message id returned by the back end is the same as the ques
-tion id,
-          //  so that the pair of messages can be deleted together when deleting
- the message
+          id: buildMessageUuid(message), // The message id is generated on the front end,
+          // and the message id returned by the back end is the same as the question id,
+          //  so that the pair of messages can be deleted together when deleting the message
         },
       ];
     });

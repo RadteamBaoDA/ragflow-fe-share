@@ -102,7 +102,7 @@ export const AssistantGroupButton = ({
               <LikeOutlined />
             </Radio.Button>
             <Radio.Button value="d" onClick={handleDislike} disabled={isLoading}
->
+            >
               <DislikeOutlined />
             </Radio.Button>
           </>

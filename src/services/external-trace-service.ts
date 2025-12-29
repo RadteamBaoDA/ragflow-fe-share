@@ -67,8 +67,7 @@ class ExternalTraceApi {
          */
         this.client = axios.create({
             baseURL:
-                process.env.EXTERNAL_TRACE_API_URL || process.env.EXTERNAL_TRACE
-_URL,
+                process.env.EXTERNAL_TRACE_API_URL || process.env.EXTERNAL_TRACE_URL,
             headers: {
                 'Content-Type': 'application/json',
                 ...(process.env.EXTERNAL_TRACE_API_KEY && {
@@ -118,8 +117,7 @@ _URL,
             return data;
         } catch (error) {
             console.warn('Failed to submit trace:', error);
-            // Return failure object instead of throwing, to prevent app crash/l
-ogout on 401
+            // Return failure object instead of throwing, to prevent app crash/logout on 401
             return { success: false, error: 'Failed to submit trace' };
         }
     }
@@ -144,8 +142,7 @@ ogout on 401
              * Send a POST request to the external tracing API.
              */
             console.log(`feedback submit: ${JSON.stringify(payload)}`);
-            const { data } = await this.client.post<FeedbackResponse>(path, payl
-oad);
+            const { data } = await this.client.post<FeedbackResponse>(path, payload);
             return data;
         } catch (error) {
             console.warn('Failed to submit feedback:', error);

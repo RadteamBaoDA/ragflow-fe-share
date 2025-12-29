@@ -5,12 +5,14 @@ import PdfDrawer from '@/components/pdf-drawer';
 import { useClickDrawer } from '@/components/pdf-drawer/hooks';
 import { useSyncThemeFromParams } from '@/components/theme-provider';
 import { MessageType, SharedFrom } from '@/constants/chat';
-import { useFetchNextConversationSSE } from '@/hooks/chat-hooks';
-import { useFetchFlowSSE } from '@/hooks/flow-hooks';
-import { useFetchExternalChatInfo } from '@/hooks/use-chat-request';
+import {
+  useFetchExternalChatInfo,
+  useFetchNextConversationSSE,
+} from '@/hooks/use-chat-request';
+import { useFetchFlowSSE } from '@/hooks/use-agent-request';
 import { useExternalTrace } from '@/hooks/user-external-trace';
 import i18n from '@/locales/config';
-import { useSendButtonDisabled } from '@/pages/chat/hooks';
+import { useSendButtonDisabled } from '../hooks/use-button-disabled';
 import { buildMessageUuidWithRole } from '@/utils/chat';
 import { Input, Modal } from 'antd';
 import React, {
@@ -69,8 +71,7 @@ const ChatContainer = () => {
     hasError,
     stopOutputMessage,
     scrollRef,
-    messageContainerRef,
-    resetSession,
+    messageContainerRef
   } = useSendSharedMessage();
 
   /**
@@ -167,8 +168,7 @@ const ChatContainer = () => {
       lastQuestion: lastQuestion ? lastQuestion.substring(0, 30) + '...' : null,
       messagesCount: derivedMessages?.length ?? 0,
       lastMsgRole: derivedMessages?.[derivedMessages.length - 1]?.role,
-      lastMsgContentLength: derivedMessages?.[derivedMessages.length - 1]?.conte
-nt?.length,
+      lastMsgContentLength: derivedMessages?.[derivedMessages.length - 1]?.content?.length,
       lastTracedId: lastTracedMessageId.current,
       pendingTrace: pendingTraceRef.current,
       hasError,
@@ -202,18 +202,16 @@ nt?.length,
     // Only process assistant messages
     if (lastMsg.role !== MessageType.Assistant) {
       console.log('[ChatContainer] ⏳ Skip: Last message is not assistant, role:'
-, lastMsg.role);
+        , lastMsg.role);
       return;
     }
 
-    // Generate a unique ID based on message ID and messages count (not content
-which changes)
+    // Generate a unique ID based on message ID and messages count (not content which changes)
     const messageId = lastMsg.id || `msg_${derivedMessages.length}`;
 
     // Skip if already traced this message
     if (lastTracedMessageId.current === messageId) {
-      console.log('[ChatContainer] ⏳ Skip: Already traced this message:', messag
-eId);
+      console.log('[ChatContainer] ⏳ Skip: Already traced this message:', messageId);
       return;
     }
 
@@ -224,13 +222,11 @@ eId);
     }
 
     if (typeof lastMsg.content !== 'string') {
-      console.log('[ChatContainer] ⏳ Skip: Content is not string, type:', typeof
- lastMsg.content);
+      console.log('[ChatContainer] ⏳ Skip: Content is not string, type:', typeof lastMsg.content);
       return;
     }
 
-    console.log('[ChatContainer] ✅ All checks passed, scheduling trace for:', me
-ssageId);
+    console.log('[ChatContainer] ✅ All checks passed, scheduling trace for:', messageId);
 
     // Mark this message as traced and pending BEFORE making API calls
     lastTracedMessageId.current = messageId;
@@ -252,16 +248,14 @@ ssageId);
       const latestMsg = latestMessages?.[capturedMessageIndex];
 
       if (!latestMsg) {
-        console.warn('[ChatContainer] Message not found at index:', capturedMess
-ageIndex);
+        console.warn('[ChatContainer] Message not found at index:', capturedMessageIndex);
         return;
       }
 
       const latestContent = latestMsg.content;
       const latestReference = latestMsg.reference;
 
-      console.log('[ChatContainer] Tracing completed assistant response after de
-lay:', {
+      console.log('[ChatContainer] Tracing completed assistant response after delay:', {
         messageId,
         capturedIndex: capturedMessageIndex,
         contentLength: latestContent?.length,
@@ -281,7 +275,7 @@ lay:', {
         user_email: email,
         user_prompt: capturedQuestion,
         llm_response: latestContent,
-        citations: latestReference?.chunks?.map((c) => c.document_name) || [],
+        citations: latestReference?.chunks?.map((c: any) => c.document_name) || [],
       };
 
       console.log('[ChatContainer] Sending to history API:', {
@@ -309,14 +303,6 @@ lay:', {
     internalChatId,
   ]);
 
-  /**
-   * Handle reset for chat
-   */
-  const handleReset = async () => {
-    await resetSession();
-    setLastTraceId(uuidv4());
-    setInternalChatId(uuidv4());
-  };
 
   /**
    * Get avatar data
