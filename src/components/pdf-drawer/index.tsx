@@ -1,9 +1,8 @@
 import { IModalProps } from '@/interfaces/common';
 import { IReferenceChunk } from '@/interfaces/database/chat';
 import { IChunk } from '@/interfaces/database/knowledge';
-import { cn } from '@/lib/utils';
+import { Drawer } from 'antd';
 import DocumentPreviewer from '../pdf-previewer';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../ui/sheet';
 
 interface IProps extends IModalProps<any> {
   documentId: string;
@@ -12,34 +11,32 @@ interface IProps extends IModalProps<any> {
   height?: string | number;
 }
 
-export const PdfSheet = ({
+import { useTranslation } from 'react-i18next';
+
+export const PdfDrawer = ({
   visible = false,
   hideModal,
   documentId,
   chunk,
-  width = '50vw',
+  width = '90vw',
   height,
 }: IProps) => {
+  const { t } = useTranslation();
   return (
-    <Sheet open onOpenChange={hideModal}>
-      <SheetContent
-        className={cn(`max-w-full`)}
-        style={{
-          width: width,
-          height: height ? height : undefined,
-        }}
-      >
-        <SheetHeader>
-          <SheetTitle>Document Previewer</SheetTitle>
-        </SheetHeader>
-        <DocumentPreviewer
-          documentId={documentId}
-          chunk={chunk}
-          visible={visible}
-        ></DocumentPreviewer>
-      </SheetContent>
-    </Sheet>
+    <Drawer
+      title={t('chat.documentPreviewer')}
+      onClose={hideModal}
+      open={visible}
+      width={width}
+      height={height}
+    >
+      <DocumentPreviewer
+        documentId={documentId}
+        chunk={chunk}
+        visible={visible}
+      ></DocumentPreviewer>
+    </Drawer>
   );
 };
 
-export default PdfSheet;
+export default PdfDrawer;

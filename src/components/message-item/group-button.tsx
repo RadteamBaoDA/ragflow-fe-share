@@ -2,6 +2,7 @@ import { PromptIcon } from '@/assets/icon/next-icon';
 import CopyToClipboard from '@/components/copy-to-clipboard';
 import { useSetModalState } from '@/hooks/common-hooks';
 import { IRemoveMessageById } from '@/hooks/logic-hooks';
+import { IFeedbackRequestBody } from '@/interfaces/request/chat';
 import {
   DeleteOutlined,
   DislikeOutlined,
@@ -13,9 +14,9 @@ import {
 import { Radio, Tooltip } from 'antd';
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import FeedbackDialog from '../feedback-dialog';
-import { PromptDialog } from '../prompt-dialog';
+import FeedbackModal from './feedback-modal';
 import { useRemoveMessage, useSendFeedback, useSpeech } from './hooks';
+import PromptModal from './prompt-modal';
 
 interface IProps {
   messageId: string;
@@ -24,6 +25,10 @@ interface IProps {
   showLikeButton: boolean;
   audioBinary?: string;
   showLoudspeaker?: boolean;
+  onLike?: () => void;
+  onDislike?: (feedback: string) => void;
+  disableInternalFeedback?: boolean;
+  isLoading?: boolean;
 }
 
 export const AssistantGroupButton = ({
@@ -33,6 +38,10 @@ export const AssistantGroupButton = ({
   audioBinary,
   showLikeButton,
   showLoudspeaker = true,
+  onLike,
+  onDislike,
+  disableInternalFeedback = false,
+  isLoading = false,
 }: IProps) => {
   const { visible, hideModal, showModal, onFeedbackOk, loading } =
     useSendFeedback(messageId);
@@ -45,8 +54,33 @@ export const AssistantGroupButton = ({
   const { handleRead, ref, isPlaying } = useSpeech(content, audioBinary);
 
   const handleLike = useCallback(() => {
-    onFeedbackOk({ thumbup: true });
-  }, [onFeedbackOk]);
+    if (!disableInternalFeedback) {
+      onFeedbackOk({ thumbup: true });
+    }
+    onLike?.();
+  }, [onFeedbackOk, onLike, disableInternalFeedback]);
+
+  const handleFeedbackOk = useCallback(
+    async (params: IFeedbackRequestBody) => {
+      if (!disableInternalFeedback) {
+        await onFeedbackOk(params);
+      }
+      if (params.thumbup === false) {
+        onDislike?.(params.feedback || '');
+      }
+    },
+    [onFeedbackOk, onDislike, disableInternalFeedback],
+  );
+
+  const handleDislike = useCallback(() => {
+    if (disableInternalFeedback) {
+      // Skip internal modal, directly call parent handler
+      onDislike?.('');
+    } else {
+      // Show internal feedback modal
+      showModal();
+    }
+  }, [disableInternalFeedback, onDislike, showModal]);
 
   return (
     <>
@@ -64,10 +98,11 @@ export const AssistantGroupButton = ({
         )}
         {showLikeButton && (
           <>
-            <Radio.Button value="c" onClick={handleLike}>
+            <Radio.Button value="c" onClick={handleLike} disabled={isLoading}>
               <LikeOutlined />
             </Radio.Button>
-            <Radio.Button value="d" onClick={showModal}>
+            <Radio.Button value="d" onClick={handleDislike} disabled={isLoading}
+>
               <DislikeOutlined />
             </Radio.Button>
           </>
@@ -79,19 +114,19 @@ export const AssistantGroupButton = ({
         )}
       </Radio.Group>
       {visible && (
-        <FeedbackDialog
+        <FeedbackModal
           visible={visible}
           hideModal={hideModal}
-          onOk={onFeedbackOk}
+          onOk={handleFeedbackOk}
           loading={loading}
-        ></FeedbackDialog>
+        ></FeedbackModal>
       )}
       {promptVisible && (
-        <PromptDialog
+        <PromptModal
           visible={promptVisible}
           hideModal={hidePromptModal}
           prompt={prompt}
-        ></PromptDialog>
+        ></PromptModal>
       )}
     </>
   );
