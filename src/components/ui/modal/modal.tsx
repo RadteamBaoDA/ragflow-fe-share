@@ -16,6 +16,7 @@ export interface ModalProps {
   footerClassName?: string;
   showfooter?: boolean;
   className?: string;
+  bodyClassName?: string;
   size?: 'small' | 'default' | 'large';
   closable?: boolean;
   closeIcon?: ReactNode;
@@ -49,6 +50,7 @@ const Modal: ModalType = ({
   footerClassName,
   showfooter = true,
   className = '',
+  bodyClassName = '',
   size = 'default',
   closable = true,
   closeIcon = <X className="w-4 h-4" />,
@@ -217,7 +219,12 @@ const Modal: ModalType = ({
             )}
 
             {/* content */}
-            <div className="py-2 px-6 overflow-y-auto scrollbar-auto max-h-[calc(100vh-280px)] focus-visible:!outline-none">
+            <div
+              className={cn(
+                'py-2 px-6 overflow-y-auto scrollbar-auto max-h-[90vh] focus-visible:!outline-none',
+                bodyClassName,
+              )}
+            >
               {destroyOnClose && !open ? null : children}
             </div>
 
@@ -234,9 +241,9 @@ let modalIns = createPortalModal();
 Modal.show = modalIns
   ? modalIns.show
   : () => {
-      modalIns = createPortalModal();
-      return modalIns.show;
-    };
+    modalIns = createPortalModal();
+    return modalIns.show;
+  };
 Modal.hide = modalIns.hide;
 Modal.destroy = modalIns.destroy;
 

@@ -1,3 +1,7 @@
+import {
+  useGetChunkHighlights,
+  useGetDocumentUrl,
+} from '@/hooks/use-document-request';
 import { IReferenceChunk } from '@/interfaces/database/chat';
 import { IChunk } from '@/interfaces/database/knowledge';
 import FileError from '@/pages/document-viewer/file-error';
@@ -15,10 +19,6 @@ import {
 import { useCatchDocumentError } from './hooks';
 import { useTranslation } from 'react-i18next';
 
-import {
-  useGetChunkHighlights,
-  useGetDocumentUrl,
-} from '@/hooks/use-document-request';
 import styles from './index.less';
 
 interface IProps {
@@ -183,7 +183,7 @@ const InnerPdfPreview = memo(({
 
   // Effect to update PDF scale when scale prop changes
   useEffect(() => {
-    // The react-pdf-highlighter library listens to resize events to update scale
+    // The react-pdf-highlighter library listens to resize events to update scal
     // Dispatch a resize event to trigger the library's debouncedScaleValue
     // which will read the new pdfScaleValue prop and apply it
     const timeoutId = setTimeout(() => {

@@ -71,5 +71,10 @@ export default defineConfig({
 
     return memo;
   },
+  define: {
+    'process.env.EXTERNAL_TRACE_API_URL': process.env.EXTERNAL_TRACE_API_URL,
+    'process.env.EXTERNAL_TRACE_URL': process.env.EXTERNAL_TRACE_URL,
+    'process.env.EXTERNAL_TRACE_API_KEY': process.env.EXTERNAL_TRACE_API_KEY,
+  },
   tailwindcss: {},
 });

@@ -209,8 +209,7 @@ export default function SearchingView({
                   }
                 }}
               />
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 transfor
-m flex items-center gap-1">
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 transform flex items-center gap-1">
                 <X
                   className="text-text-secondary cursor-pointer opacity-80"
                   size={14}
@@ -222,8 +221,7 @@ m flex items-center gap-1">
                 <span className="text-text-secondary opacity-20 ml-4">|</span>
                 <button
                   type="button"
-                  className="rounded-full bg-text-primary p-1 text-bg-base shado
-w w-12 h-8 ml-4"
+                  className="rounded-full bg-text-primary p-1 text-bg-base shadow w-12 h-8 ml-4"
                   onClick={() => {
                     if (sendingLoading) {
                       stopOutputMessage();
@@ -254,8 +252,7 @@ w w-12 h-8 ml-4"
                   {t('search.AISummary')}
                 </div>
                 {/* AI Summary container with fixed height */}
-                <div className="border rounded-lg p-4 mt-3 h-52 overflow-auto sc
-rollbar-none w-[90%]">
+                <div className="border rounded-lg p-4 mt-3 h-52 overflow-auto scrollbar-none w-[90%]">
                   {!answer.answer && sendingLoading ? (
                     <SkeletonCard className="" />
                   ) : (
@@ -423,9 +420,9 @@ t waiting for stream */}
         ></PdfDrawer>
       )}
       {showLoading && (
-        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center">
           <Spin size="large" className="w-20 h-20" />
-          <div className="mt-4 text-white font-medium text-lg">
+          <div className="mt-4 text-text-primary font-medium text-lg">
             {t('search.searchingPleaseWait')}
           </div>
         </div>

@@ -2237,6 +2237,10 @@ Important structured information may include: names, dates, locations, events, k
       okText: 'Save',
       cancelText: 'Cancel',
       chooseDataset: 'Please select a dataset first',
+      ads: 'Ads',
+      searchingPleaseWait: 'Searching, please wait...',
+      advancedDocumentSearch: 'Advanced Document Search',
+      keywordBasedSearch: '👋 Hi there, keyword-based search with AI-powered insights',
     },
     language: {
       english: 'English',
