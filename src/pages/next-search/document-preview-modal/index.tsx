@@ -51,6 +51,8 @@ const PdfDrawer = ({
       }
       onCancel={hideModal}
       open={visible}
+      className="!w-[90vw] !max-w-[90vw] !h-[90vh] !p-0 flex flex-col overflow-hidden"
+      bodyClassName="flex-1 min-h-0 !p-0 !max-h-full !overflow-hidden"
       showfooter={false}
       full={true}
     >

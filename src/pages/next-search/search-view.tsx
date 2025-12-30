@@ -421,7 +421,10 @@ t waiting for stream */}
       )}
       {showLoading && (
         <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center">
-          <Spin size="large" className="w-20 h-20" />
+          <Spin
+            size="large"
+            className="w-20 h-20 !bg-transparent after:!bg-transparent [&>div]:!bg-transparent"
+          />
           <div className="mt-4 text-text-primary font-medium text-lg">
             {t('search.searchingPleaseWait')}
           </div>

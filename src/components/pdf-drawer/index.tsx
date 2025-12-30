@@ -19,7 +19,7 @@ export const PdfSheet = ({
   hideModal,
   documentId,
   chunk,
-  width = '90vw',
+  width = '80vw',
   height,
 }: IProps) => {
   const { t } = useTranslation();

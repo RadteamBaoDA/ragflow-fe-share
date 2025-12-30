@@ -1743,6 +1743,10 @@ img,
   height: 100%;
 }
 
+.\!h-\[90vh\] {
+  height: 90vh !important;
+}
+
 .\!h-dvh {
   height: 100dvh !important;
 }
@@ -2037,6 +2041,10 @@ img,
   height: 100svh;
 }
 
+.\!max-h-full {
+  max-height: 100% !important;
+}
+
 .max-h-36 {
   max-height: 9rem;
 }
@@ -2275,6 +2283,10 @@ img,
 
 .\!w-\[900px\] {
   width: 900px !important;
+}
+
+.\!w-\[90vw\] {
+  width: 90vw !important;
 }
 
 .\!w-fit {
@@ -2775,6 +2787,10 @@ img,
 .min-w-max {
   min-width: -moz-max-content;
   min-width: max-content;
+}
+
+.\!max-w-\[90vw\] {
+  max-width: 90vw !important;
 }
 
 .max-w-20 {
@@ -3526,6 +3542,10 @@ img,
 
 .overflow-auto {
   overflow: auto;
+}
+
+.\!overflow-hidden {
+  overflow: hidden !important;
 }
 
 .overflow-hidden {
@@ -6317,6 +6337,11 @@ img,
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
 }
 
+.after\:\!bg-transparent::after {
+  content: var(--tw-content);
+  background-color: transparent !important;
+}
+
 .after\:bg-bg-base::after {
   content: var(--tw-content);
   background-color: var(--bg-base);
@@ -8665,6 +8690,10 @@ img,
 .\[\&\>button\]\:hover\:text-text-primary:hover>button {
   --tw-text-opacity: 1;
   color: rgb(var(--text-primary) / var(--tw-text-opacity));
+}
+
+.\[\&\>div\]\:\!bg-transparent>div {
+  background-color: transparent !important;
 }
 
 .\[\&\>section\.think\]\:mb-\[10px\]>section.think {

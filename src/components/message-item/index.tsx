@@ -25,6 +25,18 @@ import { useTheme } from '../theme-provider';
 import { AssistantGroupButton, UserGroupButton } from './group-button';
 import styles from './index.less';
 
+// Three-dot loading animation component
+const LoadingDots = () => {
+  console.log('LoadingDots rendering'); // Debug log
+  return (
+    <div className={styles.loadingDots}>
+      <span className={styles.dot}></span>
+      <span className={styles.dot}></span>
+      <span className={styles.dot}></span>
+    </div>
+  );
+};
+
 interface IProps extends Partial<IRemoveMessageById>, IRegenerateMessage {
   item: IMessage;
   reference: IReference;
@@ -177,6 +189,24 @@ const MessageItem = ({
                 ></MarkdownContent>
               </div>
             )}
+            {/* Show loading dots when API is processing */}
+            {(() => {
+              const shouldShow = loading && isAssistant;
+              if (shouldShow) {
+                console.log('Showing loading dots', { loading, isAssistant, messageRole: item.role });
+              }
+              return shouldShow && (
+                <div
+                  className={cn(
+                    theme === 'dark'
+                      ? styles.messageTextDark
+                      : styles.messageText,
+                  )}
+                >
+                  <LoadingDots />
+                </div>
+              );
+            })()}
             {isAssistant && (
               <ReferenceImageList
                 referenceChunks={reference.chunks}
