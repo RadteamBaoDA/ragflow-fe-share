@@ -153,6 +153,25 @@ const ChatContainer = () => {
   const derivedMessagesRef = useRef(derivedMessages);
   derivedMessagesRef.current = derivedMessages;
 
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'INSERT_PROMPT') {
+        const textarea = document.querySelector('textarea');
+        if (textarea) {
+          textarea.value = event.data.payload;
+          textarea.dispatchEvent(new Event('input', { bubbles: true }));
+          textarea.focus();
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, []);
+
+
   /**
    * Handle completed assistant messages - trace when:
    * 1. Not currently loading (stream finished)
@@ -333,7 +352,7 @@ const ChatContainer = () => {
 
   return (
     <>
-      <EmbedContainer title={chatInfo.title} avatar={chatInfo.avatar}>
+      <EmbedContainer title={chatInfo.title} avatar={chatInfo.avatar} hideHeader={true}>
         <div className="flex flex-1 flex-col p-2.5  h-[90vh] m-3">
           <div
             className={
