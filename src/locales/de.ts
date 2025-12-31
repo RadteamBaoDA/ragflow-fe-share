@@ -929,6 +929,8 @@ Beispiel: Virtual Hosted Style`,
         'Verbinden Sie Ihr Gmail über OAuth, um E-Mails zu synchronisieren.',
       webdavDescription:
         'Verbinden Sie sich mit WebDAV-Servern, um Dateien zu synchronisieren.',
+      gitlabDescription:
+        'Verbinden Sie GitLab, um Repositories, Issues, Merge Requests und zugehörige Dokumentation zu synchronisieren.',
       webdavRemotePathTip:
         'Optional: Geben Sie einen Ordnerpfad auf dem WebDAV-Server an (z.B. /Dokumente). Lassen Sie das Feld leer, um vom Stammverzeichnis aus zu synchronisieren.',
       google_driveTokenTip:
@@ -947,6 +949,8 @@ Beispiel: Virtual Hosted Style`,
         'Verbinden Sie Ihre Dropbox, um Dateien und Ordner von einem ausgewählten Konto zu synchronisieren.',
       boxDescription:
         'Verbinden Sie Ihr Box-Laufwerk, um Dateien und Ordner zu synchronisieren.',
+      githubDescription:
+        'Verbinden Sie GitHub, um Pull Requests und Issues zur Recherche zu synchronisieren.',
       dropboxAccessTokenTip:
         'Generieren Sie ein langlebiges Zugriffstoken in der Dropbox App Console mit den Bereichen files.metadata.read, files.content.read und sharing.read.',
       moodleDescription:

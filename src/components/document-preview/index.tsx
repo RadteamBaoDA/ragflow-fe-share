@@ -222,9 +222,14 @@ const Preview = ({
               <DocPreviewer className={className} url={url} />
             </section>
           )}
-          {['txt', 'md'].indexOf(fileType) > -1 && (
+          {['txt'].indexOf(fileType) > -1 && (
             <section className={'w-full h-full flex justify-center'}>
               <TxtPreviewer className={className} url={url} />
+            </section>
+          )}
+          {['md', 'mdx'].indexOf(fileType) > -1 && (
+            <section>
+              <Md className={className} url={url} />
             </section>
           )}
           {['jpg', 'png', 'gif', 'jpeg', 'svg', 'bmp', 'ico', 'tif'].indexOf(
