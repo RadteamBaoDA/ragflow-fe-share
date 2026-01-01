@@ -7,9 +7,27 @@ slug: /release_notes
 
 Key features, improvements and bug fixes in the latest releases.
 
+
+## v0.23.1
+
+Released on December 31, 2025.
+
+### Fixed issues
+
+- Resolved an issue where the RAGFlow Server would fail to start if an empty memory object existed, and corrected the inability to delete a newly created empty Memory.
+- Improved the stability of memory extraction across all memory types after selection.
+- Fixed MDX file parsing support.
+
+### Data sources
+
+- GitHub
+- Gitlab
+- Asana
+- IMAP
+
 ## v0.23.0
 
-Released on December 29, 2025.
+Released on December 27, 2025.
 
 ### New features
 
@@ -32,7 +50,7 @@ Released on December 29, 2025.
 
 ### Improvements
 
-- Bumps RAGFlow's document engine, [Infinity](https://github.com/infiniflow/infinity) to v0.6.13 (backward compatible).
+- Bumps RAGFlow's document engine, [Infinity](https://github.com/infiniflow/infinity) to v0.6.15 (backward compatible).
 
 ### Data sources
 

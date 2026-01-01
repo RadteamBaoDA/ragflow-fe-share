@@ -147,6 +147,8 @@ Procedural Memory: Learned skills, habits, and automated procedures.`,
         action: 'Action',
       },
       config: {
+        memorySizeTooltip: `Accounts for each message's content + its embedding vector (≈ Content + Dimensions × 8 Bytes). 
+Example: A 1 KB message with 1024-dim embedding uses ~9 KB. The 5 MB default limit holds ~500 such messages.`,
         avatar: 'Avatar',
         description: 'Description',
         memorySize: 'Memory size',
@@ -181,6 +183,8 @@ Procedural Memory: Learned skills, habits, and automated procedures.`,
     },
     knowledgeDetails: {
       metadata: {
+        toMetadataSetting: 'Generation settings',
+        toMetadataSettingTip: 'Set auto-metadata in Configuration.',
         descriptionTip:
           'Provide descriptions or examples to guide LLM extract values for this field. If left empty, it will rely on the field name.',
         restrictTDefinedValuesTip:
@@ -932,8 +936,16 @@ Example: Virtual Hosted Style`,
       dropboxDescription:
         'Connect your Dropbox to sync files and folders from a chosen account.',
       boxDescription: 'Connect your Box drive to sync files and folders.',
+      githubDescription:
+        'Connect GitHub to sync pull requests and issues for retrieval.',
       airtableDescription:
         'Connect to Airtable and synchronize files from a specified table within a designated workspace.',
+      gitlabDescription:
+        'Connect GitLab to sync repositories, issues, merge requests, and related documentation.',
+      asanaDescription:
+        'Connect to Asana and synchronize files from a specified workspace.',
+      imapDescription:
+        'Connect to your IMAP mailbox to sync emails for knowledge retrieval.',
       dropboxAccessTokenTip:
         'Generate a long-lived access token in the Dropbox App Console with files.metadata.read, files.content.read, and sharing.read scopes.',
       moodleDescription:
@@ -2471,7 +2483,6 @@ Important structured information may include: names, dates, locations, events, k
       deleteRole: 'Delete role',
       deleteRoleConfirmation:
         'Are you sure you want to delete this role? This action cannot be undone.',
-
 
       alive: 'Alive',
       timeout: 'Timeout',
