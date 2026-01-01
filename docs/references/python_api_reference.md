@@ -1603,7 +1603,11 @@ In streaming mode, not all responses include a reference, as this depends on the
 
 ##### question: `str`
 
+<<<<<<< HEAD
 The question to start an AI-powered conversation. Ifthe **Begin** component takes parameters, a question is not required.
+=======
+The question to start an AI-powered conversation. If the **Begin** component takes parameters, a question is not required.
+>>>>>>> origin/feature/merge-0.23.1
 
 ##### stream: `bool`
 

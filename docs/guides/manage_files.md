@@ -87,4 +87,8 @@ RAGFlow's file management allows you to download an uploaded file:
 
 ![download_file](https://github.com/infiniflow/ragflow/assets/93570324/cf3b297f-7d9b-4522-bf5f-4f45743e4ed5)
 
+<<<<<<< HEAD
 > As of RAGFlow v0.23.0, bulk download is not supported, nor can you download an entire folder. 
+=======
+> As of RAGFlow v0.23.1, bulk download is not supported, nor can you download an entire folder. 
+>>>>>>> origin/feature/merge-0.23.1

@@ -74,7 +74,7 @@ export async function getRoutes() {
 '64': React.lazy(() => import(/* webpackChunkName: "p__admin__wrappers__authorized" */'@/pages/admin/wrappers/authorized.tsx')),
 '65': React.lazy(() => import(/* webpackChunkName: "p__admin__service-status" */'@/pages/admin/service-status.tsx')),
 '66': React.lazy(() => import(/* webpackChunkName: "p__admin__users" */'@/pages/admin/users.tsx')),
-'@@/global-layout': React.lazy(() => import(/* webpackChunkName: "layouts__index" */'D:/Project/RAG/ragflow-fe-share/src/layouts/index.tsx')),
+'@@/global-layout': React.lazy(() => import(/* webpackChunkName: "layouts__index" */'D:/Project/ragflow-fe-share/src/layouts/index.tsx')),
 },
   };
 }

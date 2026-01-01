@@ -27,7 +27,7 @@
         "src/.umi/*"
       ],
       "umi": [
-        "D:\\Project\\RAG\\ragflow-fe-share\\node_modules\\umi"
+        "D:\\Project\\ragflow-fe-share\\node_modules\\umi"
       ],
       "umi/typings": [
         "src/.umi/typings"

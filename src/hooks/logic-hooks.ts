@@ -549,14 +549,14 @@ export const useSelectDerivedMessages = () => {
           const latestMessage = nextMessages.at(-1);
           nextMessages = latestMessage
             ? [
-              ...nextMessages.slice(0, -1),
-              {
-                ...latestMessage,
-                content: '',
-                reference: undefined,
-                prompt: undefined,
-              },
-            ]
+                ...nextMessages.slice(0, -1),
+                {
+                  ...latestMessage,
+                  content: '',
+                  reference: undefined,
+                  prompt: undefined,
+                },
+              ]
             : nextMessages;
           return nextMessages;
         }
@@ -615,14 +615,14 @@ export const useRemoveMessagesAfterCurrentMessage = (
           const latestMessage = nextMessages.at(-1);
           nextMessages = latestMessage
             ? [
-              ...nextMessages.slice(0, -1),
-              {
-                ...latestMessage,
-                content: '',
-                reference: undefined,
-                prompt: undefined,
-              },
-            ]
+                ...nextMessages.slice(0, -1),
+                {
+                  ...latestMessage,
+                  content: '',
+                  reference: undefined,
+                  prompt: undefined,
+                },
+              ]
             : nextMessages;
           return {
             ...pre,

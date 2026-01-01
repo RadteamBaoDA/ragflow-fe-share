@@ -46,7 +46,11 @@ The Admin CLI and Admin Service form a client-server architectural suite for RAG
 2. Install ragflow-cli.
 
    ```bash
+<<<<<<< HEAD
    pip install ragflow-cli==0.23.0
+=======
+   pip install ragflow-cli==0.23.1
+>>>>>>> origin/feature/merge-0.23.1
    ```
 
 3. Launch the CLI client:
