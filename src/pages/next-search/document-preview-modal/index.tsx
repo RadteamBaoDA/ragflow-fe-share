@@ -3,11 +3,11 @@ import { Modal } from '@/components/ui/modal/modal';
 import {
   useGetChunkHighlights,
   useGetDocumentUrl,
-} from '@/hooks/document-hooks';
+} from '@/hooks/use-document-request';
 import { IModalProps } from '@/interfaces/common';
 import { IReferenceChunk } from '@/interfaces/database/chat';
 import { IChunk } from '@/interfaces/database/knowledge';
-import DocumentPreview from '@/pages/chunk/parsed-result/add-knowledge/components/knowledge-chunk/components/document-preview';
+import DocumentPreview from '@/components/document-preview';
 import { useEffect, useState } from 'react';
 
 interface IProps extends IModalProps<any> {
@@ -51,7 +51,7 @@ const PdfDrawer = ({
       }
       onCancel={hideModal}
       open={visible}
-      className="!w-[95vw] !max-w-[95vw] !h-[95vh] !p-0 flex flex-col overflow-hidden"
+      className="!w-[90vw] !max-w-[90vw] !h-[90vh] !p-0 flex flex-col overflow-hidden"
       bodyClassName="flex-1 min-h-0 !p-0 !max-h-full !overflow-hidden"
       showfooter={false}
       full={true}

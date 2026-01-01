@@ -1,7 +1,3 @@
-import {
-  useGetChunkHighlights,
-  useGetDocumentUrl,
-} from '@/hooks/document-hooks';
 import { IReferenceChunk } from '@/interfaces/database/chat';
 import { IChunk } from '@/interfaces/database/knowledge';
 import FileError from '@/pages/document-viewer/file-error';
@@ -17,7 +13,12 @@ import {
   Popup,
 } from 'react-pdf-highlighter';
 import { useCatchDocumentError } from './hooks';
+import { useTranslation } from 'react-i18next';
 
+import {
+  useGetChunkHighlights,
+  useGetDocumentUrl,
+} from '@/hooks/use-document-request';
 import styles from './index.less';
 
 interface IProps {
@@ -26,22 +27,23 @@ interface IProps {
   visible: boolean;
 }
 
-// Zoom presets configuration
+// Zoom presets configuration with translation keys
 const ZOOM_PRESETS = [
-  { value: 'auto', label: 'Automatic Zoom' },
-  { value: 'page-actual', label: 'Actual Size' },
-  { value: 'page-fit', label: 'Page Fit' },
-  { value: 'page-width', label: 'Page Width' },
-  { value: '0.5', label: '50%' },
-  { value: '0.75', label: '75%' },
-  { value: '1', label: '100%' },
-  { value: '1.25', label: '125%' },
-  { value: '1.5', label: '150%' },
-  { value: '2', label: '200%' },
-  { value: '3', label: '300%' },
-  { value: '4', label: '400%' },
-  { value: '7', label: '700%' },
+  { value: 'auto', labelKey: 'common.automaticZoom' },
+  { value: 'page-actual', labelKey: 'common.actualSize' },
+  { value: 'page-fit', labelKey: 'common.pageFit' },
+  { value: 'page-width', labelKey: 'common.pageWidth' },
+  { value: '0.5', labelKey: '50%' },
+  { value: '0.75', labelKey: '75%' },
+  { value: '1', labelKey: '100%' },
+  { value: '1.25', labelKey: '125%' },
+  { value: '1.5', labelKey: '150%' },
+  { value: '2', labelKey: '200%' },
+  { value: '3', labelKey: '300%' },
+  { value: '4', labelKey: '400%' },
+  { value: '7', labelKey: '700%' },
 ];
+
 
 const MIN_SCALE = 0.5; // 50%
 const MAX_SCALE = 7; // 700%
@@ -257,9 +259,11 @@ const DocumentPreviewer = ({ chunk, documentId, visible }: IProps) => {
 
       if (insertIndex === -1) {
         // Add at the end if larger than all presets
-        options.push({ value: customValue, label: customLabel });
+        options.push({ value: customValue, labelKey: customLabel });
       } else {
-        options.splice(insertIndex, 0, { value: customValue, label: customLabel });
+        options.splice(insertIndex, 0, {
+          value: customValue, labelKey: customLabel
+        });
       }
     }
 
@@ -269,7 +273,8 @@ const DocumentPreviewer = ({ chunk, documentId, visible }: IProps) => {
   // Get current value for the dropdown
   const getCurrentDropdownValue = () => {
     // Check if scale matches a preset
-    const matchingPreset = ZOOM_PRESETS.find(p => parseFloat(p.value) === scale);
+    const matchingPreset = ZOOM_PRESETS.find(p => parseFloat(p.value) === scale)
+      ;
     if (matchingPreset) {
       return matchingPreset.value;
     }
@@ -319,6 +324,8 @@ const DocumentPreviewer = ({ chunk, documentId, visible }: IProps) => {
     setHighlightsVisible(prev => !prev);
   };
 
+  const { t } = useTranslation();
+
   // Render toolbar
   const renderPdfToolbar = () => (
     <div className={styles.pdfToolbar}>
@@ -328,7 +335,7 @@ const DocumentPreviewer = ({ chunk, documentId, visible }: IProps) => {
           className={styles.toolbarButton}
           onClick={handleZoomOut}
           disabled={scale <= MIN_SCALE}
-          title="Zoom Out"
+          title={t('common.zoomOut')}
         >
           <Minus />
         </button>
@@ -338,7 +345,7 @@ const DocumentPreviewer = ({ chunk, documentId, visible }: IProps) => {
           className={styles.toolbarButton}
           onClick={handleZoomIn}
           disabled={scale >= MAX_SCALE}
-          title="Zoom In"
+          title={t('common.zoomIn')}
         >
           <Plus />
         </button>
@@ -348,11 +355,11 @@ const DocumentPreviewer = ({ chunk, documentId, visible }: IProps) => {
           className={styles.zoomSelect}
           value={getCurrentDropdownValue()}
           onChange={(e) => handleSelectScale(e.target.value)}
-          title="Zoom Level"
+          title={t('common.zoomLevel')}
         >
           {dropdownOptions.map(option => (
             <option key={option.value} value={option.value}>
-              {option.label}
+              {option.labelKey.startsWith('common.') ? t(option.labelKey) : option.labelKey}
             </option>
           ))}
         </select>
@@ -364,7 +371,7 @@ const DocumentPreviewer = ({ chunk, documentId, visible }: IProps) => {
         <button
           className={styles.toolbarButton}
           onClick={toggleHighlights}
-          title={highlightsVisible ? 'Hide Highlights' : 'Show Highlights'}
+          title={highlightsVisible ? t('common.hideHighlights') : t('common.showHighlights')}
         >
           {highlightsVisible ? <Eye /> : <EyeOff />}
         </button>

@@ -73,9 +73,7 @@ export enum Operator {
   Retrieval = 'Retrieval',
   Categorize = 'Categorize',
   Message = 'Message',
-  Relevant = 'Relevant',
   RewriteQuestion = 'RewriteQuestion',
-  KeywordExtract = 'KeywordExtract',
   DuckDuckGo = 'DuckDuckGo',
   Wikipedia = 'Wikipedia',
   PubMed = 'PubMed',
@@ -84,14 +82,10 @@ export enum Operator {
   Bing = 'Bing',
   GoogleScholar = 'GoogleScholar',
   GitHub = 'GitHub',
-  QWeather = 'QWeather',
   ExeSQL = 'ExeSQL',
   Switch = 'Switch',
   WenCai = 'WenCai',
-  AkShare = 'AkShare',
   YahooFinance = 'YahooFinance',
-  Jin10 = 'Jin10',
-  TuShare = 'TuShare',
   Note = 'Note',
   Crawler = 'Crawler',
   Invoke = 'Invoke',
@@ -107,6 +101,7 @@ export enum Operator {
   UserFillUp = 'UserFillUp',
   StringTransform = 'StringTransform',
   SearXNG = 'SearXNG',
+  PDFGenerator = 'PDFGenerator',
   Placeholder = 'Placeholder',
   DataOperations = 'DataOperations',
   ListOperations = 'ListOperations',
@@ -118,6 +113,10 @@ export enum Operator {
   Splitter = 'Splitter',
   HierarchicalMerger = 'HierarchicalMerger',
   Extractor = 'Extractor',
+  Loop = 'Loop',
+  LoopStart = 'LoopItem',
+  ExitLoop = 'ExitLoop',
+  ExcelProcessor = 'ExcelProcessor',
 }
 
 export enum ComparisonOperator {
@@ -133,6 +132,8 @@ export enum ComparisonOperator {
   EndWith = 'end with',
   Empty = 'empty',
   NotEmpty = 'not empty',
+  In = 'in',
+  NotIn = 'not in',
 }
 
 export const SwitchOperatorOptions = [
@@ -168,6 +169,16 @@ export const SwitchOperatorOptions = [
     label: 'notEmpty',
     icon: <CircleSlash2 className="size-4" />,
   },
+  {
+    value: ComparisonOperator.In,
+    label: 'in',
+    icon: <CircleSlash2 className="size-4" />,
+  },
+  {
+    value: ComparisonOperator.NotIn,
+    label: 'notIn',
+    icon: <CircleSlash2 className="size-4" />,
+  },
 ];
 
 export const AgentStructuredOutputField = 'structured';
@@ -179,3 +190,24 @@ export enum JsonSchemaDataType {
   Array = 'array',
   Object = 'object',
 }
+
+export enum SwitchLogicOperator {
+  And = 'and',
+  Or = 'or',
+}
+
+export const WebhookJWTAlgorithmList = [
+  'hs256',
+  'hs384',
+  'hs512',
+  'rs256',
+  'rs384',
+  'rs512',
+  'es256',
+  'es384',
+  'es512',
+  'ps256',
+  'ps384',
+  'ps512',
+  'none',
+] as const;

@@ -47,11 +47,13 @@ interface FeedbackResponse {
 }
 
 /**
- * ExternalTraceApi is a class that provides methods for sending trace data to an external tracing API.
+ * ExternalTraceApi is a class that provides methods for sending trace data to a
+n external tracing API.
  */
 class ExternalTraceApi {
     /**
-     * The Axios instance used to make HTTP requests to the external tracing API.
+     * The Axios instance used to make HTTP requests to the external tracing API
+.
      */
     private client: AxiosInstance;
 
@@ -60,7 +62,8 @@ class ExternalTraceApi {
      */
     constructor() {
         /**
-         * The Axios instance used to make HTTP requests to the external tracing API.
+         * The Axios instance used to make HTTP requests to the external tracing
+ API.
          */
         this.client = axios.create({
             baseURL:
@@ -91,12 +94,14 @@ class ExternalTraceApi {
     /**
      * Sends a trace payload to the external tracing API.
      * @param payload The trace data to send.
-     * @returns A promise that resolves to a TraceResponse indicating success or failure.
+     * @returns A promise that resolves to a TraceResponse indicating success or
+ failure.
      */
     async sendTrace(payload: TracePayload): Promise<TraceResponse> {
         try {
             /**
-             * Determine the correct path. If baseURL already includes the path, use empty string.
+             * Determine the correct path. If baseURL already includes the path,
+ use empty string.
              */
             const baseURL = this.client.defaults.baseURL || '';
             const path = baseURL.includes('/api/external/trace/submit')
@@ -120,12 +125,14 @@ class ExternalTraceApi {
     /**
      * Sends a feedback payload to the external tracing API.
      * @param payload The feedback data to send.
-     * @returns A promise that resolves to a FeedbackResponse indicating success or failure.
+     * @returns A promise that resolves to a FeedbackResponse indicating success
+ or failure.
      */
     async sendFeedback(payload: FeedbackPayload): Promise<FeedbackResponse> {
         try {
             /**
-             * Determine the correct path. If baseURL already includes the path, use empty string.
+             * Determine the correct path. If baseURL already includes the path,
+ use empty string.
              */
             const baseURL = this.client.defaults.baseURL || '';
             const path = baseURL.includes('/api/external/trace/feedback')
@@ -150,7 +157,8 @@ class ExternalTraceApi {
      * @param message The user's message.
      * @param chatId The ID of the chat.
      * @param sessionId The ID of the session.
-     * @returns A promise that resolves to a TraceResponse indicating success or failure.
+     * @returns A promise that resolves to a TraceResponse indicating success or
+ failure.
      */
     async sendUserMessage(
         email: string,
@@ -180,7 +188,8 @@ class ExternalTraceApi {
      * @param model The model used for the assistant's response.
      * @param usage The usage data for the assistant's response.
      * @param sessionId The ID of the session.
-     * @returns A promise that resolves to a TraceResponse indicating success or failure.
+     * @returns A promise that resolves to a TraceResponse indicating success or
+ failure.
      */
     async sendAssistantResponse(
         email: string,

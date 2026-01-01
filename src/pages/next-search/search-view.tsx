@@ -18,7 +18,6 @@ import { Dispatch, SetStateAction, useEffect, useState, useMemo, useRef } from '
 import { useTranslation } from 'react-i18next';
 import { ISearchAppDetailProps } from '../next-searches/hooks';
 import PdfDrawer from './document-preview-modal';
-import HightLightMarkdown from './highlight-markdown';
 import { ISearchReturnProps } from './hooks';
 import './index.less';
 import MarkdownContent from './markdown-content';
@@ -28,6 +27,7 @@ import { SkeletonCard } from '@/components/skeleton-card';
 import { externalHistoryService } from '@/services/external-history-service';
 import { useGetSharedSearchParams } from './hooks';
 import { v4 as uuidv4 } from 'uuid';
+import HighLightMarkdown from '@/components/highlight-markdown';
 
 export default function SearchingView({
   setIsSearching,
@@ -270,7 +270,8 @@ export default function SearchingView({
                 <div className="w-full border-b border-border-default/80 my-6"></div>
               </>
             )}
-            {/* retrieval documents - show immediately when chunks available, not waiting for stream */}
+            {/* retrieval documents - show immediately when chunks available, no
+t waiting for stream */}
             {!isSearchStrEmpty && !showLoading && chunks?.length > 0 && (
               <>
                 <div className="mt-3 w-52">
@@ -283,7 +284,8 @@ export default function SearchingView({
                     }}
                   ></RetrievalDocuments>
                 </div>
-                {/* <div className="w-full border-b border-border-default/80 my-6"></div> */}
+                {/* <div className="w-full border-b border-border-default/80 my-
+6"></div> */}
               </>
             )}
             <div className="mt-3 ">
@@ -313,9 +315,9 @@ export default function SearchingView({
                               </PopoverTrigger>
                               <PopoverContent className="text-text-primary !w-full max-w-lg ">
                                 <div className="max-h-96 overflow-auto scrollbar-thin">
-                                  <HightLightMarkdown>
+                                  <HighLightMarkdown>
                                     {chunk.content_with_weight}
-                                  </HightLightMarkdown>
+                                  </HighLightMarkdown>
                                 </div>
                               </PopoverContent>
                             </Popover>
@@ -401,7 +403,8 @@ export default function SearchingView({
                 className="rounded-lg h-16 w-16 p-0 absolute top-28 right-3 z-30 border cursor-pointer flex justify-center items-center bg-bg-card"
                 onClick={showMindMapModal}
               >
-                {/* <SvgIcon name="paper-clip" width={24} height={30}></SvgIcon> */}
+                {/* <SvgIcon name="paper-clip" width={24} height={30}></SvgIcon>
+ */}
                 <BrainCircuit size={36} />
               </div>
             </PopoverTrigger>
@@ -417,9 +420,12 @@ export default function SearchingView({
         ></PdfDrawer>
       )}
       {showLoading && (
-        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/50 backdrop-blur-sm">
-          <Spin size="large" className="w-20 h-20" />
-          <div className="mt-4 text-white font-medium text-lg">
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center">
+          <Spin
+            size="large"
+            className="w-20 h-20 !bg-transparent after:!bg-transparent [&>div]:!bg-transparent"
+          />
+          <div className="mt-4 text-text-primary font-medium text-lg">
             {t('search.searchingPleaseWait')}
           </div>
         </div>

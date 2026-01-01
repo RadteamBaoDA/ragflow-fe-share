@@ -1,52 +1,132 @@
 import { FormFieldType } from '@/components/dynamic-form';
 import SvgIcon from '@/components/svg-icon';
-import { t } from 'i18next';
+import { t, TFunction } from 'i18next';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { BedrockRegionList } from '../setting-model/constant';
+import BlobTokenField from './component/blob-token-field';
+import BoxTokenField from './component/box-token-field';
+import { ConfluenceIndexingModeField } from './component/confluence-token-field';
+import GmailTokenField from './component/gmail-token-field';
 import GoogleDriveTokenField from './component/google-drive-token-field';
-
+import { IDataSourceInfoMap } from './interface';
 export enum DataSourceKey {
   CONFLUENCE = 'confluence',
   S3 = 's3',
   NOTION = 'notion',
   DISCORD = 'discord',
   GOOGLE_DRIVE = 'google_drive',
-  // GMAIL = 'gmail',
+  MOODLE = 'moodle',
+  GMAIL = 'gmail',
   JIRA = 'jira',
+  WEBDAV = 'webdav',
+  BOX = 'box',
+  DROPBOX = 'dropbox',
+  R2 = 'r2',
+  OCI_STORAGE = 'oci_storage',
+  GOOGLE_CLOUD_STORAGE = 'google_cloud_storage',
+  AIRTABLE = 'airtable',
   //   SHAREPOINT = 'sharepoint',
   //   SLACK = 'slack',
   //   TEAMS = 'teams',
 }
 
-export const DataSourceInfo = {
-  [DataSourceKey.S3]: {
-    name: 'S3',
-    description: t(`setting.${DataSourceKey.S3}Description`),
-    icon: <SvgIcon name={'data-source/s3'} width={38} />,
-  },
-  [DataSourceKey.NOTION]: {
-    name: 'Notion',
-    description: t(`setting.${DataSourceKey.NOTION}Description`),
-    icon: <SvgIcon name={'data-source/notion'} width={38} />,
-  },
-  [DataSourceKey.DISCORD]: {
-    name: 'Discord',
-    description: t(`setting.${DataSourceKey.DISCORD}Description`),
-    icon: <SvgIcon name={'data-source/discord'} width={38} />,
-  },
-  [DataSourceKey.CONFLUENCE]: {
-    name: 'Confluence',
-    description: t(`setting.${DataSourceKey.CONFLUENCE}Description`),
-    icon: <SvgIcon name={'data-source/confluence'} width={38} />,
-  },
-  [DataSourceKey.GOOGLE_DRIVE]: {
-    name: 'Google Drive',
-    description: t(`setting.${DataSourceKey.GOOGLE_DRIVE}Description`),
-    icon: <SvgIcon name={'data-source/google-drive'} width={38} />,
-  },
-  [DataSourceKey.JIRA]: {
-    name: 'Jira',
-    description: t(`setting.${DataSourceKey.JIRA}Description`),
-    icon: <SvgIcon name={'data-source/jira'} width={38} />,
-  },
+export const generateDataSourceInfo = (t: TFunction) => {
+  return {
+    [DataSourceKey.GOOGLE_CLOUD_STORAGE]: {
+      name: 'Google Cloud Storage',
+      description: t(
+        `setting.${DataSourceKey.GOOGLE_CLOUD_STORAGE}Description`,
+      ),
+      icon: <SvgIcon name={'data-source/google-cloud-storage'} width={38} />,
+    },
+    [DataSourceKey.OCI_STORAGE]: {
+      name: 'Oracle Storage',
+      description: t(`setting.${DataSourceKey.OCI_STORAGE}Description`),
+      icon: <SvgIcon name={'data-source/oracle-storage'} width={38} />,
+    },
+    [DataSourceKey.R2]: {
+      name: 'R2',
+      description: t(`setting.${DataSourceKey.R2}Description`),
+      icon: <SvgIcon name={'data-source/r2'} width={38} />,
+    },
+    [DataSourceKey.S3]: {
+      name: 'S3',
+      description: t(`setting.${DataSourceKey.S3}Description`),
+      icon: <SvgIcon name={'data-source/s3'} width={38} />,
+    },
+    [DataSourceKey.NOTION]: {
+      name: 'Notion',
+      description: t(`setting.${DataSourceKey.NOTION}Description`),
+      icon: <SvgIcon name={'data-source/notion'} width={38} />,
+    },
+    [DataSourceKey.DISCORD]: {
+      name: 'Discord',
+      description: t(`setting.${DataSourceKey.DISCORD}Description`),
+      icon: <SvgIcon name={'data-source/discord'} width={38} />,
+    },
+    [DataSourceKey.CONFLUENCE]: {
+      name: 'Confluence',
+      description: t(`setting.${DataSourceKey.CONFLUENCE}Description`),
+      icon: <SvgIcon name={'data-source/confluence'} width={38} />,
+    },
+    [DataSourceKey.GOOGLE_DRIVE]: {
+      name: 'Google Drive',
+      description: t(`setting.${DataSourceKey.GOOGLE_DRIVE}Description`),
+      icon: <SvgIcon name={'data-source/google-drive'} width={38} />,
+    },
+    [DataSourceKey.GMAIL]: {
+      name: 'Gmail',
+      description: t(`setting.${DataSourceKey.GMAIL}Description`),
+      icon: <SvgIcon name={'data-source/gmail'} width={38} />,
+    },
+    [DataSourceKey.MOODLE]: {
+      name: 'Moodle',
+      description: t(`setting.${DataSourceKey.MOODLE}Description`),
+      icon: <SvgIcon name={'data-source/moodle'} width={38} />,
+    },
+    [DataSourceKey.JIRA]: {
+      name: 'Jira',
+      description: t(`setting.${DataSourceKey.JIRA}Description`),
+      icon: <SvgIcon name={'data-source/jira'} width={38} />,
+    },
+    [DataSourceKey.WEBDAV]: {
+      name: 'WebDAV',
+      description: t(`setting.${DataSourceKey.WEBDAV}Description`),
+      icon: <SvgIcon name={'data-source/webdav'} width={38} />,
+    },
+    [DataSourceKey.DROPBOX]: {
+      name: 'Dropbox',
+      description: t(`setting.${DataSourceKey.DROPBOX}Description`),
+      icon: <SvgIcon name={'data-source/dropbox'} width={38} />,
+    },
+    [DataSourceKey.BOX]: {
+      name: 'Box',
+      description: t(`setting.${DataSourceKey.BOX}Description`),
+      icon: <SvgIcon name={'data-source/box'} width={38} />,
+    },
+    [DataSourceKey.AIRTABLE]: {
+      name: 'Airtable',
+      description: t(`setting.${DataSourceKey.AIRTABLE}Description`),
+      icon: <SvgIcon name={'data-source/airtable'} width={38} />,
+    },
+  };
+};
+
+const awsRegionOptions = BedrockRegionList.map((r) => ({
+  label: r,
+  value: r,
+}));
+
+export const useDataSourceInfo = () => {
+  const { t } = useTranslation();
+  const [dataSourceInfo, setDataSourceInfo] = useState<IDataSourceInfoMap>(
+    generateDataSourceInfo(t) as IDataSourceInfoMap,
+  );
+  useEffect(() => {
+    setDataSourceInfo(generateDataSourceInfo(t));
+  }, [t]);
+  return { dataSourceInfo };
 };
 
 export const DataSourceFormBaseFields = [
@@ -75,18 +155,17 @@ export const DataSourceFormBaseFields = [
     })),
   },
 ];
-
 export const DataSourceFormFields = {
-  [DataSourceKey.S3]: [
+  [DataSourceKey.GOOGLE_CLOUD_STORAGE]: [
     {
-      label: 'AWS Access Key ID',
-      name: 'config.credentials.aws_access_key_id',
+      label: 'GCS Access Key ID',
+      name: 'config.credentials.access_key_id',
       type: FormFieldType.Text,
       required: true,
     },
     {
-      label: 'AWS Secret Access Key',
-      name: 'config.credentials.aws_secret_access_key',
+      label: 'GCS Secret Access Key',
+      name: 'config.credentials.secret_access_key',
       type: FormFieldType.Password,
       required: true,
     },
@@ -96,28 +175,88 @@ export const DataSourceFormFields = {
       type: FormFieldType.Text,
       required: true,
     },
+  ],
+  [DataSourceKey.OCI_STORAGE]: [
     {
-      label: 'Bucket Type',
-      name: 'config.bucket_type',
-      type: FormFieldType.Select,
-      options: [
-        { label: 'S3', value: 's3' },
-        { label: 'R2', value: 'r2' },
-        { label: 'Google Cloud Storage', value: 'google_cloud_storage' },
-        { label: 'OCI Storage', value: 'oci_storage' },
-        { label: 'S3 Compatible', value: 's3_compatible' },
-      ],
+      label: 'OCI Namespace',
+      name: 'config.credentials.namespace',
+      type: FormFieldType.Text,
       required: true,
     },
     {
-      label: 'Endpoint URL',
-      name: 'config.credentials.endpoint_url',
+      label: 'OCI Region',
+      name: 'config.credentials.region',
       type: FormFieldType.Text,
+      required: true,
+    },
+    {
+      label: 'OCI Access Key ID',
+      name: 'config.credentials.access_key_id',
+      type: FormFieldType.Text,
+      required: true,
+    },
+    {
+      label: 'OCI Secret Access Key',
+      name: 'config.credentials.secret_access_key',
+      type: FormFieldType.Password,
+      required: true,
+    },
+    {
+      label: 'Bucket Name',
+      name: 'config.bucket_name',
+      type: FormFieldType.Text,
+      required: true,
+    },
+  ],
+  [DataSourceKey.R2]: [
+    {
+      label: 'R2 Account ID',
+      name: 'config.credentials.account_id',
+      type: FormFieldType.Text,
+      required: true,
+    },
+    {
+      label: 'R2 Access Key ID',
+      name: 'config.credentials.r2_access_key_id',
+      type: FormFieldType.Text,
+      required: true,
+    },
+    {
+      label: 'R2 Secret Access Key',
+      name: 'config.credentials.r2_secret_access_key',
+      type: FormFieldType.Password,
+      required: true,
+    },
+    {
+      label: 'Bucket Name',
+      name: 'config.bucket_name',
+      type: FormFieldType.Text,
+      required: true,
+    },
+  ],
+  [DataSourceKey.S3]: [
+    {
+      label: 'Bucket Name',
+      name: 'config.bucket_name',
+      type: FormFieldType.Text,
+      required: true,
+    },
+    {
+      label: 'Region',
+      name: 'config.credentials.region',
+      type: FormFieldType.Select,
       required: false,
-      placeholder: 'https://fsn1.your-objectstorage.com',
-      tooltip: t('setting.S3CompatibleEndpointUrlTip'),
-      shouldRender: (formValues) => {
-        return formValues?.config?.bucket_type === 's3_compatible';
+      options: awsRegionOptions,
+      customValidate: (val: string, formValues: any) => {
+        const credentials = formValues?.config?.credentials || {};
+        const bucketType = formValues?.config?.bucket_type || 's3';
+        const hasAccessKey = Boolean(
+          credentials.aws_access_key_id || credentials.aws_secret_access_key,
+        );
+        if (bucketType === 's3' && hasAccessKey) {
+          return Boolean(val) || 'Region is required when using access key';
+        }
+        return true;
       },
     },
     {
@@ -126,6 +265,14 @@ export const DataSourceFormFields = {
       type: FormFieldType.Text,
       required: false,
       tooltip: t('setting.s3PrefixTip'),
+    },
+    {
+      label: 'Credentials',
+      name: 'config.credentials.__blob_token',
+      type: FormFieldType.Custom,
+      hideLabel: true,
+      required: false,
+      render: () => <BlobTokenField />,
     },
   ],
   [DataSourceKey.NOTION]: [
@@ -191,6 +338,38 @@ export const DataSourceFormFields = {
       required: false,
       tooltip: t('setting.confluenceIsCloudTip'),
     },
+    {
+      label: 'Index Method',
+      name: 'config.index_mode',
+      type: FormFieldType.Text,
+      required: false,
+      horizontal: true,
+      labelClassName: 'self-start pt-4',
+      render: (fieldProps: any) => (
+        <ConfluenceIndexingModeField {...fieldProps} />
+      ),
+    },
+    {
+      label: 'Space Key',
+      name: 'config.space',
+      type: FormFieldType.Text,
+      required: false,
+      hidden: true,
+    },
+    {
+      label: 'Page ID',
+      name: 'config.page_id',
+      type: FormFieldType.Text,
+      required: false,
+      hidden: true,
+    },
+    {
+      label: 'Index Recursively',
+      name: 'config.index_recursively',
+      type: FormFieldType.Checkbox,
+      required: false,
+      hidden: true,
+    },
   ],
   [DataSourceKey.GOOGLE_DRIVE]: [
     {
@@ -210,7 +389,6 @@ export const DataSourceFormFields = {
         <GoogleDriveTokenField
           value={fieldProps.value}
           onChange={fieldProps.onChange}
-          placeholder='{ "token": "...", "refresh_token": "...", ... }'
         />
       ),
       tooltip: t('setting.google_driveTokenTip'),
@@ -285,6 +463,52 @@ export const DataSourceFormFields = {
       required: false,
       hidden: true,
       defaultValue: 'uploaded',
+    },
+  ],
+  [DataSourceKey.GMAIL]: [
+    {
+      label: 'Primary Admin Email',
+      name: 'config.credentials.google_primary_admin',
+      type: FormFieldType.Text,
+      required: true,
+      placeholder: 'admin@example.com',
+      tooltip: t('setting.gmailPrimaryAdminTip'),
+    },
+    {
+      label: 'OAuth Token JSON',
+      name: 'config.credentials.google_tokens',
+      type: FormFieldType.Textarea,
+      required: true,
+      render: (fieldProps: any) => (
+        <GmailTokenField
+          value={fieldProps.value}
+          onChange={fieldProps.onChange}
+        />
+      ),
+      tooltip: t('setting.gmailTokenTip'),
+    },
+    {
+      label: '',
+      name: 'config.credentials.authentication_method',
+      type: FormFieldType.Text,
+      required: false,
+      hidden: true,
+      defaultValue: 'uploaded',
+    },
+  ],
+  [DataSourceKey.MOODLE]: [
+    {
+      label: 'Moodle URL',
+      name: 'config.moodle_url',
+      type: FormFieldType.Text,
+      required: true,
+      placeholder: 'https://moodle.example.com',
+    },
+    {
+      label: 'API Token',
+      name: 'config.credentials.moodle_token',
+      type: FormFieldType.Password,
+      required: true,
     },
   ],
   [DataSourceKey.JIRA]: [
@@ -387,101 +611,93 @@ export const DataSourceFormFields = {
       tooltip: t('setting.jiraPasswordTip'),
     },
   ],
-  // [DataSourceKey.GOOGLE_DRIVE]: [
-  //   {
-  //     label: 'Primary Admin Email',
-  //     name: 'config.credentials.google_primary_admin',
-  //     type: FormFieldType.Text,
-  //     required: true,
-  //     placeholder: 'admin@example.com',
-  //     tooltip: t('setting.google_drivePrimaryAdminTip'),
-  //   },
-  //   {
-  //     label: 'OAuth Token JSON',
-  //     name: 'config.credentials.google_tokens',
-  //     type: FormFieldType.Textarea,
-  //     required: true,
-  //     render: (fieldProps) => (
-  //       <GoogleDriveTokenField
-  //         value={fieldProps.value}
-  //         onChange={fieldProps.onChange}
-  //         placeholder='{ "token": "...", "refresh_token": "...", ... }'
-  //       />
-  //     ),
-  //     tooltip: t('setting.google_driveTokenTip'),
-  //   },
-  //   {
-  //     label: 'My Drive Emails',
-  //     name: 'config.my_drive_emails',
-  //     type: FormFieldType.Text,
-  //     required: true,
-  //     placeholder: 'user1@example.com,user2@example.com',
-  //     tooltip: t('setting.google_driveMyDriveEmailsTip'),
-  //   },
-  //   {
-  //     label: 'Shared Folder URLs',
-  //     name: 'config.shared_folder_urls',
-  //     type: FormFieldType.Textarea,
-  //     required: true,
-  //     placeholder:
-  //       'https://drive.google.com/drive/folders/XXXXX,https://drive.google.com/drive/folders/YYYYY',
-  //     tooltip: t('setting.google_driveSharedFoldersTip'),
-  //   },
-  //   // The fields below are intentionally disabled for now. Uncomment them when we
-  //   // reintroduce shared drive controls or advanced impersonation options.
-  //   // {
-  //   //   label: 'Shared Drive URLs',
-  //   //   name: 'config.shared_drive_urls',
-  //   //   type: FormFieldType.Text,
-  //   //   required: false,
-  //   //   placeholder:
-  //   //     'Optional: comma-separated shared drive links if you want to include them.',
-  //   // },
-  //   // {
-  //   //   label: 'Specific User Emails',
-  //   //   name: 'config.specific_user_emails',
-  //   //   type: FormFieldType.Text,
-  //   //   required: false,
-  //   //   placeholder:
-  //   //     'Optional: comma-separated list of users to impersonate (overrides defaults).',
-  //   // },
-  //   // {
-  //   //      label: 'Include My Drive',
-  //   //      name: 'config.include_my_drives',
-  //   //      type: FormFieldType.Checkbox,
-  //   //      required: false,
-  //   //      defaultValue: true,
-  //   // },
-  //   // {
-  //   //   label: 'Include Shared Drives',
-  //   //   name: 'config.include_shared_drives',
-  //   //   type: FormFieldType.Checkbox,
-  //   //   required: false,
-  //   //   defaultValue: false,
-  //   // },
-  //   // {
-  //   //   label: 'Include “Shared with me”',
-  //   //   name: 'config.include_files_shared_with_me',
-  //   //   type: FormFieldType.Checkbox,
-  //   //   required: false,
-  //   //   defaultValue: false,
-  //   // },
-  //   // {
-  //   //   label: 'Allow Images',
-  //   //   name: 'config.allow_images',
-  //   //   type: FormFieldType.Checkbox,
-  //   //   required: false,
-  //   //   defaultValue: false,
-  //   // },
-  //   {
-  //     label: '',
-  //     name: 'config.credentials.authentication_method',
-  //     type: FormFieldType.Text,
-  //     required: false,
-  //     hidden: true,
-  //     defaultValue: 'uploaded',
-  //   },
-  // ],
+  [DataSourceKey.WEBDAV]: [
+    {
+      label: 'WebDAV Server URL',
+      name: 'config.base_url',
+      type: FormFieldType.Text,
+      required: true,
+      placeholder: 'https://webdav.example.com',
+    },
+    {
+      label: 'Username',
+      name: 'config.credentials.username',
+      type: FormFieldType.Text,
+      required: true,
+    },
+    {
+      label: 'Password',
+      name: 'config.credentials.password',
+      type: FormFieldType.Password,
+      required: true,
+    },
+    {
+      label: 'Remote Path',
+      name: 'config.remote_path',
+      type: FormFieldType.Text,
+      required: false,
+      placeholder: '/',
+      tooltip: t('setting.webdavRemotePathTip'),
+    },
+  ],
+  [DataSourceKey.DROPBOX]: [
+    {
+      label: 'Access Token',
+      name: 'config.credentials.dropbox_access_token',
+      type: FormFieldType.Password,
+      required: true,
+      tooltip: t('setting.dropboxAccessTokenTip'),
+    },
+    {
+      label: 'Batch Size',
+      name: 'config.batch_size',
+      type: FormFieldType.Number,
+      required: false,
+      placeholder: 'Defaults to 2',
+    },
+  ],
+  [DataSourceKey.BOX]: [
+    {
+      label: 'Box OAuth JSON',
+      name: 'config.credentials.box_tokens',
+      type: FormFieldType.Textarea,
+      required: true,
+      render: (fieldProps: any) => (
+        <BoxTokenField
+          value={fieldProps.value}
+          onChange={fieldProps.onChange}
+          placeholder='{ "client_id": "...", "client_secret": "...", "redirect_uri": "..." }'
+        />
+      ),
+    },
+    {
+      label: 'Folder ID',
+      name: 'config.folder_id',
+      type: FormFieldType.Text,
+      required: false,
+      placeholder: 'Defaults root',
+    },
+  ],
+  [DataSourceKey.AIRTABLE]: [
+    {
+      label: 'Access Token',
+      name: 'config.credentials.airtable_access_token',
+      type: FormFieldType.Text,
+      required: true,
+    },
+    {
+      label: 'Base ID',
+      name: 'config.base_id',
+      type: FormFieldType.Text,
+      required: true,
+    },
+    {
+      label: 'Table Name OR ID',
+      name: 'config.table_name_or_id',
+      type: FormFieldType.Text,
+      required: true,
+    },
+  ],
 };
 
 export const DataSourceFormDefaultValues = {
@@ -495,7 +711,23 @@ export const DataSourceFormDefaultValues = {
       credentials: {
         aws_access_key_id: '',
         aws_secret_access_key: '',
+        region: '',
+        authentication_method: 'access_key',
+        aws_role_arn: '',
         endpoint_url: '',
+        addressing_style: 'virtual',
+      },
+    },
+  },
+  [DataSourceKey.R2]: {
+    name: '',
+    source: DataSourceKey.R2,
+    config: {
+      bucket_name: '',
+      credentials: {
+        account_id: '',
+        r2_access_key_id: '',
+        r2_secret_access_key: '',
       },
     },
   },
@@ -526,10 +758,12 @@ export const DataSourceFormDefaultValues = {
     config: {
       wiki_base: '',
       is_cloud: true,
+      space: '',
       credentials: {
         confluence_username: '',
         confluence_access_token: '',
       },
+      index_mode: 'everything',
     },
   },
   [DataSourceKey.GOOGLE_DRIVE]: {
@@ -551,6 +785,51 @@ export const DataSourceFormDefaultValues = {
       },
     },
   },
+  [DataSourceKey.GMAIL]: {
+    name: '',
+    source: DataSourceKey.GMAIL,
+    config: {
+      credentials: {
+        google_primary_admin: '',
+        google_tokens: '',
+        authentication_method: 'uploaded',
+      },
+    },
+  },
+  [DataSourceKey.GOOGLE_CLOUD_STORAGE]: {
+    name: '',
+    source: DataSourceKey.GOOGLE_CLOUD_STORAGE,
+    config: {
+      bucket_name: '',
+      credentials: {
+        access_key_id: '',
+        secret_access_key: '',
+      },
+    },
+  },
+  [DataSourceKey.OCI_STORAGE]: {
+    name: '',
+    source: DataSourceKey.OCI_STORAGE,
+    config: {
+      bucket_name: '',
+      credentials: {
+        namespace: '',
+        region: '',
+        access_key_id: '',
+        secret_access_key: '',
+      },
+    },
+  },
+  [DataSourceKey.MOODLE]: {
+    name: '',
+    source: DataSourceKey.MOODLE,
+    config: {
+      moodle_url: '',
+      credentials: {
+        moodle_token: '',
+      },
+    },
+  },
   [DataSourceKey.JIRA]: {
     name: '',
     source: DataSourceKey.JIRA,
@@ -569,6 +848,51 @@ export const DataSourceFormDefaultValues = {
         jira_user_email: '',
         jira_api_token: '',
         jira_password: '',
+      },
+    },
+  },
+  [DataSourceKey.WEBDAV]: {
+    name: '',
+    source: DataSourceKey.WEBDAV,
+    config: {
+      base_url: '',
+      remote_path: '/',
+      credentials: {
+        username: '',
+        password: '',
+      },
+    },
+  },
+  [DataSourceKey.DROPBOX]: {
+    name: '',
+    source: DataSourceKey.DROPBOX,
+    config: {
+      batch_size: 2,
+      credentials: {
+        dropbox_access_token: '',
+      },
+    },
+  },
+  [DataSourceKey.BOX]: {
+    name: '',
+    source: DataSourceKey.BOX,
+    config: {
+      name: '',
+      folder_id: '0',
+      credentials: {
+        box_tokens: '',
+      },
+    },
+  },
+  [DataSourceKey.AIRTABLE]: {
+    name: '',
+    source: DataSourceKey.AIRTABLE,
+    config: {
+      name: '',
+      base_id: '',
+      table_name_or_id: '',
+      credentials: {
+        airtable_access_token: '',
       },
     },
   },

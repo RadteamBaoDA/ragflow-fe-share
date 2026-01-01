@@ -32,7 +32,6 @@ export default defineConfig({
       hack: `true; @import "~@/less/index.less";`,
     },
   },
-  //devtool: false,
   devtool: 'source-map',
   copy: [
     { from: 'src/conf.json', to: 'dist/conf.json' },

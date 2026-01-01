@@ -15,10 +15,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { useTranslation } from 'react-i18next';
+import { t } from 'i18next';
 import { CircleStop, Paperclip, Send, Upload, X } from 'lucide-react';
 import * as React from 'react';
+import { useEffect } from 'react';
 import { toast } from 'sonner';
+import { AudioButton } from '../ui/audio-button';
 
 interface IProps {
   disabled: boolean;
@@ -51,22 +53,29 @@ export function NextMessageInput({
   onPressEnter,
   removeFile,
 }: IProps) {
-  const { t } = useTranslation();
   const [files, setFiles] = React.useState<File[]>([]);
-
-  const onFileReject = React.useCallback(
-    (file: File, message: string) => {
-      toast(message, {
-        description: t('chat.fileRejected', {
-          fileName:
-            file.name.length > 20
-              ? `${file.name.slice(0, 20)}...`
-              : file.name,
-        }),
-      });
-    },
-    [t],
+  const [audioInputValue, setAudioInputValue] = React.useState<string | null>(
+    null,
   );
+
+  useEffect(() => {
+    if (audioInputValue !== null) {
+      onInputChange({
+        target: { value: audioInputValue },
+      } as React.ChangeEvent<HTMLTextAreaElement>);
+
+      setTimeout(() => {
+        onPressEnter();
+        setAudioInputValue(null);
+      }, 0);
+    }
+  }, [audioInputValue, onInputChange, onPressEnter]);
+
+  const onFileReject = React.useCallback((file: File, message: string) => {
+    toast(message, {
+      description: `"${file.name.length > 20 ? `${file.name.slice(0, 20)}...` : file.name}" has been rejected`,
+    });
+  }, []);
 
   const submit = React.useCallback(() => {
     if (isUploading) return;
@@ -115,8 +124,10 @@ export function NextMessageInput({
           <div className="flex items-center justify-center rounded-full border p-2.5">
             <Upload className="size-6 text-muted-foreground" />
           </div>
-          <p className="font-medium text-sm">{t('chat.dragAndDrop')}</p>
-          <p className="text-muted-foreground text-xs">{t('chat.uploadMax')}</p>
+          <p className="font-medium text-sm">Drag & drop files here</p>
+          <p className="text-muted-foreground text-xs">
+            Upload max 5 files each up to 5MB
+          </p>
         </div>
       </FileUploadDropzone>
       <form
@@ -150,9 +161,10 @@ export function NextMessageInput({
           value={value}
           onChange={onInputChange}
           placeholder={t('chat.messagePlaceholder')}
-          className="field-sizing-content min-h-10 w-full resize-none border-0 bg-transparent p-0 shadow-none focus-visible:ring-0 dark:bg-transparent"
+          className="min-h-0 w-full resize-none border-0 bg-transparent p-0 shadow-none focus-visible:ring-0 dark:bg-transparent"
           disabled={isUploading || disabled || sendLoading}
           onKeyDown={handleKeyDown}
+          autoSize={{ minRows: 1, maxRows: 4 }}
         />
         <div
           className={cn('flex items-center justify-between gap-1.5', {
@@ -169,7 +181,7 @@ export function NextMessageInput({
                 disabled={isUploading || sendLoading}
               >
                 <Paperclip className="size-3.5" />
-                <span className="sr-only">{t('chat.attachFile')}</span>
+                <span className="sr-only">Attach file</span>
               </Button>
             </FileUploadTrigger>
           )}
@@ -178,15 +190,24 @@ export function NextMessageInput({
               <CircleStop />
             </Button>
           ) : (
-            <Button
-              className="size-5 rounded-sm"
-              disabled={
-                sendDisabled || isUploading || sendLoading || !value.trim()
-              }
-            >
-              <Send />
-              <span className="sr-only">{t('chat.sendMessage')}</span>
-            </Button>
+            <div className="flex items-center gap-3">
+              {/* <div className="bg-bg-input rounded-md hover:bg-bg-card p-1"> */}
+              <AudioButton
+                onOk={(value) => {
+                  setAudioInputValue(value);
+                }}
+              />
+              {/* </div> */}
+              <Button
+                className="size-5 rounded-sm"
+                disabled={
+                  sendDisabled || isUploading || sendLoading || !value.trim()
+                }
+              >
+                <Send />
+                <span className="sr-only">Send message</span>
+              </Button>
+            </div>
           )}
         </div>
       </form>

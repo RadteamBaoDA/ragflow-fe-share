@@ -1,4 +1,5 @@
-import HightLightMarkdown from '@/components/highlight-markdown';
+import HighLightMarkdown from '@/components/highlight-markdown';
+import message from '@/components/ui/message';
 import { Modal } from '@/components/ui/modal/modal';
 import { RAGFlowSelect } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -7,7 +8,6 @@ import {
   LanguageAbbreviationMap,
 } from '@/constants/common';
 import { useTranslate } from '@/hooks/common-hooks';
-import { message } from 'antd';
 import { useCallback, useMemo, useState } from 'react';
 
 type IEmbedAppModalProps = {
@@ -89,7 +89,7 @@ const EmbedAppModal = (props: IEmbedAppModalProps) => {
             {t('locale')}
           </label>
           <RAGFlowSelect
-            placeholder={t('selectLocale', { keyPrefix: 'search' })}
+            placeholder="Select a locale"
             value={locale}
             onChange={(value) => setLocale(value)}
             options={languageOptions}
@@ -102,7 +102,7 @@ const EmbedAppModal = (props: IEmbedAppModalProps) => {
           </label>
           {/* <div className=" border rounded-lg"> */}
           {/* <pre className="text-sm whitespace-pre-wrap">{text}</pre> */}
-          <HightLightMarkdown>{text}</HightLightMarkdown>
+          <HighLightMarkdown>{text}</HighLightMarkdown>
           {/* </div> */}
         </div>
 
@@ -123,7 +123,7 @@ const EmbedAppModal = (props: IEmbedAppModalProps) => {
                 message.success(t('copySuccess'));
               }}
               className="ml-2 p-2 hover:text-white transition-colors"
-              title={t('copyId', { keyPrefix: 'search' })}
+              title="Copy ID"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"

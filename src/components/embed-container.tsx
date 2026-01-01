@@ -1,7 +1,6 @@
 import { useFetchAppConf } from '@/hooks/logic-hooks';
 import { RefreshCcw } from 'lucide-react';
 import { PropsWithChildren } from 'react';
-import { useTranslation } from 'react-i18next';
 import { RAGFlowAvatar } from './ragflow-avatar';
 import { Button } from './ui/button';
 
@@ -16,8 +15,8 @@ export function EmbedContainer({
   avatar,
   children,
   handleReset,
-}: EmbedContainerProps) {
-  const { t } = useTranslation();
+  hideHeader = false,
+}: EmbedContainerProps & { hideHeader?: boolean }) {
   const appConf = useFetchAppConf();
 
   return (
@@ -26,13 +25,13 @@ export function EmbedContainer({
         <img src="/logo.svg" alt="" />
         <span className="text-2xl font-bold">{appConf.appName}</span>
       </div> */}
-      <div className=" w-[90vw] border rounded-lg">
-        <div className="flex justify-between items-center border-b p-3">
-          <div className="flex gap-2 items-center">
-            <RAGFlowAvatar avatar={avatar} name={title} isPerson />
-            <div className="text-xl text-foreground">{title}</div>
-          </div>
-          {handleReset && (
+      <div className=" w-[80vw] border rounded-lg">
+        {!hideHeader && (
+          <div className="flex justify-between items-center border-b p-3">
+            <div className="flex gap-2 items-center">
+              <RAGFlowAvatar avatar={avatar} name={title} isPerson />
+              <div className="text-xl text-foreground">{title}</div>
+            </div>
             <Button
               variant={'secondary'}
               className="text-sm text-foreground cursor-pointer"
@@ -40,11 +39,11 @@ export function EmbedContainer({
             >
               <div className="flex gap-1 items-center">
                 <RefreshCcw size={14} />
-                <span className="text-lg ">{t('chat.reset')}</span>
+                <span className="text-lg ">Reset</span>
               </div>
             </Button>
-          )}
-        </div>
+          </div>
+        )}
         {children}
       </div>
     </section>

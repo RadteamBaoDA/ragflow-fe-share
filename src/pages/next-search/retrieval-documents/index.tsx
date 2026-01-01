@@ -19,11 +19,10 @@ import {
   useAllTestingResult,
   useChunkIsTesting,
   useSelectTestingResult,
-} from '@/hooks/knowledge-hooks';
+} from '@/hooks/use-knowledge-request';
 import { cn } from '@/lib/utils';
 import { CheckIcon, ChevronDown, Files, XIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 
 interface IProps {
   onTesting(documentIds: string[]): void;
@@ -38,7 +37,6 @@ const RetrievalDocuments = ({
   setSelectedDocumentIds,
   setLoading,
 }: IProps) => {
-  const { t } = useTranslation();
   const { documents: documentsAll } = useAllTestingResult();
   const { documents } = useSelectTestingResult();
   const isTesting = useChunkIsTesting();
@@ -123,12 +121,12 @@ const RetrievalDocuments = ({
             )}
           >
             <div className="flex justify-between items-center w-full">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Files />
                 <span>
                   {selectedDocumentIds?.length ?? 0}/{useDocuments?.length ?? 0}
                 </span>
-                {t('search.files')}
+                Files
               </div>
               <div className="flex items-center justify-between">
                 <XIcon
@@ -155,11 +153,11 @@ const RetrievalDocuments = ({
       >
         <Command>
           <CommandInput
-            placeholder={t('search.searchPlaceholder')}
+            placeholder="Search..."
             onKeyDown={handleInputKeyDown}
           />
           <CommandList>
-            <CommandEmpty>{t('search.noResultsFound')}</CommandEmpty>
+            <CommandEmpty>No results found.</CommandEmpty>
             <CommandGroup>
               {!multiOptions.some((x) => 'options' in x) &&
                 (multiOptions as unknown as MultiSelectOptionType[]).map(
@@ -228,7 +226,7 @@ const RetrievalDocuments = ({
                       onSelect={handleClear}
                       className="flex-1 justify-center cursor-pointer"
                     >
-                      {t('search.clear')}
+                      Clear
                     </CommandItem>
                     <Separator
                       orientation="vertical"
@@ -240,7 +238,7 @@ const RetrievalDocuments = ({
                   onSelect={() => setIsPopoverOpen(false)}
                   className="flex-1 justify-center cursor-pointer max-w-full"
                 >
-                  {t('common.close')}
+                  Close
                 </CommandItem>
               </div>
             </CommandGroup>

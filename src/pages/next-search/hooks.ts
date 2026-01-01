@@ -1,33 +1,36 @@
 import message from '@/components/ui/message';
 import { SharedFrom } from '@/constants/chat';
-import { useSelectTestingResult } from '@/hooks/knowledge-hooks';
+import { useSetModalState } from '@/hooks/common-hooks';
 import {
   useGetPaginationWithRouter,
   useSendMessageWithSse,
 } from '@/hooks/logic-hooks';
 import { useSetPaginationParams } from '@/hooks/route-hook';
-import { useKnowledgeBaseId } from '@/hooks/use-knowledge-request';
+import {
+  useKnowledgeBaseId,
+  useSelectTestingResult,
+} from '@/hooks/use-knowledge-request';
 import { ResponsePostType } from '@/interfaces/database/base';
 import { IAnswer } from '@/interfaces/database/chat';
 import { ITestingResult } from '@/interfaces/database/knowledge';
 import { IAskRequestBody } from '@/interfaces/request/chat';
-import chatService from '@/services/chat-service';
 import kbService from '@/services/knowledge-service';
+import chatService from '@/services/next-chat-service';
 import searchService from '@/services/search-service';
 import api from '@/utils/api';
 import { useMutation } from '@tanstack/react-query';
-import { has, isEmpty, trim } from 'lodash';
+import { has, isEmpty, isEqual, trim } from 'lodash';
 import {
   ChangeEventHandler,
   Dispatch,
   SetStateAction,
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from 'react';
 import { useSearchParams } from 'umi';
 import { ISearchAppDetailProps } from '../next-searches/hooks';
-import { useShowMindMapDrawer } from '../search/hooks';
 import { useClickDrawer } from './document-preview-modal/hooks';
 
 export interface ISearchingProps {
@@ -53,12 +56,11 @@ export const useGetSharedSearchParams = () => {
     sharedId: searchParams.get('shared_id'),
     locale: searchParams.get('locale'),
     tenantId: searchParams.get('tenantId'),
+    email: searchParams.get('email') || '',
     data: data,
-    theme: searchParams.get('theme') || 'dark',
     visibleAvatar: searchParams.get('visible_avatar')
       ? searchParams.get('visible_avatar') !== '1'
       : true,
-    email: searchParams.get('email'),
   };
 };
 
@@ -92,10 +94,45 @@ export const useSearchFetchMindMap = () => {
   return { data, loading, fetchMindMap: mutateAsync };
 };
 
+export const useShowMindMapDrawer = (
+  kbIds: string[],
+  question: string,
+  searchId = '',
+) => {
+  const { visible, showModal, hideModal } = useSetModalState();
+  const ref = useRef<any>();
+
+  const {
+    fetchMindMap,
+    data: mindMap,
+    loading: mindMapLoading,
+  } = useSearchFetchMindMap();
+
+  const handleShowModal = useCallback(() => {
+    const searchParams = { question: trim(question), kb_ids: kbIds, searchId };
+    if (
+      !isEmpty(searchParams.question) &&
+      !isEqual(searchParams, ref.current)
+    ) {
+      ref.current = searchParams;
+      fetchMindMap(searchParams);
+    }
+    showModal();
+  }, [fetchMindMap, showModal, question, kbIds, searchId]);
+
+  return {
+    mindMap,
+    mindMapVisible: visible,
+    mindMapLoading,
+    showMindMapModal: handleShowModal,
+    hideMindMapModal: hideModal,
+  };
+};
+
 export const useTestChunkRetrieval = (
   tenantId?: string,
 ): ResponsePostType<ITestingResult> & {
-  testChunk: (...params: any[]) => Promise<ITestingResult>;
+  testChunk: (...params: any[]) => void;
 } => {
   const knowledgeBaseId = useKnowledgeBaseId();
   const { page, size: pageSize } = useSetPaginationParams();
@@ -290,15 +327,17 @@ export const useSendQuestion = (
   const { pagination, setPagination } = useGetPaginationWithRouter();
 
   const sendQuestion = useCallback(
-    async (question: string, enableAI: boolean = true) => {
+    (question: string, enableAI: boolean = true) => {
       const q = trim(question);
       if (isEmpty(q)) return;
       setPagination({ page: 1 });
       setIsFirstRender(false);
-      setCurrentAnswer({} as IAnswer); // Reset answer for new search
-
-      // First, retrieve documents
-      const result = await testChunk({
+      setCurrentAnswer({} as IAnswer);
+      if (enableAI) {
+        setSendingLoading(true);
+        send({ kb_ids: kbIds, question: q, tenantId, search_id: searchId });
+      }
+      testChunk({
         kb_id: kbIds,
         highlight: true,
         question: q,
@@ -306,13 +345,6 @@ export const useSendQuestion = (
         size: pagination.pageSize,
         search_id: searchId,
       });
-
-      // Only call AI summary if retrieval documents exist
-      const retrievedChunks = (result as ITestingResult)?.chunks;
-      if (enableAI && retrievedChunks && retrievedChunks.length > 0) {
-        setSendingLoading(true);
-        send({ kb_ids: kbIds, question: q, tenantId, search_id: searchId });
-      }
 
       if (related_search) {
         fetchRelatedQuestions(q);
@@ -383,13 +415,11 @@ export const useSendQuestion = (
     ],
   );
 
-  // Copy answer to currentAnswer when it updates (answer gets reset after stream)
   useEffect(() => {
     if (!isEmpty(answer)) {
       setCurrentAnswer(answer);
     }
   }, [answer]);
-
 
   useEffect(() => {
     if (done) {
@@ -405,7 +435,7 @@ export const useSendQuestion = (
     setSelectedDocumentIds,
     loading,
     sendingLoading,
-    answer: currentAnswer, // Use currentAnswer to persist after stream resets
+    answer: currentAnswer,
     relatedQuestions: relatedQuestions?.slice(0, 5) ?? [],
     searchStr,
     setSearchStr,
@@ -547,4 +577,29 @@ export const useCheckSettings = (data: ISearchAppDetailProps) => {
   return {
     openSetting: kb_ids && kb_ids.length > 0 && name ? false : true,
   };
+};
+
+export const usePendingMindMap = () => {
+  const [count, setCount] = useState<number>(0);
+  const ref = useRef<NodeJS.Timeout>();
+
+  const setCountInterval = useCallback(() => {
+    ref.current = setInterval(() => {
+      setCount((pre) => {
+        if (pre > 40) {
+          clearInterval(ref?.current);
+        }
+        return pre + 1;
+      });
+    }, 1000);
+  }, []);
+
+  useEffect(() => {
+    setCountInterval();
+    return () => {
+      clearInterval(ref?.current);
+    };
+  }, [setCountInterval]);
+
+  return Number(((count / 43) * 100).toFixed(0));
 };

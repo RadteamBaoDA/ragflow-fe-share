@@ -1,10 +1,10 @@
 import { MessageType, SharedFrom } from '@/constants/chat';
-import { useCreateNextSharedConversation } from '@/hooks/chat-hooks';
 import {
   useHandleMessageInputChange,
   useSelectDerivedMessages,
   useSendMessageWithSse,
 } from '@/hooks/logic-hooks';
+import { useCreateNextSharedConversation } from '@/hooks/use-chat-request';
 import { Message } from '@/interfaces/database/chat';
 import { message } from 'antd';
 import { get } from 'lodash';
@@ -33,13 +33,12 @@ export const useGetSharedChatSearchParams = () => {
     from: searchParams.get('from') as SharedFrom,
     sharedId: searchParams.get('shared_id'),
     locale: searchParams.get('locale'),
-    theme: searchParams.get('theme') || 'dark',
+    theme: searchParams.get('theme'),
+    email: searchParams.get('email') || '',
     data: data,
     visibleAvatar: searchParams.get('visible_avatar')
       ? searchParams.get('visible_avatar') !== '1'
       : true,
-    email:
-      searchParams.get('email') || searchParams.get('user_id') || 'anonymous',
   };
 };
 
@@ -64,7 +63,6 @@ export const useSendSharedMessage = () => {
     messageContainerRef,
     removeAllMessages,
     removeAllMessagesExceptFirst,
-    scrollToBottom,
   } = useSelectDerivedMessages();
   const [hasError, setHasError] = useState(false);
 
@@ -117,16 +115,8 @@ export const useSendSharedMessage = () => {
   useEffect(() => {
     if (answer.answer) {
       addNewestAnswer(answer);
-      // Explicitly scroll to bottom during streaming
-      scrollToBottom();
     }
-  }, [answer, addNewestAnswer, scrollToBottom]);
-
-  // Reset session: clear all messages and fetch a new session_id
-  const resetSession = useCallback(async () => {
-    removeAllMessages();
-    await fetchSessionId();
-  }, [removeAllMessages, fetchSessionId]);
+  }, [answer, addNewestAnswer]);
 
   const handlePressEnter = useCallback(
     (documentIds: string[]) => {
@@ -163,6 +153,5 @@ export const useSendSharedMessage = () => {
     messageContainerRef,
     removeAllMessages,
     removeAllMessagesExceptFirst,
-    resetSession,
   };
 };

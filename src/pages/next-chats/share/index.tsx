@@ -5,12 +5,14 @@ import PdfDrawer from '@/components/pdf-drawer';
 import { useClickDrawer } from '@/components/pdf-drawer/hooks';
 import { useSyncThemeFromParams } from '@/components/theme-provider';
 import { MessageType, SharedFrom } from '@/constants/chat';
-import { useFetchNextConversationSSE } from '@/hooks/chat-hooks';
-import { useFetchFlowSSE } from '@/hooks/flow-hooks';
-import { useFetchExternalChatInfo } from '@/hooks/use-chat-request';
+import {
+  useFetchExternalChatInfo,
+  useFetchNextConversationSSE,
+} from '@/hooks/use-chat-request';
+import { useFetchFlowSSE } from '@/hooks/use-agent-request';
 import { useExternalTrace } from '@/hooks/user-external-trace';
 import i18n from '@/locales/config';
-import { useSendButtonDisabled } from '@/pages/chat/hooks';
+import { useSendButtonDisabled } from '../hooks/use-button-disabled';
 import { buildMessageUuidWithRole } from '@/utils/chat';
 import { Input, Modal } from 'antd';
 import React, {
@@ -31,7 +33,8 @@ import {
 import { buildMessageItemReference } from '../utils';
 
 /**
- * ChatContainer component for displaying and interacting with shared chat conversations.
+ * ChatContainer component for displaying and interacting with shared chat conve
+rsations.
  * It handles fetching chat data, managing messages, and user input.
  */
 const ChatContainer = () => {
@@ -68,8 +71,7 @@ const ChatContainer = () => {
     hasError,
     stopOutputMessage,
     scrollRef,
-    messageContainerRef,
-    resetSession,
+    messageContainerRef
   } = useSendSharedMessage();
 
   /**
@@ -151,12 +153,31 @@ const ChatContainer = () => {
   const derivedMessagesRef = useRef(derivedMessages);
   derivedMessagesRef.current = derivedMessages;
 
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'INSERT_PROMPT') {
+        const textarea = document.querySelector('textarea');
+        if (textarea) {
+          textarea.value = event.data.payload;
+          textarea.dispatchEvent(new Event('input', { bubbles: true }));
+          textarea.focus();
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, []);
+
+
   /**
    * Handle completed assistant messages - trace when:
    * 1. Not currently loading (stream finished)
    * 2. Have a pending question
    * 3. Have a new assistant message we haven't traced yet
-   * 
+   *
    * Uses derivedMessagesRef to fetch LATEST content inside setTimeout
    */
   useEffect(() => {
@@ -199,7 +220,8 @@ const ChatContainer = () => {
 
     // Only process assistant messages
     if (lastMsg.role !== MessageType.Assistant) {
-      console.log('[ChatContainer] ⏳ Skip: Last message is not assistant, role:', lastMsg.role);
+      console.log('[ChatContainer] ⏳ Skip: Last message is not assistant, role:'
+        , lastMsg.role);
       return;
     }
 
@@ -272,7 +294,7 @@ const ChatContainer = () => {
         user_email: email,
         user_prompt: capturedQuestion,
         llm_response: latestContent,
-        citations: latestReference?.chunks?.map((c) => c.document_name) || [],
+        citations: latestReference?.chunks?.map((c: any) => c.document_name) || [],
       };
 
       console.log('[ChatContainer] Sending to history API:', {
@@ -300,14 +322,6 @@ const ChatContainer = () => {
     internalChatId,
   ]);
 
-  /**
-   * Handle reset for chat
-   */
-  const handleReset = async () => {
-    await resetSession();
-    setLastTraceId(uuidv4());
-    setInternalChatId(uuidv4());
-  };
 
   /**
    * Get avatar data
@@ -338,7 +352,7 @@ const ChatContainer = () => {
 
   return (
     <>
-      <EmbedContainer title={chatInfo.title} avatar={chatInfo.avatar}>
+      <EmbedContainer title={chatInfo.title} avatar={chatInfo.avatar} hideHeader={true}>
         <div className="flex flex-1 flex-col p-2.5  h-[90vh] m-3">
           <div
             className={

@@ -5,12 +5,12 @@ import {
   FormFieldConfig,
   FormFieldType,
 } from '@/components/dynamic-form';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { RunningStatus } from '@/constants/knowledge';
 import { t } from 'i18next';
-import { debounce } from 'lodash';
 import { CirclePause, Repeat } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FieldValues } from 'react-hook-form';
@@ -18,7 +18,7 @@ import {
   DataSourceFormBaseFields,
   DataSourceFormDefaultValues,
   DataSourceFormFields,
-  DataSourceInfo,
+  useDataSourceInfo,
 } from '../contant';
 import {
   useAddDataSource,
@@ -32,10 +32,10 @@ const SourceDetailPage = () => {
 
   const { data: detail } = useFetchDataSourceDetail();
   const { handleResume } = useDataSourceResume();
-
+  const { dataSourceInfo } = useDataSourceInfo();
   const detailInfo = useMemo(() => {
     if (detail) {
-      return DataSourceInfo[detail.source];
+      return dataSourceInfo[detail.source];
     }
   }, [detail]);
 
@@ -67,11 +67,11 @@ const SourceDetailPage = () => {
           <div className="flex items-center  gap-1 w-full relative">
             <Input {...fieldProps} type={FormFieldType.Number} />
             <span className="absolute right-0 -translate-x-[58px] text-text-secondary italic ">
-              minutes
+              {t('setting.minutes')}
             </span>
             <button
               type="button"
-              className="text-text-secondary bg-bg-input rounded-sm text-xs h-full p-2 border border-border-button "
+              className="text-text-secondary bg-bg-input rounded-sm text-xs h-full p-2 border border-border-button hover:bg-border-button hover:text-text-primary"
               onClick={() => {
                 runSchedule();
               }}
@@ -112,7 +112,7 @@ const SourceDetailPage = () => {
           <div className="flex items-center  gap-1 w-full relative">
             <Input {...fieldProps} type={FormFieldType.Number} />
             <span className="absolute right-0 -translate-x-6 text-text-secondary italic ">
-              seconds
+              {t('setting.seconds')}
             </span>
           </div>
         ),
@@ -120,11 +120,11 @@ const SourceDetailPage = () => {
     ];
   }, [detail, runSchedule]);
 
-  const { handleAddOk } = useAddDataSource();
+  const { addLoading, handleAddOk } = useAddDataSource();
 
   const onSubmit = useCallback(() => {
     formRef?.current?.submit();
-  }, [formRef]);
+  }, []);
 
   useEffect(() => {
     if (detail) {
@@ -136,16 +136,14 @@ const SourceDetailPage = () => {
         ...customFields,
       ] as FormFieldConfig[];
 
-      const neweFields = fields.map((field) => {
+      const newFields = fields.map((field) => {
         return {
           ...field,
           horizontal: true,
-          onChange: () => {
-            onSubmit();
-          },
+          onChange: undefined,
         };
       });
-      setFields(neweFields);
+      setFields(newFields);
 
       const defultValueTemp = {
         ...(DataSourceFormDefaultValues[
@@ -170,19 +168,33 @@ const SourceDetailPage = () => {
           </CardTitle>
         </CardHeader>
         <Separator className="border-border-button bg-border-button w-[calc(100%+2rem)] -translate-x-4 -translate-y-4" />
-        <CardContent className="p-2 flex flex-col gap-2 max-h-[calc(100vh-190px)] overflow-y-auto scrollbar-auto">
+        <CardContent className="p-2 flex flex-col gap-10 max-h-[calc(100vh-190px)] overflow-y-auto scrollbar-auto">
           <div className="max-w-[1200px]">
             <DynamicForm.Root
               ref={formRef}
               fields={fields}
-              onSubmit={debounce((data) => {
-                handleAddOk(data);
-              }, 500)}
+              onSubmit={(data) => handleAddOk(data)}
               defaultValues={defaultValues}
             />
           </div>
-          <section className="flex flex-col gap-2 mt-6">
-            <div className="text-2xl text-text-primary">{t('setting.log')}</div>
+          <div className="max-w-[1200px] flex justify-end">
+            <Button
+              type="button"
+              onClick={onSubmit}
+              disabled={addLoading}
+              loading={addLoading}
+            >
+              {t('common.confirm')}
+              {/* {addLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {addLoading
+                ? t('modal.loadingText', { defaultValue: 'Submitting...' })
+                : t('modal.okText', { defaultValue: 'Submit' })} */}
+            </Button>
+          </div>
+          <section className="flex flex-col gap-2">
+            <div className="text-2xl text-text-primary mb-2">
+              {t('setting.log')}
+            </div>
             <DataSourceLogsTable refresh_freq={detail?.refresh_freq || false} />
           </section>
         </CardContent>

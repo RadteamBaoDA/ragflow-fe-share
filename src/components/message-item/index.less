@@ -1,15 +1,19 @@
 .messageItem {
   padding: 24px 0;
+
   .messageItemSection {
     display: inline-block;
   }
+
   .messageItemSectionLeft {
     width: 80%;
   }
+
   .messageItemContent {
     display: inline-flex;
     gap: 20px;
   }
+
   .messageItemContentReverse {
     flex-direction: row-reverse;
   }
@@ -17,20 +21,24 @@
   .messageTextBase() {
     padding: 6px 10px;
     border-radius: 8px;
-    & > p {
+
+    &>p {
       margin: 0;
     }
   }
+
   .messageText {
     .chunkText();
     .messageTextBase();
     // background-color: #e6f4ff;
     word-break: break-word;
   }
+
   .messageTextDark {
     .chunkText();
     .messageTextBase();
     word-break: break-word;
+
     :global(section.think) {
       color: rgb(166, 166, 166);
       border-left-color: rgb(78, 78, 86);
@@ -44,6 +52,7 @@
     word-break: break-word;
     text-align: justify;
   }
+
   .messageEmpty {
     width: 300px;
   }
@@ -59,4 +68,44 @@
 
 .messageItemRight {
   text-align: right;
+}
+
+// Loading dots animation
+.loadingDots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 0;
+  min-height: 40px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #666; // Explicit color for visibility
+  animation: dotPulse 1.4s infinite ease-in-out;
+
+  &:nth-child(1) {
+    animation-delay: -0.32s;
+  }
+
+  &:nth-child(2) {
+    animation-delay: -0.16s;
+  }
+}
+
+@keyframes dotPulse {
+
+  0%,
+  80%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
