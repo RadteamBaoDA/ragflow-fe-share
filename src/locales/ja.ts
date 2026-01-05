@@ -1213,7 +1213,11 @@ export default {
       runningHintText: '動作中です...🕞 ',
     },
     footer: {
-      profile: 'All rights reserved @ React',
+      profile: '全著作権所有 @ React',
+    },
+    pagination: {
+      total: '合計 {{total}}',
+      page: '{{page}} /ページ',
     },
     layout: {
       file: 'ファイル',

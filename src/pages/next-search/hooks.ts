@@ -57,6 +57,7 @@ export const useGetSharedSearchParams = () => {
     locale: searchParams.get('locale'),
     tenantId: searchParams.get('tenantId'),
     email: searchParams.get('email') || '',
+    theme: searchParams.get('theme') || 'light',
     data: data,
     visibleAvatar: searchParams.get('visible_avatar')
       ? searchParams.get('visible_avatar') !== '1'

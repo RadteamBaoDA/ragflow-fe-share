@@ -1258,7 +1258,11 @@ export default {
       runningHintText: 'đang chạy...🕞',
     },
     footer: {
-      profile: 'All rights reserved @ React',
+      profile: 'Bảo lưu mọi quyền @ React',
+    },
+    pagination: {
+      total: 'Tổng cộng {{total}}',
+      page: '{{page}} /Trang',
     },
     layout: {
       file: 'tệp',
