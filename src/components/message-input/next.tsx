@@ -31,6 +31,7 @@ interface IProps {
   uploadMethod?: string;
   isShared?: boolean;
   showUploadIcon?: boolean;
+  showAudioButton?: boolean;
   isUploading?: boolean;
   onPressEnter(...prams: any[]): void;
   onInputChange: React.ChangeEventHandler<HTMLTextAreaElement>;
@@ -52,6 +53,7 @@ export function NextMessageInput({
   stopOutputMessage,
   onPressEnter,
   removeFile,
+  showAudioButton = true,
 }: IProps) {
   const [files, setFiles] = React.useState<File[]>([]);
   const [audioInputValue, setAudioInputValue] = React.useState<string | null>(
@@ -192,11 +194,13 @@ export function NextMessageInput({
           ) : (
             <div className="flex items-center gap-3">
               {/* <div className="bg-bg-input rounded-md hover:bg-bg-card p-1"> */}
-              <AudioButton
-                onOk={(value) => {
-                  setAudioInputValue(value);
-                }}
-              />
+              {showAudioButton && (
+                <AudioButton
+                  onOk={(value) => {
+                    setAudioInputValue(value);
+                  }}
+                />
+              )}
               {/* </div> */}
               <Button
                 className="size-5 rounded-sm"

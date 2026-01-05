@@ -416,6 +416,7 @@ const ChatContainer = () => {
                 uploadMethod="external_upload_and_parse"
                 showUploadIcon={false}
                 stopOutputMessage={stopOutputMessage}
+                showAudioButton={false}
               ></NextMessageInput>
             </div>
           </div>
