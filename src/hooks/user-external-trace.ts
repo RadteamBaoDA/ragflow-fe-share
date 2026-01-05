@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { externalTraceApi } from '@/services/external-trace-service';
+import { externalTraceService } from '@/services/external-trace-service';
 
 interface UseExternalTraceOptions {
     email: string;
@@ -7,74 +7,108 @@ interface UseExternalTraceOptions {
     shareId?: string;
 }
 
+/**
+ * Hook for external trace API calls.
+ * Uses Web Worker under the hood - all calls are non-blocking (fire-and-forget).
+ */
 export function useExternalTrace({ email, chatId, shareId }: UseExternalTraceOptions) {
     const [isTracing, setIsTracing] = useState(false);
     const [lastTraceId, setLastTraceId] = useState<string | null>(null);
 
+    /**
+     * Trace a user message (fire-and-forget, non-blocking).
+     */
     const traceUserMessage = useCallback(
-        async (message: string = "") => {
+        (message: string = "") => {
+            // Fire-and-forget: start trace but don't block
             setIsTracing(true);
-            try {
-                const result = await externalTraceApi.sendUserMessage(
-                    email,
-                    message,
-                    chatId,
-                    shareId,
-                    lastTraceId || undefined,
-                );
-                if (result.traceId) setLastTraceId(result.traceId);
-                return result;
-            } finally {
-                setIsTracing(false);
-            }
+
+            externalTraceService.sendUserMessageAsync(
+                email,
+                message,
+                chatId,
+                shareId,
+                lastTraceId || undefined,
+            )
+                .then((result) => {
+                    if (result.traceId) {
+                        setLastTraceId(result.traceId);
+                    }
+                })
+                .catch((error) => {
+                    console.warn('[useExternalTrace] traceUserMessage failed:', error);
+                })
+                .finally(() => {
+                    setIsTracing(false);
+                });
         },
         [email, chatId, shareId, lastTraceId],
     );
 
+    /**
+     * Trace an assistant response (fire-and-forget, non-blocking).
+     */
     const traceAssistantResponse = useCallback(
-        async (
+        (
             message: string = "",
             response: string = "",
             model?: string,
             usage?: { promptTokens?: number; completionTokens?: number },
         ) => {
+            // Fire-and-forget: start trace but don't block
             setIsTracing(true);
-            try {
-                const result = await externalTraceApi.sendAssistantResponse(
-                    email,
-                    message,
-                    response,
-                    chatId,
-                    shareId,
-                    model,
-                    usage,
-                    lastTraceId || undefined,
-                );
-                if (result.traceId) setLastTraceId(result.traceId);
-                return result;
-            } finally {
-                setIsTracing(false);
-            }
+
+            externalTraceService.sendAssistantResponseAsync(
+                email,
+                message,
+                response,
+                chatId,
+                shareId,
+                model,
+                usage,
+                lastTraceId || undefined,
+            )
+                .then((result) => {
+                    if (result.traceId) {
+                        setLastTraceId(result.traceId);
+                    }
+                })
+                .catch((error) => {
+                    console.warn('[useExternalTrace] traceAssistantResponse failed:', error);
+                })
+                .finally(() => {
+                    setIsTracing(false);
+                });
         },
         [email, chatId, shareId, lastTraceId],
     );
 
+    /**
+     * Submit feedback/score (fire-and-forget, non-blocking).
+     */
     const traceScore = useCallback(
-        async (score: number, comment?: string, name: string = "user-feedback") => {
-            if (!lastTraceId) return;
-            setIsTracing(true);
-            try {
-                const result = await externalTraceApi.sendFeedback({
-                    traceId: lastTraceId,
-                    value: score,
-                    comment,
-                });
-                return result;
-            } finally {
-                setIsTracing(false);
+        (score: number, comment?: string, _name: string = "user-feedback") => {
+            if (!lastTraceId) {
+                console.warn('[useExternalTrace] traceScore: No lastTraceId available');
+                return;
             }
+
+            // Fire-and-forget: submit feedback but don't block
+            setIsTracing(true);
+
+            externalTraceService.sendFeedbackAsync({
+                traceId: lastTraceId,
+                value: score,
+                comment,
+            })
+                .catch((error) => {
+                    console.warn('[useExternalTrace] traceScore failed:', error);
+                })
+                .finally(() => {
+                    setIsTracing(false);
+                });
         },
-        [email, lastTraceId],
+        [lastTraceId],
     );
 
     return {

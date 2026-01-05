@@ -1,24 +1,22 @@
-import axios, { AxiosInstance } from 'axios';
 import { Authorization } from '@/constants/authorization';
 import { getAuthorization } from '@/utils/authorization-util';
 
 interface TracePayload {
-    email: string; // REQUIRED: Valid system user email
-    message: string; // REQUIRED: The message content
-    role: 'user' | 'assistant'; // "user" or "assistant" (default: "user")
-    share_id?: string; // Optional: Share ID
-    response?: string; // REQUIRED if role="assistant"
+    email: string;
+    message: string;
+    role: 'user' | 'assistant';
+    share_id?: string;
+    response?: string;
     metadata?: {
-        chatId?: string; // REQUIRED for conversation threading
-        sessionId?: string; // Alternative to chatId
-        source?: string; // Identifier for your application
-        task?: string; // Custom task name (default: user_response/llm_response)
-        model?: string; // Model ID
-        modelName?: string; // Human-readable model name
-        tags?: string[]; // Array of tags for categorization
-        timestamp?: string; // ISO timestamp
+        chatId?: string;
+        sessionId?: string;
+        source?: string;
+        task?: string;
+        model?: string;
+        modelName?: string;
+        tags?: string[];
+        timestamp?: string;
         usage?: {
-            // Token usage (for assistant responses)
             promptTokens?: number;
             completionTokens?: number;
             totalTokens?: number;
@@ -34,11 +32,11 @@ interface TraceResponse {
 }
 
 interface FeedbackPayload {
-    traceId: string; // REQUIRED: The ID from the Submit response
-    messageId?: string; // Alternative to traceId
-    value: number; // 1 = Positive, 0 = Negative (or custom scale)
-    score?: number; // Alternative to value
-    comment?: string; // Optional feedback text
+    traceId: string;
+    messageId?: string;
+    value: number;
+    score?: number;
+    comment?: string;
 }
 
 interface FeedbackResponse {
@@ -46,131 +44,151 @@ interface FeedbackResponse {
     error?: string;
 }
 
+interface WorkerResponse {
+    id: string;
+    success: boolean;
+    data?: TraceResponse | FeedbackResponse;
+    error?: string;
+}
+
 /**
- * ExternalTraceApi is a class that provides methods for sending trace data to a
-n external tracing API.
+ * ExternalTraceService - Uses Web Worker to send trace data off the main thread.
+ * This prevents UI blocking when the API is slow.
  */
-class ExternalTraceApi {
-    /**
-     * The Axios instance used to make HTTP requests to the external tracing API
-.
-     */
-    private client: AxiosInstance;
+class ExternalTraceService {
+    private worker: Worker | null = null;
+    private config: { baseURL?: string; apiKey?: string } = {};
+    private pendingRequests: Map<string, {
+        resolve: (value: any) => void;
+        reject: (error: any) => void;
+    }> = new Map();
+    private requestIdCounter = 0;
 
-    /**
-     * Creates a new instance of ExternalTraceApi.
-     */
     constructor() {
-        /**
-         * The Axios instance used to make HTTP requests to the external tracing
- API.
-         */
-        this.client = axios.create({
-            baseURL:
-                process.env.EXTERNAL_TRACE_API_URL || process.env.EXTERNAL_TRACE_URL,
-            headers: {
-                'Content-Type': 'application/json',
-                ...(process.env.EXTERNAL_TRACE_API_KEY && {
-                    'X-API-Key': process.env.EXTERNAL_TRACE_API_KEY,
-                }),
-            },
-        });
+        if (typeof window !== 'undefined') {
+            try {
+                this.worker = new Worker(
+                    new URL('../workers/external-trace.worker.ts', import.meta.url),
+                    { type: 'module' }
+                );
 
-        // Add request interceptor to inject Authorization header if available
-        this.client.interceptors.request.use(
-            (config) => {
-                const token = getAuthorization();
-                if (token) {
-                    config.headers[Authorization] = token;
-                }
-                return config;
-            },
-            (error) => {
-                return Promise.reject(error);
-            },
-        );
+                this.worker.onmessage = (e: MessageEvent<WorkerResponse>) => {
+                    const { id, success, data, error } = e.data;
+                    const pending = this.pendingRequests.get(id);
+                    if (pending) {
+                        this.pendingRequests.delete(id);
+                        if (success) {
+                            pending.resolve(data || { success: true });
+                        } else {
+                            pending.resolve({ success: false, error });
+                        }
+                    }
+                };
+
+                this.worker.onerror = (error) => {
+                    console.error('External Trace Worker error:', error);
+                };
+
+                this.config = {
+                    baseURL: process.env.EXTERNAL_TRACE_API_URL || process.env.EXTERNAL_TRACE_URL,
+                    apiKey: process.env.EXTERNAL_TRACE_API_KEY,
+                };
+            } catch (error) {
+                console.error('Failed to initialize ExternalTraceService worker:', error);
+            }
+        }
     }
 
-    /**
-     * Sends a trace payload to the external tracing API.
-     * @param payload The trace data to send.
-     * @returns A promise that resolves to a TraceResponse indicating success or
- failure.
-     */
-    async sendTrace(payload: TracePayload): Promise<TraceResponse> {
-        try {
-            /**
-             * Determine the correct path. If baseURL already includes the path,
- use empty string.
-             */
-            const baseURL = this.client.defaults.baseURL || '';
-            const path = baseURL.includes('/api/external/trace/submit')
-                ? ''
-                : '/api/external/trace/submit';
-            /**
-             * Send a POST request to the external tracing API.
-             */
-            const { data } = await this.client.post<TraceResponse>(path, {
-                ...payload
+    private generateRequestId(): string {
+        return `trace_${++this.requestIdCounter}_${Date.now()}`;
+    }
+
+    private sendToWorker<T>(type: 'trace' | 'feedback', payload: any): Promise<T> {
+        return new Promise((resolve) => {
+            if (!this.worker) {
+                console.warn('ExternalTraceService: Worker not available');
+                resolve({ success: false, error: 'Worker not available' } as T);
+                return;
+            }
+
+            const id = this.generateRequestId();
+            this.pendingRequests.set(id, { resolve, reject: () => resolve({ success: false } as T) });
+
+            this.worker.postMessage({
+                type,
+                id,
+                payload,
+                config: {
+                    ...this.config,
+                    authToken: getAuthorization(),
+                },
             });
-            console.log(`trace submit: ${JSON.stringify(data)}`);
-            return data;
-        } catch (error) {
-            console.warn('Failed to submit trace:', error);
-            // Return failure object instead of throwing, to prevent app crash/logout on 401
-            return { success: false, error: 'Failed to submit trace' };
-        }
+
+            // Auto-cleanup after 35s (slightly longer than worker timeout)
+            setTimeout(() => {
+                if (this.pendingRequests.has(id)) {
+                    this.pendingRequests.delete(id);
+                    resolve({ success: false, error: 'Request timeout' } as T);
+                }
+            }, 35000);
+        });
     }
 
     /**
-     * Sends a feedback payload to the external tracing API.
-     * @param payload The feedback data to send.
-     * @returns A promise that resolves to a FeedbackResponse indicating success
- or failure.
+     * Sends a trace payload (fire-and-forget - non-blocking).
      */
-    async sendFeedback(payload: FeedbackPayload): Promise<FeedbackResponse> {
-        try {
-            /**
-             * Determine the correct path. If baseURL already includes the path,
- use empty string.
-             */
-            const baseURL = this.client.defaults.baseURL || '';
-            const path = baseURL.includes('/api/external/trace/feedback')
-                ? ''
-                : '/api/external/trace/feedback';
-            /**
-             * Send a POST request to the external tracing API.
-             */
-            console.log(`feedback submit: ${JSON.stringify(payload)}`);
-            const { data } = await this.client.post<FeedbackResponse>(path, payload);
-            return data;
-        } catch (error) {
-            console.warn('Failed to submit feedback:', error);
-            // Return failure object instead of throwing
-            return { success: false, error: 'Failed to submit feedback' };
-        }
+    sendTrace(payload: TracePayload): void {
+        this.sendToWorker<TraceResponse>('trace', payload)
+            .then((result) => {
+                if (result.traceId) {
+                    console.log(`[ExternalTraceService] Trace submitted: ${result.traceId}`);
+                }
+            })
+            .catch((error) => {
+                console.warn('[ExternalTraceService] Trace failed:', error);
+            });
     }
 
     /**
-     * Sends a user message to the external tracing API.
-     * @param email The email of the user.
-     * @param message The user's message.
-     * @param chatId The ID of the chat.
-     * @param sessionId The ID of the session.
-     * @returns A promise that resolves to a TraceResponse indicating success or
- failure.
+     * Sends a trace payload and returns a promise (for cases where you need the traceId).
      */
-    async sendUserMessage(
+    sendTraceAsync(payload: TracePayload): Promise<TraceResponse> {
+        return this.sendToWorker<TraceResponse>('trace', payload);
+    }
+
+    /**
+     * Sends feedback (fire-and-forget - non-blocking).
+     */
+    sendFeedback(payload: FeedbackPayload): void {
+        this.sendToWorker<FeedbackResponse>('feedback', payload)
+            .then((result) => {
+                if (result.success) {
+                    console.log('[ExternalTraceService] Feedback submitted');
+                }
+            })
+            .catch((error) => {
+                console.warn('[ExternalTraceService] Feedback failed:', error);
+            });
+    }
+
+    /**
+     * Sends feedback and returns a promise.
+     */
+    sendFeedbackAsync(payload: FeedbackPayload): Promise<FeedbackResponse> {
+        return this.sendToWorker<FeedbackResponse>('feedback', payload);
+    }
+
+    /**
+     * Helper: Sends a user message trace (fire-and-forget).
+     */
+    sendUserMessage(
         email: string,
         message: string,
         chatId: string,
         shareId?: string,
         sessionId?: string,
-    ): Promise<TraceResponse> {
-        /**
-         * Send a user message to the external tracing API.
-         */
-        return this.sendTrace({
+    ): void {
+        this.sendTrace({
             email,
             message,
             role: 'user',
@@ -180,18 +198,62 @@ class ExternalTraceApi {
     }
 
     /**
-     * Sends an assistant response to the external tracing API.
-     * @param email The email of the user.
-     * @param message The assistant's message.
-     * @param response The assistant's response.
-     * @param chatId The ID of the chat.
-     * @param model The model used for the assistant's response.
-     * @param usage The usage data for the assistant's response.
-     * @param sessionId The ID of the session.
-     * @returns A promise that resolves to a TraceResponse indicating success or
- failure.
+     * Helper: Sends a user message trace and returns promise with traceId.
      */
-    async sendAssistantResponse(
+    sendUserMessageAsync(
+        email: string,
+        message: string,
+        chatId: string,
+        shareId?: string,
+        sessionId?: string,
+    ): Promise<TraceResponse> {
+        return this.sendTraceAsync({
+            email,
+            message,
+            role: 'user',
+            share_id: shareId,
+            metadata: { chatId, source: 'knowledge-base', sessionId },
+        });
+    }
+
+    /**
+     * Helper: Sends an assistant response trace (fire-and-forget).
+     */
+    sendAssistantResponse(
+        email: string,
+        message: string,
+        response: string,
+        chatId: string,
+        shareId?: string,
+        model?: string,
+        usage?: {
+            promptTokens?: number;
+            completionTokens?: number;
+            totalTokens?: number;
+        },
+        sessionId?: string,
+    ): void {
+        this.sendTrace({
+            email,
+            message,
+            role: 'assistant',
+            share_id: shareId,
+            response,
+            metadata: {
+                chatId,
+                source: 'knowledge-base',
+                model,
+                task: 'llm_response',
+                usage,
+                sessionId,
+            },
+        });
+    }
+
+    /**
+     * Helper: Sends an assistant response trace and returns promise.
+     */
+    sendAssistantResponseAsync(
         email: string,
         message: string,
         response: string,
@@ -205,10 +267,7 @@ class ExternalTraceApi {
         },
         sessionId?: string,
     ): Promise<TraceResponse> {
-        /**
-         * Send an assistant response to the external tracing API.
-         */
-        return this.sendTrace({
+        return this.sendTraceAsync({
             email,
             message,
             role: 'assistant',
@@ -227,6 +286,9 @@ class ExternalTraceApi {
 }
 
 /**
- * The external tracing API instance.
+ * The external tracing service instance.
  */
-export const externalTraceApi = new ExternalTraceApi();
+export const externalTraceService = new ExternalTraceService();
+
+// Backward compatibility - deprecated, use externalTraceService instead
+export const externalTraceApi = externalTraceService;

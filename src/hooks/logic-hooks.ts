@@ -242,6 +242,14 @@ export const useSendMessageWithSse = (
       controller?: AbortController,
     ): Promise<{ response: Response; data: ResponseType } | undefined> => {
       initializeSseRef();
+
+      // 5-minute abort timeout to prevent indefinite loading
+      const SSE_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+      const abortTimeoutId = setTimeout(() => {
+        console.warn('SSE stream timed out after 5 minutes, aborting...');
+        sseRef.current?.abort();
+      }, SSE_TIMEOUT_MS);
+
       try {
         setDoneValue(body, false);
         const response = await fetch(url, {
@@ -291,10 +299,12 @@ export const useSendMessageWithSse = (
             }
           }
         }
+        clearTimeout(abortTimeoutId);
         setDoneValue(body, true);
         resetAnswer();
         return { data: await res, response };
       } catch (e) {
+        clearTimeout(abortTimeoutId);
         setDoneValue(body, true);
 
         resetAnswer();
@@ -549,14 +559,14 @@ export const useSelectDerivedMessages = () => {
           const latestMessage = nextMessages.at(-1);
           nextMessages = latestMessage
             ? [
-                ...nextMessages.slice(0, -1),
-                {
-                  ...latestMessage,
-                  content: '',
-                  reference: undefined,
-                  prompt: undefined,
-                },
-              ]
+              ...nextMessages.slice(0, -1),
+              {
+                ...latestMessage,
+                content: '',
+                reference: undefined,
+                prompt: undefined,
+              },
+            ]
             : nextMessages;
           return nextMessages;
         }
@@ -615,14 +625,14 @@ export const useRemoveMessagesAfterCurrentMessage = (
           const latestMessage = nextMessages.at(-1);
           nextMessages = latestMessage
             ? [
-                ...nextMessages.slice(0, -1),
-                {
-                  ...latestMessage,
-                  content: '',
-                  reference: undefined,
-                  prompt: undefined,
-                },
-              ]
+              ...nextMessages.slice(0, -1),
+              {
+                ...latestMessage,
+                content: '',
+                reference: undefined,
+                prompt: undefined,
+              },
+            ]
             : nextMessages;
           return {
             ...pre,
