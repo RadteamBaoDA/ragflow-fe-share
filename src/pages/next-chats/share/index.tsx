@@ -158,7 +158,15 @@ const ChatContainer = () => {
       if (event.data?.type === 'INSERT_PROMPT') {
         const textarea = document.querySelector('textarea');
         if (textarea) {
-          textarea.value = event.data.payload;
+          const nativeTextareaValueSetter = Object.getOwnPropertyDescriptor(
+            window.HTMLTextAreaElement.prototype,
+            'value',
+          )?.set;
+          if (nativeTextareaValueSetter) {
+            nativeTextareaValueSetter.call(textarea, event.data.payload);
+          } else {
+            textarea.value = event.data.payload;
+          }
           textarea.dispatchEvent(new Event('input', { bubbles: true }));
           textarea.focus();
         }
