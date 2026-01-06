@@ -87,8 +87,7 @@ const PdfPreview = ({
   return (
     <div
       ref={containerRef}
-      className={`${styles.documentContainer} ${!highlightsVisible ? styles.highlightsHidden : ''} rounded-[10px]`}
-      style={{ width: '100%' }}
+      className={`${styles.documentContainer} ${!highlightsVisible ? styles.highlightsHidden : ''} rounded-[10px] min-w-fit`}
     >
       <Loader
         url={url}

@@ -195,24 +195,26 @@ const InnerPdfPreview = memo(({
 
   return (
     <div ref={containerRef} className={`${styles.pdfContentArea} ${!highlightsVisible ? styles.highlightsHidden : ''}`}>
-      <PdfLoader
-        url={url}
-        beforeLoad={<Skeleton active />}
-        workerSrc="/pdfjs-dist/pdf.worker.min.js"
-        errorMessage={<FileError>{error}</FileError>}
-      >
-        {(pdfDocument) => (
-          <PdfHighlighterWrapper
-            pdfDocument={pdfDocument}
-            scale={scale}
-            highlights={highlights}
-            setWidthAndHeight={setWidthAndHeight}
-            resetHash={resetHash}
-            setLoaded={setLoaded}
-            scrollRef={scrollRef}
-          />
-        )}
-      </PdfLoader>
+      <div className="min-w-fit">
+        <PdfLoader
+          url={url}
+          beforeLoad={<Skeleton active />}
+          workerSrc="/pdfjs-dist/pdf.worker.min.js"
+          errorMessage={<FileError>{error}</FileError>}
+        >
+          {(pdfDocument) => (
+            <PdfHighlighterWrapper
+              pdfDocument={pdfDocument}
+              scale={scale}
+              highlights={highlights}
+              setWidthAndHeight={setWidthAndHeight}
+              resetHash={resetHash}
+              setLoaded={setLoaded}
+              scrollRef={scrollRef}
+            />
+          )}
+        </PdfLoader>
+      </div>
     </div>
   );
 });

@@ -192,13 +192,13 @@ const Preview = ({
   );
 
   return (
-    <div className={cn('relative w-full', className, 'overflow-hidden')}>
+    <div className={cn('relative w-full h-full flex flex-col', className)}>
       {/* PDF Toolbar */}
       {fileType === 'pdf' && highlights && setWidthAndHeight && renderPdfToolbar()}
 
-      <div className="w-full h-full overflow-auto">
+      <div className="flex-1 min-h-0 overflow-auto">
         {fileType === 'pdf' && highlights && setWidthAndHeight && (
-          <section className={'h-full mx-auto flex justify-center'}>
+          <div className="min-w-fit h-[calc(100vh-164px)]">
             <PdfPreviewer
               highlights={highlights}
               setWidthAndHeight={setWidthAndHeight}
@@ -206,7 +206,7 @@ const Preview = ({
               scale={scale}
               highlightsVisible={highlightsVisible}
             ></PdfPreviewer>
-          </section>
+          </div>
         )}
         <div
           style={{
