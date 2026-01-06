@@ -4,6 +4,9 @@ export default {
       confirm: 'Confirm',
       back: 'Back',
       noResults: 'No results found',
+      noResultFound: 'No result found',
+      noTestResultsForRuned:
+        "We couldn't find any results matching your keyword.",
       selectPlaceholder: 'select value',
       selectAll: 'Select all',
       delete: 'Delete',
@@ -178,6 +181,8 @@ Example: A 1 KB message with 1024-dim embedding uses ~9 KB. The 5 MB default lim
       namePlaceholder: 'Please input name.',
       doc: 'Docs',
       searchKnowledgePlaceholder: 'Search',
+      noTestResultsForRuned:
+        "We couldn't find any results matching your keyword.",
       noMoreData: `That's all. Nothing more.`,
       parserRequired: 'Chunk method is required',
     },

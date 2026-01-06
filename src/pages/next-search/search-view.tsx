@@ -83,6 +83,14 @@ export default function SearchingView({
   // Generate a unique session ID for this search session
   const sessionId = useMemo(() => uuidv4(), []);
 
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 0;
+    }
+  }, [chunks]);
+
   useEffect(() => {
     setSearchtext(searchStr);
   }, [searchStr, setSearchtext]);
@@ -244,6 +252,7 @@ export default function SearchingView({
           </div>
           {/* search body */}
           <div
+            ref={scrollContainerRef}
             className="w-full mt-5 overflow-auto scrollbar-none "
             style={{ height: 'calc(100vh - 250px)' }}
           >
@@ -302,6 +311,31 @@ t waiting for stream */}
                 {/* <div className="w-full border-b border-border-default/80 my-
 6"></div> */}
               </>
+            )}
+            {!isSearchStrEmpty && !showLoading && (!chunks || chunks.length === 0) && total === 0 && (
+              <div className="flex h-full flex-col items-center justify-center mt-20 gap-4">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="64"
+                  height="64"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-text-tertiary"
+                >
+                  <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
+                  <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+                </svg>
+                <div className="text-lg font-medium text-text-secondary">
+                  {t('common.noResultFound')}
+                </div>
+                <div className="text-sm text-text-tertiary">
+                  {t('common.noTestResultsForRuned')}
+                </div>
+              </div>
             )}
             <div className="mt-3 ">
               {chunks?.length > 0 && (

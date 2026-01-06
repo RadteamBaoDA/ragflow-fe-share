@@ -328,17 +328,14 @@ export const useSendQuestion = (
   const { pagination, setPagination } = useGetPaginationWithRouter();
 
   const sendQuestion = useCallback(
-    (question: string, enableAI: boolean = true) => {
+    async (question: string, enableAI: boolean = true) => {
       const q = trim(question);
       if (isEmpty(q)) return;
       setPagination({ page: 1 });
       setIsFirstRender(false);
       setCurrentAnswer({} as IAnswer);
-      if (enableAI) {
-        setSendingLoading(true);
-        send({ kb_ids: kbIds, question: q, tenantId, search_id: searchId });
-      }
-      testChunk({
+
+      const res = await testChunk({
         kb_id: kbIds,
         highlight: true,
         question: q,
@@ -346,6 +343,11 @@ export const useSendQuestion = (
         size: pagination.pageSize,
         search_id: searchId,
       });
+
+      if (enableAI && (res?.total > 0 || res?.chunks?.length > 0)) {
+        setSendingLoading(true);
+        send({ kb_ids: kbIds, question: q, tenantId, search_id: searchId });
+      }
 
       if (related_search) {
         fetchRelatedQuestions(q);

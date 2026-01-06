@@ -2,6 +2,9 @@ export default {
   translation: {
     common: {
       delete: 'Xóa',
+      noResultFound: 'Không tìm thấy kết quả',
+      noTestResultsForRuned:
+        'Chúng tôi không tìm thấy kết quả nào phù hợp với từ khóa của bạn.',
       deleteModalTitle: 'Bạn có chắc chắn muốn xóa mục này?',
       ok: 'Có',
       cancel: 'Không',
@@ -82,6 +85,8 @@ export default {
       namePlaceholder: 'Vui lòng nhập tên!',
       doc: 'Tài liệu',
       searchKnowledgePlaceholder: 'Tìm kiếm',
+      noTestResultsForRuned:
+        'Chúng tôi không tìm thấy kết quả nào phù hợp với từ khóa của bạn.',
       noMoreData: 'Tất cả chỉ có thế, không còn gì nữa',
     },
     knowledgeDetails: {

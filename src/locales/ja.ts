@@ -2,6 +2,9 @@ export default {
   translation: {
     common: {
       selectPlaceholder: '選択してください',
+      noResultFound: '検索結果が見つかりません',
+      noTestResultsForRuned:
+        'キーワードに一致する結果は見つかりませんでした。',
       delete: '削除',
       deleteModalTitle: 'この項目を削除してよろしいですか？',
       ok: 'はい',
@@ -88,6 +91,8 @@ export default {
       namePlaceholder: '名前を入力してください',
       doc: 'ドキュメント',
       searchKnowledgePlaceholder: '検索',
+      noTestResultsForRuned:
+        'キーワードに一致する結果は見つかりませんでした。',
       noMoreData: 'これですべてです。それ以上はありません。',
     },
     knowledgeDetails: {
