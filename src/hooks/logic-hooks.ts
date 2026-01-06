@@ -206,6 +206,7 @@ export const useSendMessageWithSse = (
 ) => {
   const [answer, setAnswer] = useState<IAnswer>({} as IAnswer);
   const [done, setDone] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { doneRecord, clearDoneRecord, setDoneRecordById, allDone } =
     useSetDoneRecord();
   const timer = useRef<any>();
@@ -236,17 +237,25 @@ export const useSendMessageWithSse = (
     [setDoneRecordById],
   );
 
+  const clearError = useCallback(() => {
+    setErrorMessage(null);
+  }, []);
+
   const send = useCallback(
     async (
       body: any,
       controller?: AbortController,
     ): Promise<{ response: Response; data: ResponseType } | undefined> => {
       initializeSseRef();
+      setErrorMessage(null); // Clear previous error
 
       // 5-minute abort timeout to prevent indefinite loading
       const SSE_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+      let isTimeout = false;
       const abortTimeoutId = setTimeout(() => {
         console.warn('SSE stream timed out after 5 minutes, aborting...');
+        isTimeout = true;
+        setErrorMessage('TIMEOUT');
         sseRef.current?.abort();
       }, SSE_TIMEOUT_MS);
 
@@ -306,9 +315,26 @@ export const useSendMessageWithSse = (
       } catch (e) {
         clearTimeout(abortTimeoutId);
         setDoneValue(body, true);
-
         resetAnswer();
-        // Swallow fetch errors silently
+
+        // Only set error for actual fetch/network failures
+        // Check if this is a real fetch error (before any data was received)
+        if (!isTimeout) {
+          // Only set error if it's a genuine network or fetch error
+          // TypeError is thrown for network failures (e.g., no internet)
+          // Other errors for fetch failures before any streaming started
+          if (e instanceof TypeError && String(e.message).includes('fetch')) {
+            setErrorMessage('NETWORK');
+          } else if (e instanceof DOMException && e.name === 'AbortError') {
+            // Aborted by user - don't show error
+            console.log('Request was aborted');
+          } else if (e instanceof Error && e.message) {
+            // Only show error if there's a meaningful error message
+            // Skip generic errors that might be from stream processing
+            console.warn('SSE error:', e.message);
+          }
+          // Don't set SERVER error for stream processing issues
+        }
       }
     },
     [initializeSseRef, setDoneValue, url, resetAnswer],
@@ -328,6 +354,8 @@ export const useSendMessageWithSse = (
     resetAnswer,
     stopOutputMessage,
     clearDoneRecord,
+    errorMessage,
+    clearError,
   };
 };
 

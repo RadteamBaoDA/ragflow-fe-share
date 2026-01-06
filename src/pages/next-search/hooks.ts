@@ -311,7 +311,7 @@ export const useSendQuestion = (
   related_search: boolean = false,
 ) => {
   const { sharedId } = useGetSharedSearchParams();
-  const { send, answer, done, stopOutputMessage } = useSendMessageWithSse(
+  const { send, answer, done, stopOutputMessage, errorMessage, clearError } = useSendMessageWithSse(
     sharedId ? api.askShare : api.ask,
   );
 
@@ -444,6 +444,8 @@ export const useSendQuestion = (
     selectedDocumentIds,
     isSearchStrEmpty: isEmpty(trim(searchStr)),
     stopOutputMessage,
+    errorMessage,
+    clearError,
   };
 };
 
@@ -468,6 +470,7 @@ export const useSearching = ({
     isSearchStrEmpty,
     setSearchStr,
     stopOutputMessage,
+    errorMessage,
   } = useSendQuestion(
     searchData.search_config.kb_ids,
     tenantId as string,
@@ -548,6 +551,7 @@ export const useSearching = ({
     isSearchStrEmpty,
     setSearchStr,
     stopOutputMessage,
+    errorMessage,
 
     visible,
     hideModal,

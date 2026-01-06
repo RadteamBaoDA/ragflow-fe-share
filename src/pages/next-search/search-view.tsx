@@ -59,9 +59,11 @@ export default function SearchingView({
   pagination,
   onChange,
   loading,
+  errorMessage,
 }: ISearchReturnProps & {
   setIsSearching?: Dispatch<SetStateAction<boolean>>;
   searchData: ISearchAppDetailProps;
+  errorMessage?: string | null;
 }) {
   const { t } = useTranslation();
   // useEffect(() => {
@@ -253,7 +255,20 @@ export default function SearchingView({
                 </div>
                 {/* AI Summary container with fixed height */}
                 <div className="border rounded-lg p-4 mt-3 h-52 overflow-auto scrollbar-none w-[90%]">
-                  {!answer.answer && sendingLoading ? (
+                  {/* Error message display */}
+                  {errorMessage && !sendingLoading ? (
+                    <div className="flex flex-col items-start p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800 h-full">
+                      <p className="text-red-600 dark:text-red-400 text-sm">
+                        {errorMessage === 'TIMEOUT'
+                          ? t('chat.errorTimeout')
+                          : errorMessage === 'NETWORK'
+                            ? t('chat.errorNetwork')
+                            : errorMessage === 'SERVER'
+                              ? t('chat.errorServer')
+                              : t('chat.errorGeneric', { message: errorMessage })}
+                      </p>
+                    </div>
+                  ) : !answer.answer && sendingLoading ? (
                     <SkeletonCard className="" />
                   ) : (
                     answer.answer && (

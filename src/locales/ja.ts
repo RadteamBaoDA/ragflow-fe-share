@@ -510,6 +510,10 @@ export default {
       },
       cancel: 'キャンセル',
       chatSetting: 'チャット設定',
+      errorTimeout: 'リクエストがタイムアウトしました。後でもう一度お試しください。',
+      errorNetwork: 'ネットワークエラーが発生しました。接続を確認してください。',
+      errorServer: 'サーバーエラーが発生しました。後でもう一度お試しください。',
+      errorGeneric: 'エラーが発生しました: {{message}}',
     },
     search: {
       searchApps: '検索アプリ',

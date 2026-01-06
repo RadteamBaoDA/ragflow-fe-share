@@ -855,6 +855,10 @@ This auto-tagging feature enhances retrieval by adding another layer of domain-s
       chatSetting: 'Chat setting',
       tocEnhance: 'TOC enhance',
       tocEnhanceTip: ` During the parsing of the document, table of contents information was generated (see the 'Enable Table of Contents Extraction' option in the General method). This allows the large model to return table of contents items relevant to the user's query, thereby using these items to retrieve related chunks and apply weighting to these chunks during the sorting process. This approach is derived from mimicking the behavioral logic of how humans search for knowledge in books.`,
+      errorTimeout: 'Request timed out. Please try again later.',
+      errorNetwork: 'A network error occurred. Please check your connection.',
+      errorServer: 'A server error occurred. Please try again later.',
+      errorGeneric: 'An error occurred: {{message}}',
     },
     setting: {
       deleteModel: 'Delete model',
