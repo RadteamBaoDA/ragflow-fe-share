@@ -9,8 +9,9 @@ import { useCheckSettings, useGetSharedSearchParams } from '../hooks';
 import '../index.less';
 import SearchHome from '../search-home';
 import SearchingPage from '../searching';
+import { useSyncThemeFromParams } from '@/components/theme-provider';
 export default function ShareSeachPage() {
-  const { tenantId, locale, visibleAvatar } = useGetSharedSearchParams();
+  const { tenantId, locale, visibleAvatar, theme } = useGetSharedSearchParams();
   const {
     data: searchData = {
       search_config: { kb_ids: [] },
@@ -21,6 +22,11 @@ export default function ShareSeachPage() {
   const { openSetting: canSearch } = useCheckSettings(
     searchData as ISearchAppDetailProps,
   );
+
+  /**
+   * Sync theme from URL parameter
+   */
+  useSyncThemeFromParams(theme);
 
   useEffect(() => {
     if (locale && i18n.language !== locale) {

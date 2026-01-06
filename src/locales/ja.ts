@@ -2,6 +2,9 @@ export default {
   translation: {
     common: {
       selectPlaceholder: '選択してください',
+      noResultFound: '検索結果が見つかりません',
+      noTestResultsForRuned:
+        'キーワードに一致する結果は見つかりませんでした。',
       delete: '削除',
       deleteModalTitle: 'この項目を削除してよろしいですか？',
       ok: 'はい',
@@ -88,6 +91,8 @@ export default {
       namePlaceholder: '名前を入力してください',
       doc: 'ドキュメント',
       searchKnowledgePlaceholder: '検索',
+      noTestResultsForRuned:
+        'キーワードに一致する結果は見つかりませんでした。',
       noMoreData: 'これですべてです。それ以上はありません。',
     },
     knowledgeDetails: {
@@ -510,6 +515,10 @@ export default {
       },
       cancel: 'キャンセル',
       chatSetting: 'チャット設定',
+      errorTimeout: 'リクエストがタイムアウトしました。後でもう一度お試しください。',
+      errorNetwork: 'ネットワークエラーが発生しました。接続を確認してください。',
+      errorServer: 'サーバーエラーが発生しました。後でもう一度お試しください。',
+      errorGeneric: 'エラーが発生しました: {{message}}',
     },
     search: {
       searchApps: '検索アプリ',
@@ -1213,7 +1222,11 @@ export default {
       runningHintText: '動作中です...🕞 ',
     },
     footer: {
-      profile: 'All rights reserved @ React',
+      profile: '全著作権所有 @ React',
+    },
+    pagination: {
+      total: '合計 {{total}}',
+      page: '{{page}} /ページ',
     },
     layout: {
       file: 'ファイル',

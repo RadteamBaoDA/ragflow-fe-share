@@ -57,6 +57,7 @@ export const useGetSharedSearchParams = () => {
     locale: searchParams.get('locale'),
     tenantId: searchParams.get('tenantId'),
     email: searchParams.get('email') || '',
+    theme: searchParams.get('theme') || 'light',
     data: data,
     visibleAvatar: searchParams.get('visible_avatar')
       ? searchParams.get('visible_avatar') !== '1'
@@ -310,7 +311,7 @@ export const useSendQuestion = (
   related_search: boolean = false,
 ) => {
   const { sharedId } = useGetSharedSearchParams();
-  const { send, answer, done, stopOutputMessage } = useSendMessageWithSse(
+  const { send, answer, done, stopOutputMessage, errorMessage, clearError } = useSendMessageWithSse(
     sharedId ? api.askShare : api.ask,
   );
 
@@ -327,17 +328,14 @@ export const useSendQuestion = (
   const { pagination, setPagination } = useGetPaginationWithRouter();
 
   const sendQuestion = useCallback(
-    (question: string, enableAI: boolean = true) => {
+    async (question: string, enableAI: boolean = true) => {
       const q = trim(question);
       if (isEmpty(q)) return;
       setPagination({ page: 1 });
       setIsFirstRender(false);
       setCurrentAnswer({} as IAnswer);
-      if (enableAI) {
-        setSendingLoading(true);
-        send({ kb_ids: kbIds, question: q, tenantId, search_id: searchId });
-      }
-      testChunk({
+
+      const res = await testChunk({
         kb_id: kbIds,
         highlight: true,
         question: q,
@@ -345,6 +343,11 @@ export const useSendQuestion = (
         size: pagination.pageSize,
         search_id: searchId,
       });
+
+      if (enableAI && (res?.total > 0 || res?.chunks?.length > 0)) {
+        setSendingLoading(true);
+        send({ kb_ids: kbIds, question: q, tenantId, search_id: searchId });
+      }
 
       if (related_search) {
         fetchRelatedQuestions(q);
@@ -443,6 +446,8 @@ export const useSendQuestion = (
     selectedDocumentIds,
     isSearchStrEmpty: isEmpty(trim(searchStr)),
     stopOutputMessage,
+    errorMessage,
+    clearError,
   };
 };
 
@@ -467,6 +472,7 @@ export const useSearching = ({
     isSearchStrEmpty,
     setSearchStr,
     stopOutputMessage,
+    errorMessage,
   } = useSendQuestion(
     searchData.search_config.kb_ids,
     tenantId as string,
@@ -547,6 +553,7 @@ export const useSearching = ({
     isSearchStrEmpty,
     setSearchStr,
     stopOutputMessage,
+    errorMessage,
 
     visible,
     hideModal,

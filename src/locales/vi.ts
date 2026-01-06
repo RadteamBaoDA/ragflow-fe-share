@@ -2,6 +2,9 @@ export default {
   translation: {
     common: {
       delete: 'Xóa',
+      noResultFound: 'Không tìm thấy kết quả',
+      noTestResultsForRuned:
+        'Chúng tôi không tìm thấy kết quả nào phù hợp với từ khóa của bạn.',
       deleteModalTitle: 'Bạn có chắc chắn muốn xóa mục này?',
       ok: 'Có',
       cancel: 'Không',
@@ -82,6 +85,8 @@ export default {
       namePlaceholder: 'Vui lòng nhập tên!',
       doc: 'Tài liệu',
       searchKnowledgePlaceholder: 'Tìm kiếm',
+      noTestResultsForRuned:
+        'Chúng tôi không tìm thấy kết quả nào phù hợp với từ khóa của bạn.',
       noMoreData: 'Tất cả chỉ có thế, không còn gì nữa',
     },
     knowledgeDetails: {
@@ -515,6 +520,10 @@ export default {
         'Áp dụng LLM (Mô hình ngôn ngữ lớn) để phân tích câu hỏi của người dùng, trích xuất các từ khóa sẽ được nhấn mạnh trong quá trình tính toán độ liên quan. Hoạt động tốt với các truy vấn dài nhưng sẽ làm tăng thời gian phản hồi.',
       languageTip:
         'Cho phép viết lại câu với ngôn ngữ được chỉ định, hoặc sử dụng câu hỏi mới nhất nếu không chọn ngôn ngữ nào.',
+      errorTimeout: 'Yêu cầu đã hết thời gian chờ. Vui lòng thử lại sau.',
+      errorNetwork: 'Đã xảy ra lỗi mạng. Vui lòng kiểm tra kết nối của bạn.',
+      errorServer: 'Đã xảy ra lỗi máy chủ. Vui lòng thử lại sau.',
+      errorGeneric: 'Đã xảy ra lỗi: {{message}}',
     },
     search: {
       searchApps: 'Ứng dụng tìm kiếm',
@@ -1258,7 +1267,11 @@ export default {
       runningHintText: 'đang chạy...🕞',
     },
     footer: {
-      profile: 'All rights reserved @ React',
+      profile: 'Bảo lưu mọi quyền @ React',
+    },
+    pagination: {
+      total: 'Tổng cộng {{total}}',
+      page: '{{page}} /Trang',
     },
     layout: {
       file: 'tệp',

@@ -71,7 +71,9 @@ const ChatContainer = () => {
     hasError,
     stopOutputMessage,
     scrollRef,
-    messageContainerRef
+    messageContainerRef,
+    errorMessage,
+    clearError,
   } = useSendSharedMessage();
 
   /**
@@ -158,7 +160,15 @@ const ChatContainer = () => {
       if (event.data?.type === 'INSERT_PROMPT') {
         const textarea = document.querySelector('textarea');
         if (textarea) {
-          textarea.value = event.data.payload;
+          const nativeTextareaValueSetter = Object.getOwnPropertyDescriptor(
+            window.HTMLTextAreaElement.prototype,
+            'value',
+          )?.set;
+          if (nativeTextareaValueSetter) {
+            nativeTextareaValueSetter.call(textarea, event.data.payload);
+          } else {
+            textarea.value = event.data.payload;
+          }
           textarea.dispatchEvent(new Event('input', { bubbles: true }));
           textarea.focus();
         }
@@ -392,6 +402,20 @@ const ChatContainer = () => {
                 );
               })}
             </div>
+            {/* Error message display */}
+            {errorMessage && !sendLoading && (
+              <div className="flex flex-col items-start p-4 mb-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                <p className="text-red-600 dark:text-red-400 text-sm">
+                  {errorMessage === 'TIMEOUT'
+                    ? t('chat.errorTimeout')
+                    : errorMessage === 'NETWORK'
+                      ? t('chat.errorNetwork')
+                      : errorMessage === 'SERVER'
+                        ? t('chat.errorServer')
+                        : t('chat.errorGeneric', { message: errorMessage })}
+                </p>
+              </div>
+            )}
             <div ref={scrollRef} />
           </div>
           <div className="flex w-full justify-center mb-8">
@@ -408,6 +432,7 @@ const ChatContainer = () => {
                 uploadMethod="external_upload_and_parse"
                 showUploadIcon={false}
                 stopOutputMessage={stopOutputMessage}
+                showAudioButton={false}
               ></NextMessageInput>
             </div>
           </div>

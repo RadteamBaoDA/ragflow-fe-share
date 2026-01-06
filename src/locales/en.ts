@@ -4,6 +4,9 @@ export default {
       confirm: 'Confirm',
       back: 'Back',
       noResults: 'No results found',
+      noResultFound: 'No result found',
+      noTestResultsForRuned:
+        "We couldn't find any results matching your keyword.",
       selectPlaceholder: 'select value',
       selectAll: 'Select all',
       delete: 'Delete',
@@ -178,6 +181,8 @@ Example: A 1 KB message with 1024-dim embedding uses ~9 KB. The 5 MB default lim
       namePlaceholder: 'Please input name.',
       doc: 'Docs',
       searchKnowledgePlaceholder: 'Search',
+      noTestResultsForRuned:
+        "We couldn't find any results matching your keyword.",
       noMoreData: `That's all. Nothing more.`,
       parserRequired: 'Chunk method is required',
     },
@@ -855,6 +860,10 @@ This auto-tagging feature enhances retrieval by adding another layer of domain-s
       chatSetting: 'Chat setting',
       tocEnhance: 'TOC enhance',
       tocEnhanceTip: ` During the parsing of the document, table of contents information was generated (see the 'Enable Table of Contents Extraction' option in the General method). This allows the large model to return table of contents items relevant to the user's query, thereby using these items to retrieve related chunks and apply weighting to these chunks during the sorting process. This approach is derived from mimicking the behavioral logic of how humans search for knowledge in books.`,
+      errorTimeout: 'Request timed out. Please try again later.',
+      errorNetwork: 'A network error occurred. Please check your connection.',
+      errorServer: 'A server error occurred. Please try again later.',
+      errorGeneric: 'An error occurred: {{message}}',
     },
     setting: {
       deleteModel: 'Delete model',

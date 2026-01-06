@@ -59,9 +59,11 @@ export default function SearchingView({
   pagination,
   onChange,
   loading,
+  errorMessage,
 }: ISearchReturnProps & {
   setIsSearching?: Dispatch<SetStateAction<boolean>>;
   searchData: ISearchAppDetailProps;
+  errorMessage?: string | null;
 }) {
   const { t } = useTranslation();
   // useEffect(() => {
@@ -80,6 +82,14 @@ export default function SearchingView({
 
   // Generate a unique session ID for this search session
   const sessionId = useMemo(() => uuidv4(), []);
+
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 0;
+    }
+  }, [chunks]);
 
   useEffect(() => {
     setSearchtext(searchStr);
@@ -242,6 +252,7 @@ export default function SearchingView({
           </div>
           {/* search body */}
           <div
+            ref={scrollContainerRef}
             className="w-full mt-5 overflow-auto scrollbar-none "
             style={{ height: 'calc(100vh - 250px)' }}
           >
@@ -253,7 +264,20 @@ export default function SearchingView({
                 </div>
                 {/* AI Summary container with fixed height */}
                 <div className="border rounded-lg p-4 mt-3 h-52 overflow-auto scrollbar-none w-[90%]">
-                  {!answer.answer && sendingLoading ? (
+                  {/* Error message display */}
+                  {errorMessage && !sendingLoading ? (
+                    <div className="flex flex-col items-start p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800 h-full">
+                      <p className="text-red-600 dark:text-red-400 text-sm">
+                        {errorMessage === 'TIMEOUT'
+                          ? t('chat.errorTimeout')
+                          : errorMessage === 'NETWORK'
+                            ? t('chat.errorNetwork')
+                            : errorMessage === 'SERVER'
+                              ? t('chat.errorServer')
+                              : t('chat.errorGeneric', { message: errorMessage })}
+                      </p>
+                    </div>
+                  ) : !answer.answer && sendingLoading ? (
                     <SkeletonCard className="" />
                   ) : (
                     answer.answer && (
@@ -287,6 +311,31 @@ t waiting for stream */}
                 {/* <div className="w-full border-b border-border-default/80 my-
 6"></div> */}
               </>
+            )}
+            {!isSearchStrEmpty && !showLoading && (!chunks || chunks.length === 0) && total === 0 && (
+              <div className="flex h-full flex-col items-center justify-center mt-20 gap-4">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="64"
+                  height="64"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-text-tertiary"
+                >
+                  <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
+                  <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+                </svg>
+                <div className="text-lg font-medium text-text-secondary">
+                  {t('common.noResultFound')}
+                </div>
+                <div className="text-sm text-text-tertiary">
+                  {t('common.noTestResultsForRuned')}
+                </div>
+              </div>
             )}
             <div className="mt-3 ">
               {chunks?.length > 0 && (
