@@ -29,6 +29,63 @@ import { useGetSharedSearchParams } from './hooks';
 import { v4 as uuidv4 } from 'uuid';
 import HighLightMarkdown from '@/components/highlight-markdown';
 
+// ... (previous imports)
+import { memo } from 'react';
+
+const ChunkItem = memo(
+  ({
+    chunk,
+    clickDocumentButton,
+  }: {
+    chunk: any;
+    clickDocumentButton: (docId: string, chunk: any) => void;
+  }) => {
+    const sanitizedHtml = useMemo(
+      () =>
+        DOMPurify.sanitize(
+          `${chunk.highlight ?? chunk.content_with_weight ?? ''}...`,
+        ),
+      [chunk.highlight, chunk.content_with_weight],
+    );
+
+    return (
+      <div>
+        <div className="w-full flex flex-col">
+          <div className="w-full highlightContent">
+            <ImageWithPopover
+              id={chunk.image_id || chunk.img_id}
+            ></ImageWithPopover>
+            <Popover>
+              <PopoverTrigger asChild>
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html: sanitizedHtml,
+                  }}
+                  className="text-sm text-text-primary mb-1"
+                ></div>
+              </PopoverTrigger>
+              <PopoverContent className="text-text-primary !w-full max-w-lg ">
+                <div className="max-h-96 overflow-auto scrollbar-thin">
+                  <HighLightMarkdown>
+                    {chunk.content_with_weight}
+                  </HighLightMarkdown>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+          <div
+            className="flex gap-2 items-center text-xs text-text-secondary border p-1 rounded-lg w-fit mt-3"
+            onClick={() => clickDocumentButton(chunk.doc_id, chunk as any)}
+          >
+            <FileIcon name={chunk.docnm_kwd}></FileIcon>
+            {chunk.docnm_kwd}
+          </div>
+        </div>
+      </div>
+    );
+  },
+);
+
 export default function SearchingView({
   setIsSearching,
   searchData,
@@ -116,7 +173,8 @@ export default function SearchingView({
     // 2. sendingLoading is now false (stream finished)
     // 3. loading is false (retrieval finished)
     // 4. We haven't logged yet
-    const streamFinished = hasStartedSending.current && !sendingLoading && !loading;
+    const streamFinished =
+      hasStartedSending.current && !sendingLoading && !loading;
 
     if (streamFinished && !hasLoggedHistory) {
       // Check if we have results
@@ -138,7 +196,11 @@ export default function SearchingView({
           const latestChunks = chunksRef.current || [];
 
           // Get unique file names from latest chunks
-          const fileResults = [...new Set(latestChunks?.map(c => c.docnm_kwd).filter(Boolean) || [])];
+          const fileResults = [
+            ...new Set(
+              latestChunks?.map((c) => c.docnm_kwd).filter(Boolean) || [],
+            ),
+          ];
           const searchInput = capturedSearchStr || capturedSearchtext;
 
           console.log('[SearchView] Sending history after stream complete:', {
@@ -157,7 +219,7 @@ export default function SearchingView({
               search_input: searchInput,
               user_email: email || undefined,
               ai_summary: latestAnswer,
-              file_results: fileResults
+              file_results: fileResults,
             });
           }
         }, delayMs);
@@ -169,8 +231,17 @@ export default function SearchingView({
       setHasLoggedHistory(false);
       hasStartedSending.current = false;
     }
-  }, [loading, sendingLoading, chunks, answer, searchStr, searchtext, email, sessionId, hasLoggedHistory]);
-
+  }, [
+    loading,
+    sendingLoading,
+    chunks,
+    answer,
+    searchStr,
+    searchtext,
+    email,
+    sessionId,
+    hasLoggedHistory,
+  ]);
 
   // Show loading only when searching retrieval documents, not waiting for summary
   const showLoading = loading && (!chunks || chunks.length === 0);
@@ -256,46 +327,47 @@ export default function SearchingView({
             className="w-full mt-5 overflow-auto scrollbar-none "
             style={{ height: 'calc(100vh - 250px)' }}
           >
-
-            {searchData.search_config.summary && !isSearchStrEmpty && chunks?.length > 0 && (
-              <>
-                <div className="flex justify-start items-start text-text-primary text-2xl">
-                  {t('search.AISummary')}
-                </div>
-                {/* AI Summary container with fixed height */}
-                <div className="border rounded-lg p-4 mt-3 h-52 overflow-auto scrollbar-none w-[90%]">
-                  {/* Error message display */}
-                  {errorMessage && !sendingLoading ? (
-                    <div className="flex flex-col items-start p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800 h-full">
-                      <p className="text-red-600 dark:text-red-400 text-sm">
-                        {errorMessage === 'TIMEOUT'
-                          ? t('chat.errorTimeout')
-                          : errorMessage === 'NETWORK'
-                            ? t('chat.errorNetwork')
-                            : errorMessage === 'SERVER'
-                              ? t('chat.errorServer')
-                              : t('chat.errorGeneric', { message: errorMessage })}
-                      </p>
-                    </div>
-                  ) : !answer.answer && sendingLoading ? (
-                    <SkeletonCard className="" />
-                  ) : (
-                    answer.answer && (
-                      <MarkdownContent
-                        loading={sendingLoading}
-                        content={answer.answer}
-                        reference={answer.reference ?? ({} as IReference)}
-                        clickDocumentButton={clickDocumentButton}
-                      ></MarkdownContent>
-                    )
-                  )}
-                </div>
-                {/* Divider - always show when chunks exist */}
-                <div className="w-full border-b border-border-default/80 my-6"></div>
-              </>
-            )}
+            {searchData.search_config.summary &&
+              !isSearchStrEmpty &&
+              chunks?.length > 0 && (
+                <>
+                  <div className="flex justify-start items-start text-text-primary text-2xl">
+                    {t('search.AISummary')}
+                  </div>
+                  {/* AI Summary container with fixed height */}
+                  <div className="border rounded-lg p-4 mt-3 h-52 overflow-auto scrollbar-none w-[90%]">
+                    {/* Error message display */}
+                    {errorMessage && !sendingLoading ? (
+                      <div className="flex flex-col items-start p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800 h-full">
+                        <p className="text-red-600 dark:text-red-400 text-sm">
+                          {errorMessage === 'TIMEOUT'
+                            ? t('chat.errorTimeout')
+                            : errorMessage === 'NETWORK'
+                              ? t('chat.errorNetwork')
+                              : errorMessage === 'SERVER'
+                                ? t('chat.errorServer')
+                                : t('chat.errorGeneric', { message: errorMessage })}
+                        </p>
+                      </div>
+                    ) : !answer.answer && sendingLoading ? (
+                      <SkeletonCard className="" />
+                    ) : (
+                      answer.answer && (
+                        <MarkdownContent
+                          loading={sendingLoading}
+                          content={answer.answer}
+                          reference={answer.reference ?? ({} as IReference)}
+                          clickDocumentButton={clickDocumentButton}
+                        ></MarkdownContent>
+                      )
+                    )}
+                  </div>
+                  {/* Divider - always show when chunks exist */}
+                  <div className="w-full border-b border-border-default/80 my-6"></div>
+                </>
+              )}
             {/* retrieval documents - show immediately when chunks available, no
-t waiting for stream */}
+ t waiting for stream */}
             {!isSearchStrEmpty && !showLoading && chunks?.length > 0 && (
               <>
                 <div className="mt-3 w-52">
@@ -309,78 +381,47 @@ t waiting for stream */}
                   ></RetrievalDocuments>
                 </div>
                 {/* <div className="w-full border-b border-border-default/80 my-
-6"></div> */}
+ 6"></div> */}
               </>
             )}
-            {!isSearchStrEmpty && !showLoading && (!chunks || chunks.length === 0) && total === 0 && (
-              <div className="flex h-full flex-col items-center justify-center mt-20 gap-4">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="64"
-                  height="64"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="text-text-tertiary"
-                >
-                  <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
-                  <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
-                </svg>
-                <div className="text-lg font-medium text-text-secondary">
-                  {t('common.noResultFound')}
+            {!isSearchStrEmpty &&
+              !showLoading &&
+              (!chunks || chunks.length === 0) &&
+              total === 0 && (
+                <div className="flex h-full flex-col items-center justify-center mt-20 gap-4">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="64"
+                    height="64"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-text-tertiary"
+                  >
+                    <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
+                    <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+                  </svg>
+                  <div className="text-lg font-medium text-text-secondary">
+                    {t('common.noResultFound')}
+                  </div>
+                  <div className="text-sm text-text-tertiary">
+                    {t('common.noTestResultsForRuned')}
+                  </div>
                 </div>
-                <div className="text-sm text-text-tertiary">
-                  {t('common.noTestResultsForRuned')}
-                </div>
-              </div>
-            )}
+              )}
             <div className="mt-3 ">
               {chunks?.length > 0 && (
                 <>
                   {chunks.map((chunk, index) => {
                     return (
                       <div key={index}>
-                        <div className="w-full flex flex-col">
-                          <div className="w-full highlightContent">
-                            <ImageWithPopover
-                              id={chunk.image_id || chunk.img_id}
-                            ></ImageWithPopover>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <div
-                                  dangerouslySetInnerHTML={{
-                                    __html: DOMPurify.sanitize(
-                                      `${chunk.highlight ??
-                                      chunk.content_with_weight ??
-                                      ''
-                                      }...`,
-                                    ),
-                                  }}
-                                  className="text-sm text-text-primary mb-1"
-                                ></div>
-                              </PopoverTrigger>
-                              <PopoverContent className="text-text-primary !w-full max-w-lg ">
-                                <div className="max-h-96 overflow-auto scrollbar-thin">
-                                  <HighLightMarkdown>
-                                    {chunk.content_with_weight}
-                                  </HighLightMarkdown>
-                                </div>
-                              </PopoverContent>
-                            </Popover>
-                          </div>
-                          <div
-                            className="flex gap-2 items-center text-xs text-text-secondary border p-1 rounded-lg w-fit mt-3"
-                            onClick={() =>
-                              clickDocumentButton(chunk.doc_id, chunk as any)
-                            }
-                          >
-                            <FileIcon name={chunk.docnm_kwd}></FileIcon>
-                            {chunk.docnm_kwd}
-                          </div>
-                        </div>
+                        <ChunkItem
+                          chunk={chunk}
+                          clickDocumentButton={clickDocumentButton}
+                        />
                         {index < chunks.length - 1 && (
                           <div className="w-full border-b border-border-default/80 mt-6"></div>
                         )}
@@ -453,7 +494,7 @@ t waiting for stream */}
                 onClick={showMindMapModal}
               >
                 {/* <SvgIcon name="paper-clip" width={24} height={30}></SvgIcon>
- */}
+                 */}
                 <BrainCircuit size={36} />
               </div>
             </PopoverTrigger>
