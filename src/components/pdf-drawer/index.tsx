@@ -40,7 +40,7 @@ export const PdfSheet = ({
           </SheetTitle>
         </SheetHeader>
         <div className="flex-1 min-h-0 overflow-auto">
-          <div className="min-w-fit h-full">
+          <div className="min-w-fit h-[calc(100vh-164px)]">
             <DocumentPreviewer
               documentId={documentId}
               chunk={chunk}
