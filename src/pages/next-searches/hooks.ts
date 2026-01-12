@@ -111,6 +111,7 @@ export const useFetchSearchList = () => {
             page: pagination.current,
           },
           data: {},
+          silent: true,
         },
         true,
       );

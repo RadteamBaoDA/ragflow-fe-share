@@ -472,16 +472,16 @@ export const useGetDocumentUrl = (documentId?: string) => {
 export const useGetChunkHighlights = (
   selectedChunk: IChunk | IReferenceChunk,
 ) => {
-  const [size, setSize] = useState({ width: 849, height: 1200 });
+  const [size, setSize] = useState({ width: 849, height: 1200, scale: 1 });
 
   const highlights: IHighlight[] = useMemo(() => {
-    return buildChunkHighlights(selectedChunk, size);
+    return buildChunkHighlights(selectedChunk, size, size.scale);
   }, [selectedChunk, size]);
 
-  const setWidthAndHeight = (width: number, height: number) => {
+  const setWidthAndHeight = (width: number, height: number, scale: number) => {
     setSize((pre) => {
-      if (pre.height !== height || pre.width !== width) {
-        return { height, width };
+      if (pre.height !== height || pre.width !== width || pre.scale !== scale) {
+        return { height, width, scale };
       }
       return pre;
     });

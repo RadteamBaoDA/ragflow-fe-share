@@ -97,6 +97,10 @@ request.interceptors.request.use(
 
 request.interceptors.response.use(
   async (response) => {
+    const { silent } = response.config as any;
+    if (silent) {
+      return response;
+    }
     if (response?.status === 413 || response?.status === 504) {
       message.error(RetcodeMessage[response?.status as ResultCode]);
     }
@@ -126,7 +130,10 @@ request.interceptors.response.use(
   },
   function (error) {
     console.log('🚀 ~ error:', error);
-    errorHandler(error);
+    const { silent } = error.config as any;
+    if (!silent) {
+      errorHandler(error);
+    }
     return Promise.reject(error);
   },
 );
@@ -141,6 +148,6 @@ export const post = (url: string, body: any) => {
   return request.post(url, { data: body });
 };
 
-export const drop = () => {};
+export const drop = () => { };
 
-export const put = () => {};
+export const put = () => { };
