@@ -10,6 +10,8 @@ import {
   useKnowledgeBaseId,
   useSelectTestingResult,
 } from '@/hooks/use-knowledge-request';
+import { useExternalTrace } from '@/hooks/user-external-trace';
+import { v4 as uuidv4 } from 'uuid';
 import { ResponsePostType } from '@/interfaces/database/base';
 import { IAnswer } from '@/interfaces/database/chat';
 import { ITestingResult } from '@/interfaces/database/knowledge';
@@ -456,7 +458,19 @@ export const useSearching = ({
   data: searchData,
   setSearchText,
 }: ISearchingProps) => {
-  const { tenantId } = useGetSharedSearchParams();
+  const { tenantId, email, sharedId } = useGetSharedSearchParams();
+  const [sessionId] = useState<string>(() => uuidv4());
+
+  const {
+    traceUserMessage,
+    traceAssistantResponse,
+    traceScore,
+  } = useExternalTrace({
+    email,
+    chatId: sessionId,
+    shareId: sharedId || undefined,
+  });
+
   const {
     sendQuestion,
     handleClickRelatedQuestion,
@@ -504,6 +518,55 @@ export const useSearching = ({
     searchData.search_config.summary,
   ]);
 
+  // Track the last traced message ID to avoid duplicate traces
+  const lastTracedMessageId = useRef<string | null>(null);
+  // Track if a trace is pending (setTimeout in progress)
+  const pendingTraceRef = useRef<boolean>(false);
+  // Ref to access latest answer inside setTimeout
+  const answerRef = useRef(answer);
+  answerRef.current = answer;
+  const searchStrRef = useRef(searchStr);
+  searchStrRef.current = searchStr;
+
+  // Trace assistant response
+  useEffect(() => {
+    // Skip if still loading
+    if (sendingLoading) return;
+
+    // Skip if a trace is already pending
+    if (pendingTraceRef.current) return;
+
+    // Skip if no answer or empty answer
+    if (!answer || !answer.answer) return;
+
+    // Generate a unique ID based on answer content length (simple hash) or just use current answer
+    const messageIdentifier = `${answer.answer.length}_${answer.conversationId || ''}`;
+
+    // Skip if already traced this message
+    if (lastTracedMessageId.current === messageIdentifier) return;
+
+    // Mark as traced and pending
+    lastTracedMessageId.current = messageIdentifier;
+    pendingTraceRef.current = true;
+
+    // Capture current search string
+    const capturedQuestion = searchStrRef.current; // Use ref to get latest search string
+    if (!capturedQuestion) {
+      pendingTraceRef.current = false;
+      return;
+    }
+
+    const delayMs = 1000;
+    setTimeout(() => {
+      pendingTraceRef.current = false;
+      const latestAnswer = answerRef.current?.answer;
+      if (latestAnswer) {
+        traceAssistantResponse(capturedQuestion, latestAnswer);
+      }
+    }, delayMs);
+
+  }, [sendingLoading, answer, traceAssistantResponse]);
+
   const {
     mindMapVisible,
     hideMindMapModal,
@@ -521,6 +584,7 @@ export const useSearching = ({
     (value: string) => {
       sendQuestion(value, searchData.search_config.summary);
       setSearchStr?.(value);
+      traceUserMessage(value);
       hideMindMapModal();
     },
     [
@@ -528,6 +592,7 @@ export const useSearching = ({
       sendQuestion,
       hideMindMapModal,
       searchData.search_config.summary,
+      traceUserMessage,
     ],
   );
 
@@ -569,7 +634,10 @@ export const useSearching = ({
     total,
     handleSearch,
     pagination,
+
     onChange,
+    traceScore,
+    sessionId,
   };
 };
 

@@ -4,17 +4,23 @@ import { Input } from '@/components/originui/input';
 import { Spin } from '@/components/ui/spin';
 import { Button } from '@/components/ui/button';
 import {
+  DislikeOutlined,
+  LikeOutlined,
+} from '@ant-design/icons';
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { RAGFlowPagination } from '@/components/ui/ragflow-pagination';
+import { useSetModalState } from '@/hooks/common-hooks';
 import { IReference } from '@/interfaces/database/chat';
+import { IFeedbackRequestBody } from '@/interfaces/request/chat';
 import { cn } from '@/lib/utils';
 import DOMPurify from 'dompurify';
 import { isEmpty } from 'lodash';
 import { BrainCircuit, Search, X } from 'lucide-react';
-import { Dispatch, SetStateAction, useEffect, useState, useMemo, useRef } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ISearchAppDetailProps } from '../next-searches/hooks';
 import PdfDrawer from './document-preview-modal';
@@ -28,6 +34,7 @@ import { externalHistoryService } from '@/services/external-history-service';
 import { useGetSharedSearchParams } from './hooks';
 import { v4 as uuidv4 } from 'uuid';
 import HighLightMarkdown from '@/components/highlight-markdown';
+import FeedbackModal from '@/components/message-item/feedback-modal';
 
 // ... (previous imports)
 import { memo } from 'react';
@@ -117,10 +124,14 @@ export default function SearchingView({
   onChange,
   loading,
   errorMessage,
+  traceScore,
+  sessionId,
 }: ISearchReturnProps & {
   setIsSearching?: Dispatch<SetStateAction<boolean>>;
   searchData: ISearchAppDetailProps;
   errorMessage?: string | null;
+  traceScore: (score: number, comment?: string) => void;
+  sessionId: string;
 }) {
   const { t } = useTranslation();
   // useEffect(() => {
@@ -131,6 +142,12 @@ export default function SearchingView({
   // }, [i18n]);
   const [searchtext, setSearchtext] = useState<string>('');
   const [retrievalLoading, setRetrievalLoading] = useState(false);
+  const [feedbackType, setFeedbackType] = useState<'like' | 'dislike'>();
+  const {
+    visible: feedbackVisible,
+    hideModal: hideFeedbackModal,
+    showModal: showFeedbackModal,
+  } = useSetModalState();
   const { email, sharedId } = useGetSharedSearchParams();
 
   // Track previous sendingLoading state to detect completion
@@ -138,7 +155,26 @@ export default function SearchingView({
   const [hasLoggedHistory, setHasLoggedHistory] = useState(false);
 
   // Generate a unique session ID for this search session
-  const sessionId = useMemo(() => uuidv4(), []);
+  // SessionID is now passed from props
+
+  // Handlers for Like/Dislike
+  const handleLike = useCallback(() => {
+    traceScore(1);
+    setFeedbackType('like');
+  }, [traceScore]);
+
+  const handleDislike = useCallback(() => {
+    showFeedbackModal();
+  }, [showFeedbackModal]);
+
+  const handleFeedbackOk = useCallback(
+    async (params: IFeedbackRequestBody) => {
+      traceScore(0, params.feedback);
+      setFeedbackType('dislike');
+      hideFeedbackModal();
+    },
+    [traceScore, hideFeedbackModal],
+  );
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -362,6 +398,28 @@ export default function SearchingView({
                       )
                     )}
                   </div>
+                  {/* Like/Dislike Buttons */}
+                  <div className="flex gap-2 mt-2 justify-end w-[90%]">
+
+                    <Button
+                      variant={feedbackType === 'like' ? 'default' : 'ghost'}
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={handleLike}
+                      disabled={sendingLoading || !answer.answer}
+                    >
+                      <LikeOutlined />
+                    </Button>
+                    <Button
+                      variant={feedbackType === 'dislike' ? 'default' : 'ghost'}
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={handleDislike}
+                      disabled={sendingLoading || !answer.answer}
+                    >
+                      <DislikeOutlined />
+                    </Button>
+                  </div>
                   {/* Divider - always show when chunks exist */}
                   <div className="w-full border-b border-border-default/80 my-6"></div>
                 </>
@@ -501,6 +559,13 @@ export default function SearchingView({
             <PopoverContent className="w-fit">{t('chunk.mind')}</PopoverContent>
           </Popover>
         )}
+      {feedbackVisible && (
+        <FeedbackModal
+          visible={feedbackVisible}
+          hideModal={hideFeedbackModal}
+          onOk={handleFeedbackOk}
+        ></FeedbackModal>
+      )}
       {visible && (
         <PdfDrawer
           visible={visible}
