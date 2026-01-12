@@ -398,6 +398,7 @@ const ChatContainer = () => {
                     onLike={handleLike}
                     onDislike={handleDislike}
                     disableInternalFeedback={true}
+                    showPrompt={false}
                   ></MessageItem>
                 );
               })}
