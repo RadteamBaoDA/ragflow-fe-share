@@ -163,6 +163,7 @@ const FloatingChatWidgetMarkdown = ({
           {imageId && (
             <Popover
               placement="left"
+              zIndex={2147483647}
               content={
                 <Image
                   id={imageId}
@@ -195,6 +196,7 @@ const FloatingChatWidgetMarkdown = ({
                   <SvgIcon name={`file-icon/${fileExtension}`} width={20} />
                 )}
                 <Tooltip
+                  zIndex={2147483647}
                   title={
                     !documentUrl && fileExtension !== 'pdf'
                       ? 'Document link unavailable'
@@ -236,7 +238,7 @@ const FloatingChatWidgetMarkdown = ({
 
         if (!info) {
           return (
-            <Tooltip key={`err-tooltip-${i}`} title="Reference unavailable">
+            <Tooltip key={`err-tooltip-${i}`} title="Reference unavailable" zIndex={2147483647}>
               <InfoCircleOutlined className={styles.referenceIcon} />
             </Tooltip>
           );
@@ -262,7 +264,7 @@ const FloatingChatWidgetMarkdown = ({
         }
 
         return (
-          <Popover content={getPopoverContent(chunkIndex)} key={`popover-${i}`}>
+          <Popover content={getPopoverContent(chunkIndex)} key={`popover-${i}`} zIndex={2147483647}>
             <InfoCircleOutlined className={styles.referenceIcon} />
           </Popover>
         );

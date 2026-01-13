@@ -12,6 +12,8 @@ import {
   useSendSharedMessage,
 } from '../pages/next-chats/hooks/use-send-shared-message';
 import FloatingChatWidgetMarkdown from './floating-chat-widget-markdown';
+import { useExternalTrace } from '@/hooks/user-external-trace';
+import { v4 as uuidv4 } from 'uuid';
 
 const FloatingChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -21,12 +23,69 @@ const FloatingChatWidget = () => {
   const [displayMessages, setDisplayMessages] = useState<any[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const windowModeScrollRef = useRef<HTMLDivElement>(null);
+  const fullModeScrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      const element = e.currentTarget as HTMLElement;
+      const isAtTop = element.scrollTop === 0;
+      const isAtBottom =
+        element.scrollTop + element.clientHeight >=
+        element.scrollHeight - 1;
+
+      // Allow scroll to pass through to parent when at boundaries
+      if ((isAtTop && e.deltaY < 0) || (isAtBottom && e.deltaY > 0)) {
+        e.preventDefault();
+        e.stopPropagation();
+        // Let the parent handle the scroll
+        window.parent.postMessage(
+          {
+            type: 'SCROLL_PASSTHROUGH',
+            deltaY: e.deltaY,
+          },
+          '*',
+        );
+      }
+    };
+
+    const attach = (ref: React.RefObject<HTMLDivElement>) => {
+      if (ref.current) {
+        ref.current.addEventListener('wheel', handleWheel, { passive: false });
+        // Use a stable cleanup function
+        const el = ref.current;
+        return () => el.removeEventListener('wheel', handleWheel);
+      }
+    };
+
+    const cleanupWindow = attach(windowModeScrollRef);
+    const cleanupFull = attach(fullModeScrollRef);
+
+    return () => {
+      cleanupWindow?.();
+      cleanupFull?.();
+    };
+  }, [isOpen, isMinimized]); // Re-attach when layout/visibility changes
+
 
   const {
     sharedId: conversationId,
     locale,
     from,
+    email,
   } = useGetSharedChatSearchParams();
+
+  // Generate a session ID for tracing this specific interaction
+  const [sessionId] = useState<string>(() => uuidv4());
+
+  const {
+    traceUserMessage,
+    traceAssistantResponse,
+  } = useExternalTrace({
+    email: email || '', // Use email from URL params, fallback to empty for anonymous
+    chatId: sessionId,
+    shareId: conversationId || undefined,
+  });
 
   const isFromAgent = from === SharedFrom.Agent;
 
@@ -42,7 +101,7 @@ const FloatingChatWidget = () => {
     sendLoading,
     derivedMessages,
     hasError,
-  } = (isFromAgent ? useSendNextSharedMessage : useSendSharedMessage)(() => {});
+  } = (isFromAgent ? useSendNextSharedMessage : useSendSharedMessage)(() => { });
 
   // Sync our local input with the hook's value when needed
   useEffect(() => {
@@ -62,8 +121,15 @@ const FloatingChatWidget = () => {
 
   // PDF drawer state tracking
   useEffect(() => {
-    // Drawer state management
-  }, [visible, documentId, selectedChunk]);
+    // Tell parent to resize iframe based on drawer visibility
+    window.parent.postMessage(
+      {
+        type: 'RESIZE_IFRAME',
+        expanded: visible,
+      },
+      '*',
+    );
+  }, [visible]);
 
   // Play sound when opening
   const playNotificationSound = useCallback(() => {
@@ -217,9 +283,16 @@ const FloatingChatWidget = () => {
       ) {
         setLastResponseId(lastMessage.id || '');
         playResponseSound();
+
+        // Trace assistant response
+        // Need to find the corresponding user question if possible, or just pass empty string if the hook handles context via implicit knowledge
+        // But useExternalTrace expects (question, answer, ...)
+        // We can get the last user message from derivedMessages
+        const lastUserMessage = [...derivedMessages].reverse().find(m => m.role === MessageType.User);
+        traceAssistantResponse(lastUserMessage?.content || '', lastMessage.content);
       }
     }
-  }, [derivedMessages, sendLoading, lastResponseId, playResponseSound]);
+  }, [derivedMessages, sendLoading, lastResponseId, playResponseSound, traceAssistantResponse]);
 
   const toggleChat = useCallback(() => {
     if (mode === 'button') {
@@ -259,10 +332,13 @@ const FloatingChatWidget = () => {
     const syntheticEvent = {
       target: { value: inputValue },
       currentTarget: { value: inputValue },
-      preventDefault: () => {},
+      preventDefault: () => { },
     } as any;
 
     handleInputChange(syntheticEvent);
+
+    // Trace user message
+    traceUserMessage(inputValue);
 
     // Wait for state to update, then send
     setTimeout(() => {
@@ -318,9 +394,8 @@ const FloatingChatWidget = () => {
               '*',
             );
           }}
-          className={`w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-all duration-300 flex items-center justify-center group ${
-            isOpen ? 'scale-95' : 'scale-100 hover:scale-105'
-          }`}
+          className={`w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-all duration-300 flex items-center justify-center group ${isOpen ? 'scale-95' : 'scale-100 hover:scale-105'
+            }`}
         >
           <div
             className={`transition-transform duration-300 ${isOpen ? 'rotate-45' : 'rotate-0'}`}
@@ -348,9 +423,8 @@ const FloatingChatWidget = () => {
         <button
           type="button"
           onClick={toggleChat}
-          className={`w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-all duration-300 flex items-center justify-center group ${
-            isOpen ? 'scale-95' : 'scale-100 hover:scale-105'
-          }`}
+          className={`w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-all duration-300 flex items-center justify-center group ${isOpen ? 'scale-95' : 'scale-100 hover:scale-105'
+            }`}
         >
           <div
             className={`transition-transform duration-300 ${isOpen ? 'rotate-45' : 'rotate-0'}`}
@@ -399,27 +473,8 @@ const FloatingChatWidget = () => {
             style={{ borderRadius: '0 0 16px 16px' }}
           >
             <div
+              ref={windowModeScrollRef}
               className="flex-1 overflow-y-auto p-4 space-y-4"
-              onWheel={(e) => {
-                const element = e.currentTarget;
-                const isAtTop = element.scrollTop === 0;
-                const isAtBottom =
-                  element.scrollTop + element.clientHeight >=
-                  element.scrollHeight - 1;
-
-                // Allow scroll to pass through to parent when at boundaries
-                if ((isAtTop && e.deltaY < 0) || (isAtBottom && e.deltaY > 0)) {
-                  e.preventDefault();
-                  // Let the parent handle the scroll
-                  window.parent.postMessage(
-                    {
-                      type: 'SCROLL_PASSTHROUGH',
-                      deltaY: e.deltaY,
-                    },
-                    '*',
-                  );
-                }
-              }}
             >
               {displayMessages?.map((message, index) => (
                 <div
@@ -427,11 +482,10 @@ const FloatingChatWidget = () => {
                   className={`flex ${message.role === MessageType.User ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[280px] px-4 py-2 rounded-2xl ${
-                      message.role === MessageType.User
-                        ? 'bg-blue-600 text-white rounded-br-md'
-                        : 'bg-gray-100 text-gray-800 rounded-bl-md'
-                    }`}
+                    className={`max-w-[280px] px-4 py-2 rounded-2xl ${message.role === MessageType.User
+                      ? 'bg-blue-600 text-white rounded-br-md'
+                      : 'bg-gray-100 text-gray-800 rounded-bl-md'
+                      }`}
                   >
                     {message.role === MessageType.User ? (
                       <p className="text-sm leading-relaxed whitespace-pre-wrap">
@@ -526,9 +580,8 @@ const FloatingChatWidget = () => {
       {/* Chat Widget Container */}
       {isOpen && (
         <div
-          className={`fixed bottom-24 right-6 z-50 bg-blue-600 rounded-2xl transition-all duration-300 ease-out ${
-            isMinimized ? 'h-16' : 'h-[500px]'
-          } w-[380px] overflow-hidden`}
+          className={`fixed bottom-24 right-6 z-50 bg-blue-600 rounded-2xl transition-all duration-300 ease-out ${isMinimized ? 'h-16' : 'h-[500px]'
+            } w-[380px] overflow-hidden`}
         >
           {/* Header */}
           <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-t-2xl">
@@ -570,30 +623,8 @@ const FloatingChatWidget = () => {
               style={{ borderRadius: '0 0 16px 16px' }}
             >
               <div
+                ref={fullModeScrollRef}
                 className="flex-1 overflow-y-auto p-4 space-y-4"
-                onWheel={(e) => {
-                  const element = e.currentTarget;
-                  const isAtTop = element.scrollTop === 0;
-                  const isAtBottom =
-                    element.scrollTop + element.clientHeight >=
-                    element.scrollHeight - 1;
-
-                  // Allow scroll to pass through to parent when at boundaries
-                  if (
-                    (isAtTop && e.deltaY < 0) ||
-                    (isAtBottom && e.deltaY > 0)
-                  ) {
-                    e.preventDefault();
-                    // Let the parent handle the scroll
-                    window.parent.postMessage(
-                      {
-                        type: 'SCROLL_PASSTHROUGH',
-                        deltaY: e.deltaY,
-                      },
-                      '*',
-                    );
-                  }
-                }}
               >
                 {displayMessages?.map((message, index) => (
                   <div
@@ -601,11 +632,10 @@ const FloatingChatWidget = () => {
                     className={`flex ${message.role === MessageType.User ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
-                      className={`max-w-[280px] px-4 py-2 rounded-2xl ${
-                        message.role === MessageType.User
-                          ? 'bg-blue-600 text-white rounded-br-md'
-                          : 'bg-gray-100 text-gray-800 rounded-bl-md'
-                      }`}
+                      className={`max-w-[280px] px-4 py-2 rounded-2xl ${message.role === MessageType.User
+                        ? 'bg-blue-600 text-white rounded-br-md'
+                        : 'bg-gray-100 text-gray-800 rounded-bl-md'
+                        }`}
                     >
                       {message.role === MessageType.User ? (
                         <p className="text-sm leading-relaxed whitespace-pre-wrap">
@@ -691,9 +721,8 @@ const FloatingChatWidget = () => {
         <button
           type="button"
           onClick={toggleChat}
-          className={`w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-all duration-300 flex items-center justify-center group ${
-            isOpen ? 'scale-95' : 'scale-100 hover:scale-105'
-          }`}
+          className={`w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-all duration-300 flex items-center justify-center group ${isOpen ? 'scale-95' : 'scale-100 hover:scale-105'
+            }`}
         >
           <div
             className={`transition-transform duration-300 ${isOpen ? 'rotate-45' : 'rotate-0'}`}
