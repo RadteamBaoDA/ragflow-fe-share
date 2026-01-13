@@ -198,7 +198,7 @@ const Preview = ({
 
       <div className="flex-1 min-h-0 overflow-auto">
         {fileType === 'pdf' && highlights && setWidthAndHeight && (
-          <div className="min-w-fit h-[calc(100vh-164px)]">
+          <div className="min-w-fit h-[calc(100vh-280px)]">
             <PdfPreviewer
               highlights={highlights}
               setWidthAndHeight={setWidthAndHeight}
