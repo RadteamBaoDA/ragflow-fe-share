@@ -12,13 +12,18 @@ import {
   useSendSharedMessage,
 } from '../pages/next-chats/hooks/use-send-shared-message';
 import FloatingChatWidgetMarkdown from './floating-chat-widget-markdown';
+import { externalHistoryService } from '@/services/external-history-service';
 import { useExternalTrace } from '@/hooks/user-external-trace';
 import { v4 as uuidv4 } from 'uuid';
+import { useTranslation } from 'react-i18next';
+import { useSyncThemeFromParams } from './theme-provider';
 
 const FloatingChatWidget = () => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [inputValue, setInputValue] = useState('');
+  const [lastQuestion, setLastQuestion] = useState<string>('');
   const [lastResponseId, setLastResponseId] = useState<string | null>(null);
   const [displayMessages, setDisplayMessages] = useState<any[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -73,6 +78,7 @@ const FloatingChatWidget = () => {
     locale,
     from,
     email,
+    theme
   } = useGetSharedChatSearchParams();
 
   // Generate a session ID for tracing this specific interaction
@@ -119,6 +125,7 @@ const FloatingChatWidget = () => {
   const { visible, hideModal, documentId, selectedChunk, clickDocumentButton } =
     useClickDrawer();
 
+  useSyncThemeFromParams(theme);
   // PDF drawer state tracking
   useEffect(() => {
     // Tell parent to resize iframe based on drawer visibility
@@ -272,27 +279,170 @@ const FloatingChatWidget = () => {
     return () => window.removeEventListener('message', handleToggle);
   }, [mode]);
 
-  // Play sound only when AI response is complete (not streaming chunks)
-  useEffect(() => {
-    if (derivedMessages && derivedMessages.length > 0 && !sendLoading) {
-      const lastMessage = derivedMessages[derivedMessages.length - 1];
-      if (
-        lastMessage.role === MessageType.Assistant &&
-        lastMessage.id !== lastResponseId &&
-        derivedMessages.length > 1
-      ) {
-        setLastResponseId(lastMessage.id || '');
-        playResponseSound();
+  // Track the last traced message ID to avoid duplicate traces
+  const lastTracedMessageId = useRef<string | null>(null);
+  // Track if a trace is pending (setTimeout in progress)
+  const pendingTraceRef = useRef<boolean>(false);
+  // Ref to access latest derivedMessages inside setTimeout
+  const derivedMessagesRef = useRef(derivedMessages);
+  derivedMessagesRef.current = derivedMessages;
 
-        // Trace assistant response
-        // Need to find the corresponding user question if possible, or just pass empty string if the hook handles context via implicit knowledge
-        // But useExternalTrace expects (question, answer, ...)
-        // We can get the last user message from derivedMessages
-        const lastUserMessage = [...derivedMessages].reverse().find(m => m.role === MessageType.User);
-        traceAssistantResponse(lastUserMessage?.content || '', lastMessage.content);
-      }
+  /**
+   * Handle completed assistant messages - trace when:
+   * 1. Not currently loading (stream finished)
+   * 2. Have a pending question
+   * 3. Have a new assistant message we haven't traced yet
+   *
+   * Uses derivedMessagesRef to fetch LATEST content inside setTimeout
+   */
+  useEffect(() => {
+
+
+    // In master/button mode, we delegate tracing to the window/full mode instance to avoid duplicates
+    if (mode === 'master' || mode === 'button') {
+
+      return;
     }
-  }, [derivedMessages, sendLoading, lastResponseId, playResponseSound, traceAssistantResponse]);
+
+    // Skip if still loading
+    if (sendLoading) {
+
+      return;
+    }
+
+    // Skip if a trace is already pending
+    if (pendingTraceRef.current) {
+
+      return;
+    }
+
+    // Skip if no messages or no pending question
+    if (!derivedMessages || derivedMessages.length === 0) {
+
+      return;
+    }
+
+
+
+    if (!lastQuestion) {
+
+      return;
+    }
+
+    // Explicitly skip if we only have 1 message (or 0).
+    // A valid trace interaction requires at least [User, Assistant] (length 2)
+    // or [Greeting, User, Assistant] (length 3).
+    // If length is 1, it's just the initial greeting, and we should NOT trace it
+    // even if 'lastQuestion' has just been updated by the user (race condition).
+    if (derivedMessages.length <= 1) {
+
+      return;
+    }
+
+    const lastMsg = derivedMessages[derivedMessages.length - 1];
+
+    // Only process assistant messages
+    if (lastMsg.role !== MessageType.Assistant) {
+
+      return;
+    }
+
+    // Generate a unique dedupe ID based on message INDEX.
+    // We avoid using lastMsg.id because it can change from undefined/temp to a real UUID
+    // after the stream finishes (and we get a response from backend), which would cause
+    // a double-trace (once for temp ID, once for real ID).
+    // The index in derivedMessages is stable for the append-only chat.
+    const messageIndex = derivedMessages.length - 1;
+    const dedupeId = `msg_index_${messageIndex}`;
+
+    // Skip if already traced this message index
+    if (lastTracedMessageId.current === dedupeId) {
+
+      return;
+    }
+
+
+    // Skip if has error or no content
+    if (hasError) {
+
+      return;
+    }
+
+    if (typeof lastMsg.content !== 'string') {
+
+      return;
+    }
+
+
+
+    // Mark this message as traced and pending BEFORE making API calls
+    lastTracedMessageId.current = dedupeId;
+    pendingTraceRef.current = true;
+
+    // Capture question now (it won't change)
+    const capturedQuestion = lastQuestion;
+    const capturedMessageIndex = derivedMessages.length - 1;
+
+    // Add delay to ensure data is fully settled
+    const delayMs = 1000;
+    setTimeout(() => {
+      // Mark pending as complete
+      pendingTraceRef.current = false;
+
+      // Get LATEST content from ref
+      const latestMessages = derivedMessagesRef.current;
+      const latestMsg = latestMessages?.[capturedMessageIndex];
+
+      if (!latestMsg) {
+        console.warn('[FloatingChatWidget] Message not found at index:', capturedMessageIndex);
+        return;
+      }
+
+      const latestContent = latestMsg.content;
+      const latestReference = latestMsg.reference;
+
+
+
+      // Play sound only for new complete responses (avoid duplicates via lastResponseId)
+      if (dedupeId !== lastResponseId) {
+        setLastResponseId(dedupeId);
+        playResponseSound();
+      }
+
+      // Trace to external trace API
+      if (capturedQuestion && capturedQuestion.trim() !== '') {
+        traceAssistantResponse(capturedQuestion, latestContent);
+      } else {
+
+        return;
+      }
+
+      // Construct payload for history API
+      const payload = {
+        session_id: sessionId,
+        share_id: conversationId || undefined,
+        user_email: email,
+        user_prompt: capturedQuestion,
+        llm_response: latestContent,
+        citations: latestReference?.chunks?.map((c: any) => c.document_name) || [],
+      };
+
+
+
+      externalHistoryService.sendChatHistory(payload);
+    }, delayMs);
+  }, [
+    sendLoading,
+    derivedMessages,
+    lastQuestion,
+    traceAssistantResponse,
+    hasError,
+    email,
+    sessionId,
+    conversationId,
+    lastResponseId,
+    playResponseSound,
+  ]);
 
   const toggleChat = useCallback(() => {
     if (mode === 'button') {
@@ -337,6 +487,9 @@ const FloatingChatWidget = () => {
 
     handleInputChange(syntheticEvent);
 
+    // Capture the question
+    setLastQuestion(inputValue);
+
     // Trace user message
     traceUserMessage(inputValue);
 
@@ -362,7 +515,7 @@ const FloatingChatWidget = () => {
     return (
       <div className="fixed bottom-5 right-5 z-50">
         <div className="bg-red-500 text-white p-4 rounded-lg shadow-lg">
-          Error: No conversation ID provided
+          {t('chatWidget.errorNoId')}
         </div>
       </div>
     );
@@ -458,10 +611,10 @@ const FloatingChatWidget = () => {
               </div>
               <div>
                 <h3 className="font-semibold text-sm">
-                  {title || 'Chat Support'}
+                  {title || t('chatWidget.title')}
                 </h3>
                 <p className="text-xs text-blue-100">
-                  We typically reply instantly
+                  {t('chatWidget.replyText')}
                 </p>
               </div>
             </div>
@@ -540,8 +693,9 @@ const FloatingChatWidget = () => {
                       setInputValue(newValue);
                       handleInputChange(e);
                     }}
+
                     onKeyPress={handleKeyPress}
-                    placeholder="Type your message..."
+                    placeholder={t('chatWidget.placeholder')}
                     rows={1}
                     className="w-full resize-none border border-gray-300 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                     style={{ minHeight: '44px', maxHeight: '120px' }}
@@ -591,10 +745,10 @@ const FloatingChatWidget = () => {
               </div>
               <div>
                 <h3 className="font-semibold text-sm">
-                  {title || 'Chat Support'}
+                  {title || t('chatWidget.title')}
                 </h3>
                 <p className="text-xs text-blue-100">
-                  We typically reply instantly
+                  {t('chatWidget.replyText')}
                 </p>
               </div>
             </div>
@@ -694,7 +848,7 @@ const FloatingChatWidget = () => {
                         handleInputChange(e);
                       }}
                       onKeyPress={handleKeyPress}
-                      placeholder="Type your message..."
+                      placeholder={t('chatWidget.placeholder')}
                       rows={1}
                       className="w-full resize-none border border-gray-300 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                       style={{ minHeight: '44px', maxHeight: '120px' }}

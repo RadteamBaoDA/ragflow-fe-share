@@ -65,6 +65,12 @@ export default {
       },
       selected: 'Selected',
     },
+    chatWidget: {
+      title: 'Chat Support',
+      replyText: 'We typically reply instantly',
+      placeholder: 'Type your message...',
+      errorNoId: 'Error: No conversation ID provided',
+    },
     login: {
       loginTitle: 'Sign in to your account',
       signUpTitle: 'Create an account',

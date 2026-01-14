@@ -50,6 +50,12 @@ export default {
       submit: '送信',
       japanese: '日本語',
     },
+    chatWidget: {
+      title: 'チャットサポート',
+      replyText: '通常即座に返信します',
+      placeholder: 'メッセージを入力してください...',
+      errorNoId: 'エラー：会話IDが提供されていません',
+    },
     login: {
       login: 'ログイン',
       signUp: 'サインアップ',

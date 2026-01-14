@@ -44,6 +44,12 @@ export default {
       nextPage: 'Tới',
       previousPage: 'Lùi',
     },
+    chatWidget: {
+      title: 'Hỗ trợ trò chuyện',
+      replyText: 'Chúng tôi thường trả lời ngay lập tức',
+      placeholder: 'Nhập tin nhắn của bạn...',
+      errorNoId: 'Lỗi: Không có ID cuộc trò chuyện nào được cung cấp',
+    },
     login: {
       login: 'Đăng nhập',
       signUp: 'Đăng ký',
