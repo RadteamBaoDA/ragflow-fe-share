@@ -55,7 +55,7 @@ export default function SearchPage({
             <div className="relative w-full ">
               <Input
                 placeholder={t('search.searchGreeting')}
-                className="w-full rounded-full py-7 px-4 pr-10 text-text-primary text-lg bg-bg-base delay-700"
+                className="w-full rounded-full py-7 px-4 pr-20 text-text-primary text-lg bg-bg-base delay-700"
                 value={searchText}
                 onKeyUp={(e) => {
                   if (e.key === 'Enter') {

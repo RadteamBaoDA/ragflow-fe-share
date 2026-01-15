@@ -551,7 +551,7 @@ const FloatingChatWidget = () => {
             }`}
         >
           <div
-            className={`transition-transform duration-300 ${isOpen ? 'rotate-45' : 'rotate-0'}`}
+            className={`transition-transform duration-300 ${isOpen ? 'rotate-0' : 'rotate-0'}`}
           >
             {isOpen ? <X size={24} /> : <MessageCircle size={24} />}
           </div>
@@ -580,7 +580,7 @@ const FloatingChatWidget = () => {
             }`}
         >
           <div
-            className={`transition-transform duration-300 ${isOpen ? 'rotate-45' : 'rotate-0'}`}
+            className={`transition-transform duration-300 ${isOpen ? 'rotate-0' : 'rotate-0'}`}
           >
             {isOpen ? <X size={24} /> : <MessageCircle size={24} />}
           </div>
@@ -879,7 +879,7 @@ const FloatingChatWidget = () => {
             }`}
         >
           <div
-            className={`transition-transform duration-300 ${isOpen ? 'rotate-45' : 'rotate-0'}`}
+            className={`transition-transform duration-300 ${isOpen ? 'rotate-0' : 'rotate-0'}`}
           >
             {isOpen ? <X size={24} /> : <MessageCircle size={24} />}
           </div>
