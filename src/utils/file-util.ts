@@ -101,7 +101,7 @@ export const getBase64FromUploadFileList = async (fileList?: UploadFile[]) => {
   return '';
 };
 
-async function fetchDocumentBlob(id: string, mimeType?: FileMimeType) {
+export async function fetchDocumentBlob(id: string, mimeType?: FileMimeType) {
   const response = await fileManagerService.getDocumentFile({}, id);
   const blob = new Blob([response.data], {
     type: mimeType || response.data.type,

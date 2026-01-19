@@ -1,4 +1,7 @@
-import { Images } from '@/constants/common';
+import { FileMimeType, Images } from '@/constants/common';
+import { Spin } from '@/components/ui/spin';
+import { fetchDocumentBlob } from '@/utils/file-util';
+import { useEffect, useState } from 'react';
 import { api_host } from '@/utils/api';
 import { useParams, useSearchParams } from 'umi';
 // import Docx from './docx';
@@ -25,7 +28,30 @@ const DocumentViewer = () => {
   const ext = currentQueryParameters.get('ext');
   const prefix = currentQueryParameters.get('prefix');
   const api = `${api_host}/${prefix || 'file'}/get/${documentId}`;
-  // request.head
+  const [pdfUrl, setPdfUrl] = useState<string>('');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (ext === 'pdf' && documentId) {
+      setLoading(true);
+      fetchDocumentBlob(documentId)
+        .then((blob) => {
+          const url = URL.createObjectURL(blob);
+          setPdfUrl(url + '#toolbar=1');
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
+  }, [documentId, ext]);
+
+  useEffect(() => {
+    return () => {
+      if (pdfUrl) {
+        URL.revokeObjectURL(pdfUrl);
+      }
+    };
+  }, [pdfUrl]);
 
   if (ext === 'html' && documentId) {
     previewHtmlFile(documentId);
@@ -46,7 +72,17 @@ const DocumentViewer = () => {
       {ext === 'txt' && <TxtPreviewer url={api}></TxtPreviewer>}
 
       {ext === 'pdf' && (
-        <PdfPreview url={api} className="!h-dvh p-5"></PdfPreview>
+        <div className="w-full h-full">
+          {loading ? (
+            <Spin className="!h-dvh p-5" />
+          ) : (
+            <iframe
+              src={pdfUrl}
+              className="w-full h-full"
+              title="PDF Viewer"
+            ></iframe>
+          )}
+        </div>
       )}
       {(ext === 'xlsx' || ext === 'xls') && (
         <ExcelCsvPreviewer url={api}></ExcelCsvPreviewer>
