@@ -230,13 +230,33 @@ export default function SearchingView({
           // Get LATEST answer and chunks from refs
           const latestAnswer = answerRef.current?.answer || '';
           const latestChunks = chunksRef.current || [];
+          const latestReference = answerRef.current?.reference;
 
-          // Get unique file names from latest chunks
-          const fileResults = [
-            ...new Set(
-              latestChunks?.map((c) => c.docnm_kwd).filter(Boolean) || [],
-            ),
-          ];
+          // Get unique file names from latest chunks for file_results
+          // chunks in search-view seem to have docnm_kwd and doc_id
+          const uniqueFileResults = new Map<string, { document_name: string; document_id: string }>();
+          latestChunks?.forEach((c) => {
+            if (c.doc_id && c.docnm_kwd) {
+              uniqueFileResults.set(c.doc_id, {
+                document_name: c.docnm_kwd,
+                document_id: c.doc_id
+              });
+            }
+          });
+          const fileResults = Array.from(uniqueFileResults.values());
+
+          // Get citations from answer reference
+          const uniqueCitations = new Map<string, { document_name: string; document_id: string }>();
+          latestReference?.chunks?.forEach((c) => {
+            if (c.document_id && c.document_name) {
+              uniqueCitations.set(c.document_id, {
+                document_name: c.document_name,
+                document_id: c.document_id
+              });
+            }
+          });
+          const citations = Array.from(uniqueCitations.values());
+
           const searchInput = capturedSearchStr || capturedSearchtext;
 
           console.log('[SearchView] Sending history after stream complete:', {
@@ -245,6 +265,7 @@ export default function SearchingView({
             ai_summary: latestAnswer?.substring(0, 100) + '...',
             ai_summary_length: latestAnswer?.length,
             file_results: fileResults,
+            citations: citations,
           });
 
           // Only send if we have the required fields
@@ -256,6 +277,7 @@ export default function SearchingView({
               user_email: email || undefined,
               ai_summary: latestAnswer,
               file_results: fileResults,
+              citations: citations,
             });
           }
         }, delayMs);

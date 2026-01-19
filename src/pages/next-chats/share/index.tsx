@@ -298,13 +298,52 @@ const ChatContainer = () => {
 
       // Validate required fields for history API
       // Construct payload with explicit validation
+
+      // Extract unique citations from chunks
+      const uniqueCitations = new Map<string, { document_name: string; document_id: string }>();
+      latestReference?.chunks?.forEach((c: any) => {
+        if (c.document_id && c.document_name) {
+          uniqueCitations.set(c.document_id, {
+            document_name: c.document_name,
+            document_id: c.document_id
+          });
+        }
+      });
+      const citations = Array.from(uniqueCitations.values());
+
+      // Extract file results from doc_aggs (all involved documents)
+      const uniqueFileResults = new Map<string, { document_name: string; document_id: string }>();
+      // Use doc_aggs if available, otherwise fallback to citations
+      if (latestReference?.doc_aggs && latestReference.doc_aggs.length > 0) {
+        latestReference.doc_aggs.forEach((d: any) => {
+          if (d.doc_id && d.doc_name) {
+            uniqueFileResults.set(d.doc_id, {
+              document_name: d.doc_name,
+              document_id: d.doc_id
+            });
+          }
+        });
+      } else {
+        // Fallback to chunks if doc_aggs is empty
+        latestReference?.chunks?.forEach((c: any) => {
+          if (c.document_id && c.document_name) {
+            uniqueFileResults.set(c.document_id, {
+              document_name: c.document_name,
+              document_id: c.document_id
+            });
+          }
+        });
+      }
+      const fileResults = Array.from(uniqueFileResults.values());
+
       const payload = {
         session_id: internalChatId,
         share_id: conversationId || undefined,
         user_email: email,
         user_prompt: capturedQuestion,
         llm_response: latestContent,
-        citations: latestReference?.chunks?.map((c: any) => c.document_name) || [],
+        citations: citations,
+        file_results: fileResults,
       };
 
       console.log('[ChatContainer] Sending to history API:', {
@@ -314,6 +353,7 @@ const ChatContainer = () => {
         llm_response: payload.llm_response.substring(0, 50) + '...',
         llm_response_length: payload.llm_response.length,
         citations: payload.citations,
+        file_results: payload.file_results,
       });
 
       externalHistoryService.sendChatHistory(payload);

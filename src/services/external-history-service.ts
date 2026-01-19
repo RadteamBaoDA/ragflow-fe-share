@@ -1,10 +1,16 @@
+export interface FileResult {
+  document_name: string;
+  document_id: string;
+}
+
 interface ChatHistoryPayload {
   session_id: string;
   share_id?: string;
   user_email?: string;
   user_prompt: string;
   llm_response: string;
-  citations?: string[]; // Assuming simple string list of citations or file names
+  citations?: FileResult[];
+  file_results?: FileResult[];
 }
 
 interface SearchHistoryPayload {
@@ -13,7 +19,8 @@ interface SearchHistoryPayload {
   search_input: string;
   user_email?: string;
   ai_summary?: string;
-  file_results?: string[];
+  citations?: FileResult[];
+  file_results?: FileResult[];
 }
 
 class ExternalHistoryService {
