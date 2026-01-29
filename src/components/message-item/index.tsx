@@ -27,7 +27,6 @@ import styles from './index.less';
 
 // Three-dot loading animation component
 const LoadingDots = () => {
-  console.log('LoadingDots rendering'); // Debug log
   return (
     <div className={styles.loadingDots}>
       <span className={styles.dot}></span>

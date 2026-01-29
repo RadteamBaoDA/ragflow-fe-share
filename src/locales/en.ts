@@ -870,6 +870,9 @@ This auto-tagging feature enhances retrieval by adding another layer of domain-s
       errorNetwork: 'A network error occurred. Please check your connection.',
       errorServer: 'A server error occurred. Please try again later.',
       errorGeneric: 'An error occurred: {{message}}',
+      aiDisclaimer:
+        'AI-generated responses may be inaccurate. Please verify important information with the reference documents.',
+      inputPlaceholder: 'Type your message here...',
     },
     setting: {
       deleteModel: 'Delete model',

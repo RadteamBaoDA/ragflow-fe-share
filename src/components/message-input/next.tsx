@@ -39,6 +39,7 @@ interface IProps {
   stopOutputMessage?(): void;
   onUpload?: NonNullable<FileUploadProps['onUpload']>;
   removeFile?(file: File): void;
+  placeholder?: string;
 }
 
 export function NextMessageInput({
@@ -54,6 +55,7 @@ export function NextMessageInput({
   onPressEnter,
   removeFile,
   showAudioButton = true,
+  placeholder,
 }: IProps) {
   const [files, setFiles] = React.useState<File[]>([]);
   const [audioInputValue, setAudioInputValue] = React.useState<string | null>(
@@ -162,7 +164,7 @@ export function NextMessageInput({
         <Textarea
           value={value}
           onChange={onInputChange}
-          placeholder={t('chat.messagePlaceholder')}
+          placeholder={placeholder ?? t('chat.messagePlaceholder')}
           className="min-h-0 w-full resize-none border-0 bg-transparent p-0 shadow-none focus-visible:ring-0 dark:bg-transparent"
           disabled={isUploading || disabled || sendLoading}
           onKeyDown={handleKeyDown}

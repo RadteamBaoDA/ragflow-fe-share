@@ -96,7 +96,6 @@ const ChatContainer = () => {
    */
   const [internalChatId, setInternalChatId] = useState<string>(() => {
     const newId = uuidv4();
-    console.log('[ChatContainer] Initializing internalChatId:', newId);
     return newId;
   });
 
@@ -191,38 +190,23 @@ const ChatContainer = () => {
    * Uses derivedMessagesRef to fetch LATEST content inside setTimeout
    */
   useEffect(() => {
-    // Debug: Log all relevant state on every effect run
-    console.log('[ChatContainer] Trace effect triggered:', {
-      sendLoading,
-      lastQuestion: lastQuestion ? lastQuestion.substring(0, 30) + '...' : null,
-      messagesCount: derivedMessages?.length ?? 0,
-      lastMsgRole: derivedMessages?.[derivedMessages.length - 1]?.role,
-      lastMsgContentLength: derivedMessages?.[derivedMessages.length - 1]?.content?.length,
-      lastTracedId: lastTracedMessageId.current,
-      pendingTrace: pendingTraceRef.current,
-      hasError,
-    });
 
     // Skip if still loading
     if (sendLoading) {
-      console.log('[ChatContainer] ⏳ Skip: Still loading');
       return;
     }
 
     // Skip if a trace is already pending
     if (pendingTraceRef.current) {
-      console.log('[ChatContainer] ⏳ Skip: Trace already pending');
       return;
     }
 
     // Skip if no messages or no pending question
     if (!derivedMessages || derivedMessages.length === 0) {
-      console.log('[ChatContainer] ⏳ Skip: No messages');
       return;
     }
 
     if (!lastQuestion) {
-      console.log('[ChatContainer] ⏳ Skip: No lastQuestion');
       return;
     }
 
@@ -230,8 +214,6 @@ const ChatContainer = () => {
 
     // Only process assistant messages
     if (lastMsg.role !== MessageType.Assistant) {
-      console.log('[ChatContainer] ⏳ Skip: Last message is not assistant, role:'
-        , lastMsg.role);
       return;
     }
 
@@ -240,22 +222,18 @@ const ChatContainer = () => {
 
     // Skip if already traced this message
     if (lastTracedMessageId.current === messageId) {
-      console.log('[ChatContainer] ⏳ Skip: Already traced this message:', messageId);
       return;
     }
 
     // Skip if has error or no content
     if (hasError) {
-      console.log('[ChatContainer] ⏳ Skip: Has error');
       return;
     }
 
     if (typeof lastMsg.content !== 'string') {
-      console.log('[ChatContainer] ⏳ Skip: Content is not string, type:', typeof lastMsg.content);
       return;
     }
 
-    console.log('[ChatContainer] ✅ All checks passed, scheduling trace for:', messageId);
 
     // Mark this message as traced and pending BEFORE making API calls
     lastTracedMessageId.current = messageId;
@@ -283,15 +261,6 @@ const ChatContainer = () => {
 
       const latestContent = latestMsg.content;
       const latestReference = latestMsg.reference;
-
-      console.log('[ChatContainer] Tracing completed assistant response after delay:', {
-        messageId,
-        capturedIndex: capturedMessageIndex,
-        contentLength: latestContent?.length,
-        content: latestContent?.substring(0, 100) + '...',
-        hasReference: !!latestReference,
-        docAggs: latestReference?.doc_aggs,
-      });
 
       // Trace to external trace API
       traceAssistantResponse(capturedQuestion, latestContent);
@@ -346,15 +315,6 @@ const ChatContainer = () => {
         file_results: fileResults,
       };
 
-      console.log('[ChatContainer] Sending to history API:', {
-        session_id: payload.session_id,
-        share_id: payload.share_id,
-        user_prompt: payload.user_prompt.substring(0, 50) + '...',
-        llm_response: payload.llm_response.substring(0, 50) + '...',
-        llm_response_length: payload.llm_response.length,
-        citations: payload.citations,
-        file_results: payload.file_results,
-      });
 
       externalHistoryService.sendChatHistory(payload);
     }, delayMs);
@@ -459,7 +419,7 @@ const ChatContainer = () => {
             )}
             <div ref={scrollRef} />
           </div>
-          <div className="flex w-full justify-center mb-8">
+          <div className="flex w-full justify-center pb-1">
             <div className="w-5/6">
               <NextMessageInput
                 isShared
@@ -474,7 +434,11 @@ const ChatContainer = () => {
                 showUploadIcon={false}
                 stopOutputMessage={stopOutputMessage}
                 showAudioButton={false}
+                placeholder={t('chat.inputPlaceholder')}
               ></NextMessageInput>
+              <p className="text-xs text-center text-gray-500 dark:text-gray-400 mt-1 mb-1">
+                {t('chat.aiDisclaimer')}
+              </p>
             </div>
           </div>
         </div>
