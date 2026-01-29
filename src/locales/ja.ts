@@ -528,6 +528,7 @@ export default {
       aiDisclaimer:
         'AIの回答には誤りが含まれる可能性があります。重要な情報は参照文書でご確認ください。',
       inputPlaceholder: 'ここにメッセージを入力してください...',
+      relevanceScore: '関連度スコア',
     },
     search: {
       searchApps: '検索アプリ',

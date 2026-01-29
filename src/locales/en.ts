@@ -873,6 +873,7 @@ This auto-tagging feature enhances retrieval by adding another layer of domain-s
       aiDisclaimer:
         'AI-generated responses may be inaccurate. Please verify important information with the reference documents.',
       inputPlaceholder: 'Type your message here...',
+      relevanceScore: 'Relevance Score',
     },
     setting: {
       deleteModel: 'Delete model',
