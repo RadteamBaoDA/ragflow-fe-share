@@ -47,6 +47,7 @@ const ChunkItem = memo(
     chunk: any;
     clickDocumentButton: (docId: string, chunk: any) => void;
   }) => {
+    const { t } = useTranslation();
     const sanitizedHtml = useMemo(
       () =>
         DOMPurify.sanitize(
@@ -80,12 +81,20 @@ const ChunkItem = memo(
               </PopoverContent>
             </Popover>
           </div>
-          <div
-            className="flex gap-2 items-center text-xs text-text-secondary border p-1 rounded-lg w-fit mt-3"
-            onClick={() => clickDocumentButton(chunk.doc_id, chunk as any)}
-          >
-            <FileIcon name={chunk.docnm_kwd}></FileIcon>
-            {chunk.docnm_kwd}
+          <div className="flex gap-2 items-center text-xs text-text-secondary w-fit mt-3">
+            <div
+              className="flex gap-2 items-center border p-1 rounded-lg cursor-pointer"
+              onClick={() => clickDocumentButton(chunk.doc_id, chunk as any)}
+            >
+              <FileIcon name={chunk.docnm_kwd}></FileIcon>
+              {chunk.docnm_kwd}
+            </div>
+            <div className="flex gap-1 items-center border p-1 rounded-lg bg-bg-card">
+              <span className="opacity-60">{t('chat.relevanceScore')}:</span>
+              <span className="font-medium text-primary">
+                {(chunk.similarity * 100).toFixed(0)}%
+              </span>
+            </div>
           </div>
         </div>
       </div>

@@ -530,6 +530,10 @@ export default {
       errorNetwork: 'Đã xảy ra lỗi mạng. Vui lòng kiểm tra kết nối của bạn.',
       errorServer: 'Đã xảy ra lỗi máy chủ. Vui lòng thử lại sau.',
       errorGeneric: 'Đã xảy ra lỗi: {{message}}',
+      aiDisclaimer:
+        'Phản hồi do AI tạo ra có thể không chính xác. Vui lòng xác minh thông tin quan trọng với các tài liệu tham khảo.',
+      inputPlaceholder: 'Nhập tin nhắn của bạn ở đây...',
+      relevanceScore: 'Điểm phù hợp',
     },
     search: {
       searchApps: 'Ứng dụng tìm kiếm',

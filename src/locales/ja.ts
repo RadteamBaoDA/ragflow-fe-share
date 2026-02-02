@@ -525,6 +525,10 @@ export default {
       errorNetwork: 'ネットワークエラーが発生しました。接続を確認してください。',
       errorServer: 'サーバーエラーが発生しました。後でもう一度お試しください。',
       errorGeneric: 'エラーが発生しました: {{message}}',
+      aiDisclaimer:
+        'AIの回答には誤りが含まれる可能性があります。重要な情報は参照文書でご確認ください。',
+      inputPlaceholder: 'ここにメッセージを入力してください...',
+      relevanceScore: '関連度スコア',
     },
     search: {
       searchApps: '検索アプリ',
