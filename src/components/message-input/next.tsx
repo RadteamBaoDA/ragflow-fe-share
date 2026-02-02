@@ -94,6 +94,41 @@ export function NextMessageInput({
     }
   };
 
+  const handlePaste = React.useCallback(
+    (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+      const clipboardItems = e.clipboardData?.items;
+      if (!clipboardItems) return;
+
+      const imageFiles: File[] = [];
+      for (let i = 0; i < clipboardItems.length; i++) {
+        const item = clipboardItems[i];
+        if (item.type.startsWith('image/')) {
+          const file = item.getAsFile();
+          if (file) {
+            // Create a new file with a descriptive name including timestamp
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const extension = file.type.split('/')[1] || 'png';
+            const newFile = new File(
+              [file],
+              `pasted-image-${timestamp}.${extension}`,
+              { type: file.type },
+            );
+            imageFiles.push(newFile);
+          }
+        }
+      }
+
+      if (imageFiles.length > 0) {
+        e.preventDefault();
+        setFiles((prev) => [...prev, ...imageFiles]);
+        if (onUpload) {
+          onUpload(imageFiles, { setFiles: setFiles } as any);
+        }
+      }
+    },
+    [onUpload],
+  );
+
   const onSubmit = React.useCallback(
     (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
@@ -168,6 +203,7 @@ export function NextMessageInput({
           className="min-h-0 w-full resize-none border-0 bg-transparent p-0 shadow-none focus-visible:ring-0 dark:bg-transparent"
           disabled={isUploading || disabled || sendLoading}
           onKeyDown={handleKeyDown}
+          onPaste={handlePaste}
           autoSize={{ minRows: 1, maxRows: 4 }}
         />
         <div
