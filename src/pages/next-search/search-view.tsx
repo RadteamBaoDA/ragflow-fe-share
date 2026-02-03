@@ -92,7 +92,7 @@ const ChunkItem = memo(
             <div className="flex gap-1 items-center border p-1 rounded-lg bg-bg-card">
               <span className="opacity-60">{t('chat.relevanceScore')}:</span>
               <span className="font-medium text-primary">
-                {(chunk.similarity * 100).toFixed(0)}%
+                {chunk.similarity}%
               </span>
             </div>
           </div>
