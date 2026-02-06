@@ -283,13 +283,20 @@ export const useSendMessageWithSse = (
             const x = await reader?.read();
             if (x) {
               const { done, value } = x;
+              console.log('[SSE Stream] Chunk received:', { done, rawData: value?.data?.substring(0, 200) });
               if (done) {
-                resetAnswer();
+                console.log('[SSE Stream] Stream completed');
                 break;
               }
               try {
                 const val = JSON.parse(value?.data || '');
                 const d = val?.data;
+                console.log('[SSE Stream] Parsed data:', {
+                  isBoolean: typeof d === 'boolean',
+                  answerLength: d?.answer?.length,
+                  hasReference: !!d?.reference,
+                  id: d?.id
+                });
                 if (typeof d !== 'boolean') {
                   setAnswer({
                     ...d,
@@ -298,7 +305,7 @@ export const useSendMessageWithSse = (
                   });
                 }
               } catch (e) {
-                // Swallow parse errors silently
+                console.warn('[SSE Stream] Parse error:', e);
               }
             }
           } catch (e) {
@@ -310,7 +317,8 @@ export const useSendMessageWithSse = (
         }
         clearTimeout(abortTimeoutId);
         setDoneValue(body, true);
-        resetAnswer();
+        // Note: Don't call resetAnswer() here - let the answer persist until next message
+        // to avoid race condition where content is cleared before UI renders it
         return { data: await res, response };
       } catch (e) {
         clearTimeout(abortTimeoutId);
