@@ -100,10 +100,15 @@ export const useSendSharedMessage = () => {
   );
 
   const fetchSessionId = useCallback(async () => {
-    const payload = { question: '' };
-    const ret = await send({ ...payload, ...data });
-    if (isCompletionError(ret)) {
-      message.error(ret?.data.message);
+    try {
+      const payload = { question: '' };
+      const ret = await send({ ...payload, ...data });
+      if (isCompletionError(ret)) {
+        message.error(ret?.data.message);
+        setHasError(true);
+      }
+    } catch (e) {
+      console.error('[useSendSharedMessage] fetchSessionId failed:', e);
       setHasError(true);
     }
   }, [send]);
@@ -113,7 +118,7 @@ export const useSendSharedMessage = () => {
   }, [fetchSessionId]);
 
   useEffect(() => {
-    if (answer.answer) {
+    if (answer.answer !== undefined) {
       addNewestAnswer(answer);
     }
   }, [answer, addNewestAnswer]);

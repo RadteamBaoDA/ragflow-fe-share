@@ -278,6 +278,13 @@ export const useSendMessageWithSse = (
           .pipeThrough(new EventSourceParserStream())
           .getReader();
 
+        if (!reader) {
+          console.warn('[SSE Stream] No readable stream body, skipping stream read');
+          clearTimeout(abortTimeoutId);
+          setDoneValue(body, true);
+          return { data: await res, response };
+        }
+
         while (true) {
           try {
             const x = await reader?.read();
@@ -307,12 +314,19 @@ export const useSendMessageWithSse = (
               } catch (e) {
                 console.warn('[SSE Stream] Parse error:', e);
               }
+            } else {
+              // reader.read() returned a falsy result — break to prevent infinite loop
+              console.warn('[SSE Stream] reader.read() returned falsy result, breaking loop');
+              break;
             }
           } catch (e) {
             if (e instanceof DOMException && e.name === 'AbortError') {
               console.log('Request was aborted by user or logic.');
-              break;
+            } else {
+              // Non-abort reader error — break to prevent infinite error loop
+              console.warn('[SSE Stream] Unexpected reader error, breaking loop:', e);
             }
+            break;
           }
         }
         clearTimeout(abortTimeoutId);
