@@ -38,6 +38,9 @@ interface IProps extends Partial<IRemoveMessageById>, IRegenerateMessage {
   index: number;
   showLikeButton?: boolean;
   showLoudspeaker?: boolean;
+  onLike?: () => void;
+  onDislike?: (feedback: string) => void;
+  disableInternalFeedback?: boolean;
 }
 
 const MessageItem = ({
@@ -54,6 +57,9 @@ const MessageItem = ({
   showLikeButton = true,
   showLoudspeaker = true,
   visibleAvatar = true,
+  onLike,
+  onDislike,
+  disableInternalFeedback = false,
 }: IProps) => {
   const { theme } = useTheme();
   const isAssistant = item.role === MessageType.Assistant;
@@ -131,12 +137,15 @@ const MessageItem = ({
                   messageId={item.id}
                   content={item.content}
                   prompt={item.prompt}
-                  showLikeButton={showLikeButton}
-                  audioBinary={item.audio_binary}
-                  showLoudspeaker={showLoudspeaker}
-                ></AssistantGroupButton>
-              )
-            ) : (
+                    showLikeButton={showLikeButton}
+                    audioBinary={item.audio_binary}
+                    showLoudspeaker={showLoudspeaker}
+                    onLike={onLike}
+                    onDislike={onDislike}
+                    disableInternalFeedback={disableInternalFeedback}
+                  ></AssistantGroupButton>
+                )
+              ) : (
               <UserGroupButton
                 content={item.content}
                 messageId={item.id}

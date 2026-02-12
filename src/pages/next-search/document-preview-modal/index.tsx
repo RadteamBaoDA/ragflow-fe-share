@@ -1,4 +1,3 @@
-import DocumentPreview from '@/components/document-preview';
 import { FileIcon } from '@/components/icon-font';
 import { Modal } from '@/components/ui/modal/modal';
 import {
@@ -8,13 +7,13 @@ import {
 import { IModalProps } from '@/interfaces/common';
 import { IReferenceChunk } from '@/interfaces/database/chat';
 import { IChunk } from '@/interfaces/database/knowledge';
-import { cn } from '@/lib/utils';
+import DocumentPreview from '@/components/document-preview';
 import { useEffect, useState } from 'react';
 
 interface IProps extends IModalProps<any> {
   documentId: string;
   chunk: IChunk &
-    IReferenceChunk & { docnm_kwd: string; document_name: string };
+  IReferenceChunk & { docnm_kwd: string; document_name: string };
 }
 function getFileExtensionRegex(filename: string): string {
   const match = filename.match(/\.([^.]+)$/);
@@ -52,12 +51,13 @@ const PdfDrawer = ({
       }
       onCancel={hideModal}
       open={visible}
+      className="!w-[90vw] !max-w-[90vw] !h-[90vh] !p-0 flex flex-col overflow-hidden"
+      bodyClassName="flex-1 min-h-0 !p-0 !max-h-full !overflow-hidden"
       showfooter={false}
+      full={true}
     >
       <DocumentPreview
-        className={cn(
-          '!h-[calc(100dvh-300px)] overflow-auto border-none padding-0 max-h-full',
-        )}
+        className={'!h-full w-full'}
         fileType={fileType}
         highlights={highlights}
         setWidthAndHeight={setWidthAndHeight}

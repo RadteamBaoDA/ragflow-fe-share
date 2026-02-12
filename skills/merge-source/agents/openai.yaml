@@ -1,0 +1,4 @@
+interface:
+  display_name: "Merge Source"
+  short_description: "Safely merge source branches in Git"
+  default_prompt: "Use $merge-source to merge an upstream/source branch into my target branch with a conflict-resolution checklist."

@@ -14,14 +14,15 @@ import {
 import { RAGFlowPagination } from '@/components/ui/ragflow-pagination';
 import { IReference } from '@/interfaces/database/chat';
 import { cn } from '@/lib/utils';
+import { externalHistoryService } from '@/services/external-history-service';
 import DOMPurify from 'dompurify';
 import { isEmpty } from 'lodash';
 import { BrainCircuit, Search, X } from 'lucide-react';
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ISearchAppDetailProps } from '../next-searches/hooks';
 import PdfDrawer from './document-preview-modal';
-import { ISearchReturnProps } from './hooks';
+import { ISearchReturnProps, useGetSharedSearchParams } from './hooks';
 import './index.less';
 import MarkdownContent from './markdown-content';
 import MindMapDrawer from './mindmap-drawer';
@@ -55,6 +56,8 @@ export default function SearchingView({
   handleSearch,
   pagination,
   onChange,
+  loading,
+  sessionId,
 }: ISearchReturnProps & {
   setIsSearching?: Dispatch<SetStateAction<boolean>>;
   searchData: ISearchAppDetailProps;
@@ -68,10 +71,96 @@ export default function SearchingView({
   // }, [i18n]);
   const [searchtext, setSearchtext] = useState<string>('');
   const [retrievalLoading, setRetrievalLoading] = useState(false);
+  const { email, sharedId } = useGetSharedSearchParams();
+  const [hasLoggedHistory, setHasLoggedHistory] = useState(false);
+  const hasStartedSending = useRef(false);
+  const answerRef = useRef(answer);
+  const chunksRef = useRef(chunks);
+  answerRef.current = answer;
+  chunksRef.current = chunks;
 
   useEffect(() => {
     setSearchtext(searchStr);
   }, [searchStr, setSearchtext]);
+
+  useEffect(() => {
+    if (sendingLoading) {
+      hasStartedSending.current = true;
+    }
+
+    const streamFinished = hasStartedSending.current && !sendingLoading && !loading;
+
+    if (streamFinished && !hasLoggedHistory) {
+      if ((chunks && chunks.length > 0) || (answer && answer.answer)) {
+        setHasLoggedHistory(true);
+        hasStartedSending.current = false;
+
+        const capturedSearchStr = searchStr;
+        const capturedSearchtext = searchtext;
+
+        setTimeout(() => {
+          const latestAnswer = answerRef.current?.answer || '';
+          const latestChunks = chunksRef.current || [];
+          const latestReference = answerRef.current?.reference;
+
+          const uniqueFileResults = new Map<
+            string,
+            { document_name: string; document_id: string }
+          >();
+          latestChunks.forEach((chunk) => {
+            if (chunk?.doc_id && chunk?.docnm_kwd) {
+              uniqueFileResults.set(chunk.doc_id, {
+                document_name: chunk.docnm_kwd,
+                document_id: chunk.doc_id,
+              });
+            }
+          });
+
+          const uniqueCitations = new Map<
+            string,
+            { document_name: string; document_id: string }
+          >();
+          latestReference?.chunks?.forEach((chunk) => {
+            if (chunk?.document_id && chunk?.document_name) {
+              uniqueCitations.set(chunk.document_id, {
+                document_name: chunk.document_name,
+                document_id: chunk.document_id,
+              });
+            }
+          });
+
+          const searchInput = capturedSearchStr || capturedSearchtext;
+          if (!searchInput) return;
+
+          externalHistoryService.sendSearchHistory({
+            session_id: sessionId,
+            share_id: sharedId || undefined,
+            search_input: searchInput,
+            user_email: email || undefined,
+            ai_summary: latestAnswer,
+            citations: Array.from(uniqueCitations.values()),
+            file_results: Array.from(uniqueFileResults.values()),
+          });
+        }, 1000);
+      }
+    }
+
+    if (loading) {
+      setHasLoggedHistory(false);
+      hasStartedSending.current = false;
+    }
+  }, [
+    answer,
+    chunks,
+    email,
+    hasLoggedHistory,
+    loading,
+    searchStr,
+    searchtext,
+    sendingLoading,
+    sessionId,
+    sharedId,
+  ]);
   return (
     <section
       className={cn(

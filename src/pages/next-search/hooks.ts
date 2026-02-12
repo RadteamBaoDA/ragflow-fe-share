@@ -10,6 +10,7 @@ import {
   useKnowledgeBaseId,
   useSelectTestingResult,
 } from '@/hooks/use-knowledge-request';
+import { useExternalTrace } from '@/hooks/user-external-trace';
 import { ResponsePostType } from '@/interfaces/database/base';
 import { IAnswer } from '@/interfaces/database/chat';
 import { ITestingResult } from '@/interfaces/database/knowledge';
@@ -30,6 +31,7 @@ import {
   useState,
 } from 'react';
 import { useSearchParams } from 'react-router';
+import { v4 as uuidv4 } from 'uuid';
 import { ISearchAppDetailProps } from '../next-searches/hooks';
 import { useClickDrawer } from './document-preview-modal/hooks';
 
@@ -56,6 +58,7 @@ export const useGetSharedSearchParams = () => {
     sharedId: searchParams.get('shared_id'),
     locale: searchParams.get('locale'),
     tenantId: searchParams.get('tenantId'),
+    email: searchParams.get('email') || '',
     data: data,
     visibleAvatar: searchParams.get('visible_avatar')
       ? searchParams.get('visible_avatar') !== '1'
@@ -450,7 +453,13 @@ export const useSearching = ({
   data: searchData,
   setSearchText,
 }: ISearchingProps) => {
-  const { tenantId } = useGetSharedSearchParams();
+  const { tenantId, email, sharedId } = useGetSharedSearchParams();
+  const [sessionId] = useState<string>(() => uuidv4());
+  const { traceUserMessage, traceAssistantResponse } = useExternalTrace({
+    email,
+    chatId: sessionId,
+    shareId: sharedId || undefined,
+  });
   const {
     sendQuestion,
     handleClickRelatedQuestion,
@@ -472,6 +481,13 @@ export const useSearching = ({
     searchData.id,
     searchData.search_config.related_search,
   );
+
+  const lastTracedMessageId = useRef<string | null>(null);
+  const pendingTraceRef = useRef(false);
+  const answerRef = useRef(answer);
+  const searchStrRef = useRef(searchStr);
+  answerRef.current = answer;
+  searchStrRef.current = searchStr;
 
   const handleSearchStrChange = useCallback(
     (value: string) => {
@@ -497,6 +513,31 @@ export const useSearching = ({
     searchData.search_config.summary,
   ]);
 
+  useEffect(() => {
+    if (sendingLoading || pendingTraceRef.current) return;
+    if (!answer?.answer) return;
+
+    const messageIdentifier = `${answer.answer.length}_${answer.conversationId || ''}`;
+    if (lastTracedMessageId.current === messageIdentifier) return;
+
+    lastTracedMessageId.current = messageIdentifier;
+    pendingTraceRef.current = true;
+
+    const capturedQuestion = searchStrRef.current;
+    if (!capturedQuestion) {
+      pendingTraceRef.current = false;
+      return;
+    }
+
+    setTimeout(() => {
+      pendingTraceRef.current = false;
+      const latestAnswer = answerRef.current?.answer;
+      if (latestAnswer) {
+        traceAssistantResponse(capturedQuestion, latestAnswer);
+      }
+    }, 1000);
+  }, [answer, sendingLoading, traceAssistantResponse]);
+
   const {
     mindMapVisible,
     hideMindMapModal,
@@ -514,6 +555,9 @@ export const useSearching = ({
     (value: string) => {
       sendQuestion(value, searchData.search_config.summary);
       setSearchStr?.(value);
+      if (trim(value)) {
+        traceUserMessage(value);
+      }
       hideMindMapModal();
     },
     [
@@ -521,6 +565,7 @@ export const useSearching = ({
       sendQuestion,
       hideMindMapModal,
       searchData.search_config.summary,
+      traceUserMessage,
     ],
   );
 
@@ -561,6 +606,7 @@ export const useSearching = ({
     total,
     handleSearch,
     pagination,
+    sessionId,
     onChange,
   };
 };

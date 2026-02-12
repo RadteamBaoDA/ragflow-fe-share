@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import {
   AreaHighlight,
   Highlight,
@@ -14,7 +14,7 @@ import { Spin } from '@/components/ui/spin';
 import { Authorization } from '@/constants/authorization';
 import FileError from '@/pages/document-viewer/file-error';
 import { getAuthorization } from '@/utils/authorization-util';
-import styles from './index.module.less';
+import styles from './index.less';
 type PdfLoaderProps = React.ComponentProps<typeof PdfLoader> & {
   httpHeaders?: Record<string, string>;
 };
@@ -25,6 +25,8 @@ export interface IProps {
   setWidthAndHeight?: (width: number, height: number) => void;
   url: string;
   className?: string;
+  scale?: number;
+  highlightsVisible?: boolean;
 }
 const HighlightPopup = ({
   comment,
@@ -42,26 +44,41 @@ const PdfPreview = ({
   highlights: state,
   setWidthAndHeight,
   url,
+  scale = 1,
   className,
+  highlightsVisible = true,
 }: IProps) => {
   // const url = useGetDocumentUrl();
 
-  const ref = useRef<(highlight: IHighlight) => void>(() => {});
+  const ref = useRef<(highlight: IHighlight) => void>(() => { });
   const error = useCatchDocumentError(url);
 
-  const resetHash = () => {};
+  const [docWidth, setDocWidth] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const resetHash = () => { };
 
   useEffect(() => {
-    let timer = null;
     if (state?.length && state?.length > 0) {
-      timer = setTimeout(() => {
-        ref?.current(state[0]);
-      }, 100);
+      ref?.current(state[0]);
     }
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
   }, [state]);
+
+  // Effect to update PDF scale when scale prop changes
+  useEffect(() => {
+    // The react-pdf-highlighter library listens to resize events to update scale
+    // Dispatch a resize event to trigger the library's debouncedScaleValue
+    // which will read the new pdfScaleValue prop and apply it
+    const timeoutId = setTimeout(() => {
+      window.dispatchEvent(new Event('resize'));
+    }, 50);
+    return () => clearTimeout(timeoutId);
+  }, [scale]);
+
+  // Convert numeric scale to string format for pdfScaleValue
+  const getPdfScaleValue = (): string => {
+    return scale.toString();
+  };
 
   const httpHeaders = {
     [Authorization]: getAuthorization(),
@@ -69,7 +86,8 @@ const PdfPreview = ({
 
   return (
     <div
-      className={`${styles.documentContainer} rounded-[10px] overflow-hidden	${className}`}
+      ref={containerRef}
+      className={`${styles.documentContainer} ${!highlightsVisible ? styles.highlightsHidden : ''} rounded-[10px] min-w-fit`}
     >
       <Loader
         url={url}
@@ -88,6 +106,7 @@ const PdfPreview = ({
             const width = viewport.width;
             const height = viewport.height;
             setWidthAndHeight?.(width, height);
+            setDocWidth(width);
           });
 
           return (
@@ -99,6 +118,7 @@ const PdfPreview = ({
                 ref.current = scrollTo;
               }}
               onSelectionFinished={() => null}
+              pdfScaleValue={getPdfScaleValue()}
               highlightTransform={(
                 highlight,
                 index,
@@ -122,7 +142,7 @@ const PdfPreview = ({
                   <AreaHighlight
                     isScrolledTo={isScrolledTo}
                     highlight={highlight}
-                    onChange={() => {}}
+                    onChange={() => { }}
                   />
                 );
 
