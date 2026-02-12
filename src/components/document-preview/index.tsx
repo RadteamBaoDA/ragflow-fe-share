@@ -9,7 +9,7 @@ import PdfPreviewer, { IProps } from './pdf-preview';
 import { PptPreviewer } from './ppt-preview';
 import { TxtPreviewer } from './txt-preview';
 import { VideoPreviewer } from './video-preview';
-import styles from './index.less';
+import styles from './index.module.less';
 import { Eye, EyeOff, Minus, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
