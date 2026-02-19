@@ -5,7 +5,8 @@ import authorizationUtil, {
   getAuthorization,
   redirectToLogin,
 } from '@/utils/authorization-util';
-import { message, notification } from 'antd';
+import message from '@/components/ui/message';
+import notification from '@/utils/notification';
 import { RequestMethod, extend } from 'umi-request';
 import { convertTheKeysOfTheObjectToSnake } from './common-util';
 

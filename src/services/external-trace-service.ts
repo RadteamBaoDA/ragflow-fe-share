@@ -90,8 +90,8 @@ class ExternalTraceService {
                 };
 
                 this.config = {
-                    baseURL: process.env.EXTERNAL_TRACE_API_URL || process.env.EXTERNAL_TRACE_URL,
-                    apiKey: process.env.EXTERNAL_TRACE_API_KEY,
+                    baseURL: import.meta.env.VITE_EXTERNAL_TRACE_API_URL || import.meta.env.VITE_EXTERNAL_TRACE_URL,
+                    apiKey: import.meta.env.VITE_EXTERNAL_TRACE_API_KEY,
                 };
             } catch (error) {
                 console.error('Failed to initialize ExternalTraceService worker:', error);

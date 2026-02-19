@@ -34,10 +34,22 @@ export interface ModalProps {
   style?: React.CSSProperties;
   zIndex?: number;
 }
+interface ModalStaticConfig {
+  title?: ReactNode;
+  content?: ReactNode;
+  onOk?: () => void;
+  okText?: string;
+}
+
 export interface ModalType extends FC<ModalProps> {
   show: typeof modalIns.show;
   hide: typeof modalIns.hide;
   destroy: typeof modalIns.destroy;
+  warning: (config: ModalStaticConfig) => void;
+  info: (config: ModalStaticConfig) => void;
+  success: (config: ModalStaticConfig) => void;
+  error: (config: ModalStaticConfig) => void;
+  confirm: (config: ModalStaticConfig) => void;
 }
 
 const Modal: ModalType = ({
@@ -241,5 +253,39 @@ Modal.show = modalIns
     };
 Modal.hide = modalIns.hide;
 Modal.destroy = modalIns.destroy;
+
+const showStaticModal = (config: {
+  title?: ReactNode;
+  content?: ReactNode;
+  onOk?: () => void;
+  okText?: string;
+}) => {
+  const ins = createPortalModal();
+  ins.show({
+    title: config.title,
+    children: config.content || null,
+    visible: true,
+    onVisibleChange: (visible: boolean) => {
+      if (!visible) {
+        ins.destroy();
+      }
+    },
+    onOk: () => {
+      config.onOk?.();
+      ins.hide();
+      setTimeout(() => ins.destroy(), 300);
+    },
+    onCancel: () => {
+      ins.hide();
+      setTimeout(() => ins.destroy(), 300);
+    },
+  } as any);
+};
+
+Modal.warning = showStaticModal;
+Modal.info = showStaticModal;
+Modal.success = showStaticModal;
+Modal.error = showStaticModal;
+Modal.confirm = showStaticModal;
 
 export { Modal };

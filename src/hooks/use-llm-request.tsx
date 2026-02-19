@@ -16,7 +16,7 @@ import {
 import userService from '@/services/user-service';
 import { getLLMIconName, getRealModelName } from '@/utils/llm-util';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { DefaultOptionType } from 'antd/es/select';
+import { DefaultOptionType } from '@/interfaces/antd-compat';
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 

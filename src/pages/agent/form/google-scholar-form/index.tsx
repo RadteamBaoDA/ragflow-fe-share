@@ -12,7 +12,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { useTranslate } from '@/hooks/common-hooks';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { DatePicker, DatePickerProps } from 'antd';
+import { DatePicker } from '@/components/ui/date-picker';
 import dayjs from 'dayjs';
 import { memo, useCallback, useMemo } from 'react';
 import { useForm, useFormContext } from 'react-hook-form';
@@ -35,9 +35,9 @@ const YearPicker = ({
   onChange?: (val: number | undefined) => void;
   value?: number | undefined;
 }) => {
-  const handleChange: DatePickerProps['onChange'] = useCallback(
-    (val: any) => {
-      const nextVal = val?.format('YYYY');
+  const handleChange = useCallback(
+    (val: Date | undefined) => {
+      const nextVal = val ? dayjs(val).format('YYYY') : undefined;
       onChange?.(nextVal ? Number(nextVal) : undefined);
     },
     [onChange],
@@ -45,7 +45,7 @@ const YearPicker = ({
   // The year needs to be converted into a number and saved to the backend
   const nextValue = useMemo(() => {
     if (value) {
-      return dayjs(value.toString());
+      return dayjs(value.toString()).toDate();
     }
     return undefined;
   }, [value]);

@@ -92,7 +92,6 @@ export default defineConfig(({ mode, command }) => {
         'react',
         'react-dom',
         'react-router',
-        'antd',
         'axios',
         'lodash',
         'dayjs',
@@ -141,6 +140,14 @@ export default defineConfig(({ mode, command }) => {
                 return 'xml-js';
               }
               return name;
+            }
+
+            // Locale chunk splitting for i18n lazy loading
+            if (id.includes('src/locales/') && !id.includes('config')) {
+              const match = id.match(/locales\/([a-z]{2}(?:-[A-Z]{2})?)/);
+              if (match) {
+                return `locale-${match[1]}`;
+              }
             }
           },
           chunkFileNames: 'chunk/js/[name]-[hash].js',

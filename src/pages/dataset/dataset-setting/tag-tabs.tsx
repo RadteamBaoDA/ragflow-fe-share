@@ -1,5 +1,7 @@
-import { Segmented } from 'antd';
-import { SegmentedLabeledOption } from 'antd/es/segmented';
+import {
+  Segmented,
+  SegmentedLabeledOption,
+} from '@/components/ui/segmented';
 import { upperFirst } from 'lodash';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';

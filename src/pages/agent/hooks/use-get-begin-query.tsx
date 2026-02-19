@@ -7,7 +7,7 @@ import {
   buildUpstreamNodeOutputOptions,
   isAgentStructured,
 } from '@/utils/canvas-util';
-import { DefaultOptionType } from 'antd/es/select';
+import { DefaultOptionType } from '@/interfaces/antd-compat';
 import { t } from 'i18next';
 import { flatten, isEmpty, toLower } from 'lodash';
 import get from 'lodash/get';

@@ -1,7 +1,7 @@
 import { useSetModalState } from '@/hooks/common-hooks';
 import { useConnectToKnowledge, useRenameFile } from '@/hooks/use-file-request';
 import { IFile } from '@/interfaces/database/file-manager';
-import { TableRowSelection } from 'antd/es/table/interface';
+import { TableRowSelection } from '@/interfaces/antd-compat';
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 

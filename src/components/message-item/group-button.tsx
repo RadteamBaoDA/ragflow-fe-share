@@ -11,11 +11,16 @@ import {
   SoundOutlined,
   SyncOutlined,
 } from '@ant-design/icons';
-import { Radio, Tooltip } from 'antd';
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import FeedbackDialog from '../feedback-dialog';
 import { PromptDialog } from '../prompt-dialog';
+import { ToggleGroup, ToggleGroupItem } from '../ui/toggle-group';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '../ui/tooltip';
 import { useRemoveMessage, useSendFeedback, useSpeech } from './hooks';
 
 interface IProps {
@@ -84,34 +89,37 @@ export const AssistantGroupButton = ({
 
   return (
     <>
-      <Radio.Group size="small">
-        <Radio.Button value="a">
+      <ToggleGroup type={'single'} size="sm" variant="outline" className="space-x-1">
+        <ToggleGroupItem value="a">
           <CopyToClipboard text={content}></CopyToClipboard>
-        </Radio.Button>
+        </ToggleGroupItem>
         {showLoudspeaker && (
-          <Radio.Button value="b" onClick={handleRead}>
-            <Tooltip title={t('chat.read')}>
-              {isPlaying ? <PauseCircleOutlined /> : <SoundOutlined />}
+          <ToggleGroupItem value="b" onClick={handleRead}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>{isPlaying ? <PauseCircleOutlined /> : <SoundOutlined />}</span>
+              </TooltipTrigger>
+              <TooltipContent>{t('chat.read')}</TooltipContent>
             </Tooltip>
             <audio src="" ref={ref}></audio>
-          </Radio.Button>
+          </ToggleGroupItem>
         )}
         {showLikeButton && (
           <>
-            <Radio.Button value="c" onClick={handleLike} disabled={isLoading}>
+            <ToggleGroupItem value="c" onClick={handleLike} disabled={isLoading}>
               <LikeOutlined />
-            </Radio.Button>
-            <Radio.Button value="d" onClick={handleDislike} disabled={isLoading}>
+            </ToggleGroupItem>
+            <ToggleGroupItem value="d" onClick={handleDislike} disabled={isLoading}>
               <DislikeOutlined />
-            </Radio.Button>
+            </ToggleGroupItem>
           </>
         )}
         {prompt && showPrompt && (
-          <Radio.Button value="e" onClick={showPromptModal}>
+          <ToggleGroupItem value="e" onClick={showPromptModal}>
             <PromptIcon style={{ fontSize: '16px' }} />
-          </Radio.Button>
+          </ToggleGroupItem>
         )}
-      </Radio.Group>
+      </ToggleGroup>
       {visible && (
         <FeedbackDialog
           visible={visible}
@@ -152,28 +160,34 @@ export const UserGroupButton = ({
   const { t } = useTranslation();
 
   return (
-    <Radio.Group size="small">
-      <Radio.Button value="a">
+    <ToggleGroup type={'single'} size="sm" variant="outline" className="space-x-1">
+      <ToggleGroupItem value="a">
         <CopyToClipboard text={content}></CopyToClipboard>
-      </Radio.Button>
+      </ToggleGroupItem>
       {regenerateMessage && (
-        <Radio.Button
+        <ToggleGroupItem
           value="b"
           onClick={regenerateMessage}
           disabled={sendLoading}
         >
-          <Tooltip title={t('chat.regenerate')}>
-            <SyncOutlined spin={sendLoading} />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span><SyncOutlined spin={sendLoading} /></span>
+            </TooltipTrigger>
+            <TooltipContent>{t('chat.regenerate')}</TooltipContent>
           </Tooltip>
-        </Radio.Button>
+        </ToggleGroupItem>
       )}
       {removeMessageById && (
-        <Radio.Button value="c" onClick={onRemoveMessage} disabled={loading}>
-          <Tooltip title={t('common.delete')}>
-            <DeleteOutlined spin={loading} />
+        <ToggleGroupItem value="c" onClick={onRemoveMessage} disabled={loading}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span><DeleteOutlined spin={loading} /></span>
+            </TooltipTrigger>
+            <TooltipContent>{t('common.delete')}</TooltipContent>
           </Tooltip>
-        </Radio.Button>
+        </ToggleGroupItem>
       )}
-    </Radio.Group>
+    </ToggleGroup>
   );
 };

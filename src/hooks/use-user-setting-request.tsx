@@ -1,4 +1,5 @@
 import message from '@/components/ui/message';
+import { changeLanguageAsync } from '@/locales/config';
 import { LanguageTranslationMap } from '@/constants/common';
 import { ResponseGetType } from '@/interfaces/database/base';
 import { IToken } from '@/interfaces/database/chat';
@@ -20,7 +21,7 @@ import userService, {
 } from '@/services/user-service';
 import { history } from '@/utils/simple-history-util';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Modal } from 'antd';
+import { Modal } from '@/components/ui/modal/modal';
 import DOMPurify from 'dompurify';
 import { isEmpty } from 'lodash';
 import { useCallback, useMemo, useState } from 'react';
@@ -45,7 +46,6 @@ export const enum UserSettingApiAction {
 }
 
 export const useFetchUserInfo = (): ResponseGetType<IUserInfo> => {
-  const { i18n } = useTranslation();
 
   const { data, isFetching: loading } = useQuery({
     queryKey: [UserSettingApiAction.UserInfo],
@@ -54,7 +54,7 @@ export const useFetchUserInfo = (): ResponseGetType<IUserInfo> => {
     queryFn: async () => {
       const { data } = await userService.user_info();
       if (data.code === 0) {
-        i18n.changeLanguage(
+        changeLanguageAsync(
           LanguageTranslationMap[
             data.data.language as keyof typeof LanguageTranslationMap
           ],

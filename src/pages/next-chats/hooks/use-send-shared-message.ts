@@ -7,7 +7,7 @@ import {
 } from '@/hooks/logic-hooks';
 import { useCreateNextSharedConversation } from '@/hooks/use-chat-request';
 import { Message } from '@/interfaces/database/chat';
-import { message } from 'antd';
+import message from '@/components/ui/message';
 import { get } from 'lodash';
 import trim from 'lodash/trim';
 import { useCallback, useEffect, useState } from 'react';

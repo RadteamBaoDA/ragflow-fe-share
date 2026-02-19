@@ -3,7 +3,8 @@ import { IChunk, IKnowledgeFile } from '@/interfaces/database/knowledge';
 import kbService from '@/services/knowledge-service';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useDebounce } from 'ahooks';
-import { PaginationProps, message } from 'antd';
+import { PaginationProps } from '@/interfaces/antd-compat';
+import message from '@/components/ui/message';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {

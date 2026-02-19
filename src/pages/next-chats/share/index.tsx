@@ -12,9 +12,9 @@ import {
   useFetchExternalChatInfo,
   useFetchNextConversationSSE,
 } from '@/hooks/use-chat-request';
-import i18n from '@/locales/config';
+import i18n, { changeLanguageAsync } from '@/locales/config';
 import { externalHistoryService } from '@/services/external-history-service';
-import { Input, Modal } from 'antd';
+import { Modal } from '@/components/ui/modal/modal';
 import { buildMessageUuidWithRole } from '@/utils/chat';
 import React, { forwardRef, useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -207,7 +207,7 @@ const ChatContainer = () => {
   }, [from]);
   React.useEffect(() => {
     if (locale && i18n.language !== locale) {
-      i18n.changeLanguage(locale);
+      changeLanguageAsync(locale);
     }
   }, [locale, visibleAvatar]);
 
@@ -315,13 +315,14 @@ const ChatContainer = () => {
         onOk={handleFeedbackSubmit}
         onCancel={handleFeedbackCancel}
       >
-        <Input.TextArea
+        <textarea
           rows={4}
           value={feedbackComment}
           onChange={(e) => setFeedbackComment(e.target.value)}
           placeholder={
             t('feedback.placeholder') || 'Please verify your feedback...'
           }
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         />
       </Modal>
     </>

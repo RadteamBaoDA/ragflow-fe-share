@@ -165,3 +165,29 @@ export const useFetchDocx = (filePath: string) => {
 
   return { succeed, containerRef, error };
 };
+
+export const useCatchDocumentError = (url: string) => {
+  const [error, setError] = useState('');
+  const fetchDocument = useCallback(async () => {
+    try {
+      const ret = await axios.get(url, {
+        headers: {
+          [Authorization]: getAuthorization(),
+        },
+      });
+      const { data } = ret;
+      if (!(data instanceof ArrayBuffer) && data.code !== 0) {
+        setError(data.message);
+      }
+      return ret;
+    } catch (err: any) {
+      setError(err?.message || 'Failed to fetch document');
+    }
+  }, [url]);
+
+  useEffect(() => {
+    fetchDocument();
+  }, [fetchDocument]);
+
+  return { fetchDocument, error };
+};
