@@ -41,6 +41,7 @@ interface IProps extends Partial<IRemoveMessageById>, IRegenerateMessage {
   onLike?: () => void;
   onDislike?: (feedback: string) => void;
   disableInternalFeedback?: boolean;
+  showPrompt?: boolean;
 }
 
 const MessageItem = ({
@@ -60,6 +61,7 @@ const MessageItem = ({
   onLike,
   onDislike,
   disableInternalFeedback = false,
+  showPrompt = true,
 }: IProps) => {
   const { theme } = useTheme();
   const isAssistant = item.role === MessageType.Assistant;
@@ -143,6 +145,7 @@ const MessageItem = ({
                     onLike={onLike}
                     onDislike={onDislike}
                     disableInternalFeedback={disableInternalFeedback}
+                    showPrompt={showPrompt}
                   ></AssistantGroupButton>
                 )
               ) : (

@@ -206,6 +206,7 @@ export const useSendMessageWithSse = (
 ) => {
   const [answer, setAnswer] = useState<IAnswer>({} as IAnswer);
   const [done, setDone] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { doneRecord, clearDoneRecord, setDoneRecordById, allDone } =
     useSetDoneRecord();
   const timer = useRef<any>();
@@ -236,12 +237,25 @@ export const useSendMessageWithSse = (
     [setDoneRecordById],
   );
 
+  const clearError = useCallback(() => {
+    setErrorMessage(null);
+  }, []);
+
   const send = useCallback(
     async (
       body: any,
       controller?: AbortController,
     ): Promise<{ response: Response; data: ResponseType } | undefined> => {
       initializeSseRef();
+      setErrorMessage(null);
+
+      const SSE_TIMEOUT_MS = 5 * 60 * 1000;
+      let isTimeout = false;
+      const abortTimeoutId = setTimeout(() => {
+        isTimeout = true;
+        setErrorMessage('TIMEOUT');
+        sseRef.current?.abort();
+      }, SSE_TIMEOUT_MS);
       try {
         setDoneValue(body, false);
         const response = await fetch(url, {
@@ -312,17 +326,27 @@ export const useSendMessageWithSse = (
             }
           }
         }
+        clearTimeout(abortTimeoutId);
         setDoneValue(body, true);
         resetAnswer();
         return { data: await res, response };
       } catch (e) {
+        clearTimeout(abortTimeoutId);
         setDoneValue(body, true);
 
         resetAnswer();
-        // Swallow fetch errors silently
+        if (!isTimeout) {
+          if (e instanceof TypeError && String(e.message).includes('fetch')) {
+            setErrorMessage('NETWORK');
+          } else if (e instanceof DOMException && e.name === 'AbortError') {
+            // User stop, no surface error.
+          } else if (e instanceof Error && e.message) {
+            setErrorMessage('SERVER');
+          }
+        }
       }
     },
-    [initializeSseRef, setDoneValue, url, resetAnswer],
+    [initializeSseRef, resetAnswer, setDoneValue, url],
   );
 
   const stopOutputMessage = useCallback(() => {
@@ -339,6 +363,8 @@ export const useSendMessageWithSse = (
     resetAnswer,
     stopOutputMessage,
     clearDoneRecord,
+    errorMessage,
+    clearError,
   };
 };
 

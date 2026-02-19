@@ -50,6 +50,8 @@ const ChatContainer = () => {
     stopOutputMessage,
     scrollRef,
     messageContainerRef,
+    errorMessage,
+    clearError,
     removeAllMessagesExceptFirst,
   } = useSendSharedMessage();
   const sendDisabled = useSendButtonDisabled(value);
@@ -91,15 +93,42 @@ const ChatContainer = () => {
         setLastQuestion(currentQuestion);
         traceUserMessage(currentQuestion);
       }
+      clearError?.();
       handlePressEnter(params);
     },
-    [handlePressEnter, traceUserMessage, value],
+    [clearError, handlePressEnter, traceUserMessage, value],
   );
 
   const lastTracedMessageId = useRef<string | null>(null);
   const pendingTraceRef = useRef<boolean>(false);
   const derivedMessagesRef = useRef(derivedMessages);
   derivedMessagesRef.current = derivedMessages;
+
+  React.useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'INSERT_PROMPT') {
+        const textarea = document.querySelector('textarea');
+        if (textarea) {
+          const nativeTextareaValueSetter = Object.getOwnPropertyDescriptor(
+            window.HTMLTextAreaElement.prototype,
+            'value',
+          )?.set;
+          if (nativeTextareaValueSetter) {
+            nativeTextareaValueSetter.call(textarea, event.data.payload);
+          } else {
+            textarea.value = event.data.payload;
+          }
+          textarea.dispatchEvent(new Event('input', { bubbles: true }));
+          textarea.focus();
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, []);
 
   React.useEffect(() => {
     if (sendLoading || pendingTraceRef.current) return;
@@ -185,7 +214,7 @@ const ChatContainer = () => {
   const { data: avatarData } = useFetchAvatar();
 
   if (!conversationId) {
-    return <div>empty</div>;
+    return <div>{t('chat.emptyConversation')}</div>;
   }
 
   return (
@@ -230,10 +259,24 @@ const ChatContainer = () => {
                     onLike={handleLike}
                     onDislike={handleDislike}
                     disableInternalFeedback={true}
+                    showPrompt={false}
                   ></MessageItem>
                 );
               })}
             </div>
+            {errorMessage && !sendLoading && (
+              <div className="flex flex-col items-start p-4 mb-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                <p className="text-red-600 dark:text-red-400 text-sm">
+                  {errorMessage === 'TIMEOUT'
+                    ? t('chat.errorTimeout')
+                    : errorMessage === 'NETWORK'
+                      ? t('chat.errorNetwork')
+                      : errorMessage === 'SERVER'
+                        ? t('chat.errorServer')
+                        : t('chat.errorGeneric', { message: errorMessage })}
+                </p>
+              </div>
+            )}
             <div ref={scrollRef} />
           </div>
           <div className="flex w-full justify-center mb-8">
