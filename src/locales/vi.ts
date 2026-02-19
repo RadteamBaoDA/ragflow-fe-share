@@ -180,6 +180,10 @@ export default {
       deleteDocumentConfirmContent:
         'Tài liệu này được liên kết với đồ thị tri thức. Sau khi xóa, các thông tin về nút và quan hệ liên quan sẽ bị xóa theo, nhưng đồ thị sẽ không được cập nhật ngay lập tức. Việc cập nhật đồ thị được thực hiện trong quá trình phân tích tài liệu mới chứa tác vụ trích xuất đồ thị tri thức.',
       documentMetaTips: `<p>Dữ liệu meta ở định dạng Json (không thể tìm kiếm). Nó sẽ được thêm vào prompt cho LLM nếu bất kỳ đoạn nào của tài liệu này được đưa vào prompt.</p> <p>Ví dụ:</p> <b>Dữ liệu meta là:</b><br> <code> { "Author": "Alex Dowson", "Date": "2024-11-12" } </code><br><b>Prompt sẽ là:</b><br> <p>Tài liệu: the_name_of_document</p> <p>Tác giả: Alex Dowson</p> <p>Ngày: 2024-11-12</p> <p>Các đoạn liên quan như sau:</p> <ul> <li> Đây là nội dung của đoạn...</li> <li> Đây là nội dung của đoạn...</li> </ul>`,
+      metadata: {
+        editMetadata: 'Chỉnh sửa metadata',
+        addMetadata: 'Thêm metadata',
+      },
     },
     knowledgeConfiguration: {
       imageTableContextWindow: 'Cửa sổ ngữ cảnh hình ảnh & bảng',

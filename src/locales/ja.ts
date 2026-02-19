@@ -169,6 +169,10 @@ export default {
       autoKeywordsTip: `各チャンクに含まれるキーワードのランキングを向上させるために、自動的にN個のキーワードを抽出します。「システムモデル設定」で指定されたチャットモデルによって追加のトークンが消費されることに注意してください。チャンクリストから追加されたキーワードを確認または更新することができます。詳細は https://ragflow.io/docs/dev/autokeyword_autoquestion をご覧ください。`,
       autoQuestions: '自動質問',
       autoQuestionsTip: `ランキングスコアを向上させるために、「システムモデル設定」で定義されたチャットモデルを使用して、ナレッジベースのチャンクごとにN個の質問を抽出します。 これにより、追加のトークンが消費されることに注意してください。 結果はチャンクリストで表示および編集できます。 質問抽出エラーはチャンク処理をブロックしません。空の結果が元のチャンクに追加されます。詳細は https://ragflow.io/docs/dev/autokeyword_autoquestion をご覧ください。`,
+      metadata: {
+        editMetadata: 'メタデータを編集',
+        addMetadata: 'メタデータを追加',
+      },
     },
     knowledgeConfiguration: {
       imageTableContextWindow: '画像・表コンテキストウィンドウ',
